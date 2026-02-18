@@ -18,7 +18,9 @@ services:
 
   # Servicio Backend - Laravel
   backend:
-    image: php:8.3-apache
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: laravel-backend
     working_dir: /var/www/html
     volumes:
@@ -37,19 +39,7 @@ services:
       - app-network
     depends_on:
       - db
-    command: >
-      bash -c "
-      apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev zip unzip git curl &&
-      docker-php-ext-configure gd --with-freetype --with-jpeg &&
-      docker-php-ext-install gd pdo pdo_mysql &&
-      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
-      composer install --no-interaction --working-dir=/var/www/html &&
-      a2enmod rewrite &&
-      chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache &&
-      chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache &&
-      apache2-foreground
-      "
-
+      
   # Servicio Base de Datos - MySQL
   db:
     image: mysql:8.0
@@ -73,7 +63,6 @@ services:
 
 volumes:
   mysql-data:
-    driver: local
 
 networks:
   app-network:
