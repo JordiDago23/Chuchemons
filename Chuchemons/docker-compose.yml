@@ -39,9 +39,11 @@ services:
       - db
     command: >
       bash -c "
-      apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev zip unzip git &&
+      apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev zip unzip git curl &&
       docker-php-ext-configure gd --with-freetype --with-jpeg &&
       docker-php-ext-install gd pdo pdo_mysql &&
+      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
+      composer install --no-interaction --working-dir=/var/www/html &&
       a2enmod rewrite &&
       chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache &&
       chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache &&
@@ -69,12 +71,10 @@ services:
       timeout: 5s
       retries: 5
 
-# Volumen para persistir datos de MySQL
 volumes:
   mysql-data:
     driver: local
 
-# Red para comunicación entre servicios
 networks:
   app-network:
     driver: bridge
