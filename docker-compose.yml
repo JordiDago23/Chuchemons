@@ -38,8 +38,16 @@ services:
     networks:
       - app-network
     depends_on:
-      - db
-      
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        composer install --no-interaction --prefer-dist &&
+        php artisan key:generate --force &&
+        php artisan migrate --force &&
+        apache2-foreground
+      "
+
   # Servicio Base de Datos - MySQL
   db:
     image: mysql:8.0
