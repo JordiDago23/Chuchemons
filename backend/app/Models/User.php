@@ -27,7 +27,6 @@ class User extends Authenticatable implements JWTSubject
         'is_admin' => 'boolean',
     ];
 
-    // Métodos requeridos por JWT
     public function getJWTIdentifier()
     {
         return $this->getKey();
