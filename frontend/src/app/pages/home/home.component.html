@@ -1,0 +1,17 @@
+<div class="container">
+  <div class="header">
+    <h1>🎮 Bienvenido a Chuchemons</h1>
+    <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
+  </div>
+
+  <div *ngIf="user" class="user-card">
+    <p><strong>ID:</strong> {{ user.player_id }}</p>
+    <p><strong>Nombre:</strong> {{ user.nombre }} {{ user.apellidos }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p *ngIf="user.is_admin" class="admin-badge">🤖 Administrador</p>
+  </div>
+
+  <div class="actions">
+    <a routerLink="/profile" class="btn">👤 Mi Perfil</a>
+  </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="page">
+  <div class="card">
+
+    <!-- Pokéball logo -->
+    <div class="pokeball">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" fill="white" stroke="#1a1a1a" stroke-width="4"/>
+        <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#e63946"/>
+        <rect x="2" y="46" width="96" height="8" fill="#1a1a1a"/>
+        <circle cx="50" cy="50" r="14" fill="#1a1a1a"/>
+        <circle cx="50" cy="50" r="9" fill="white"/>
+        <circle cx="50" cy="50" r="5" fill="#f0f0f0"/>
+      </svg>
+    </div>
+
+    <h1 class="title">Chuchemons</h1>
+    <p class="subtitle">Comienza tu nueva aventura</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <a class="tab" routerLink="/login">Iniciar Sesión</a>
+      <button class="tab active" type="button">Regístrate</button>
+    </div>
+
+    <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="field">
+        <label>Nombre de usuario</label>
+        <input
+          type="text"
+          placeholder="XuxemonsMaster"
+          [(ngModel)]="form.nombre"
+          name="nombre"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Correo Electrónico</label>
+        <input
+          type="email"
+          placeholder="chuchemons@email.com"
+          [(ngModel)]="form.email"
+          name="email"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Contraseña</label>
+        <input
+          type="password"
+          placeholder="············"
+          [(ngModel)]="form.password"
+          name="password"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Confirmar Contraseña</label>
+        <input
+          type="password"
+          placeholder="············"
+          [(ngModel)]="form.password_confirmation"
+          name="password_confirmation"
+          required
+        />
+      </div>
+
+      <button class="submit-btn" type="submit" [disabled]="loading">
+        <span class="bolt">⚡</span>
+        {{ loading ? 'Registrando...' : 'Entrar' }}
+      </button>
+    </form>
+
+  </div>
+</div>

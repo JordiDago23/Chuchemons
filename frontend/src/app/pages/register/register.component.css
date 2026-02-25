@@ -1,0 +1,157 @@
+:host {
+  display: flex;
+  min-height: 100vh;
+}
+
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #f7b733 0%, #f05a28 50%, #c0392b 100%);
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pokeball {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+}
+
+.pokeball svg {
+  width: 100%;
+  height: 100%;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin: 0 0 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  width: 100%;
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tab.active {
+  background: #ffffff;
+  color: #1a1a1a;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-size: 0.8rem;
+  color: #555;
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  box-sizing: border-box;
+  outline: none;
+  transition: background 0.2s;
+}
+
+.field input:focus {
+  background: #e9eaf0;
+}
+
+form {
+  width: 100%;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(90deg, #e63946, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.bolt {
+  font-size: 1rem;
+}
+
+.error-msg {
+  width: 100%;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
