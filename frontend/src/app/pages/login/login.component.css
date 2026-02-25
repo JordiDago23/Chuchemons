@@ -26,6 +26,7 @@
   align-items: center;
 }
 
+/* Pokéball */
 .pokeball {
   width: 80px;
   height: 80px;
@@ -50,6 +51,7 @@
   margin: 0 0 1.5rem;
 }
 
+/* Tabs */
 .tabs {
   display: flex;
   width: 100%;
@@ -81,6 +83,7 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
 
+/* Fields */
 .field {
   width: 100%;
   margin-bottom: 1rem;
@@ -115,6 +118,7 @@ form {
   width: 100%;
 }
 
+/* Submit button */
 .submit-btn {
   width: 100%;
   padding: 0.8rem;
@@ -146,6 +150,7 @@ form {
   font-size: 1rem;
 }
 
+/* Error */
 .error-msg {
   width: 100%;
   background: #fee2e2;
@@ -154,4 +159,22 @@ form {
   border-radius: 8px;
   margin-bottom: 1rem;
   font-size: 0.85rem;
+}
+
+/* Forgot */
+.forgot {
+  font-size: 0.82rem;
+  color: #888;
+  margin-top: 1.2rem;
+  text-align: center;
+}
+
+.recover-link {
+  color: #e63946;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.recover-link:hover {
+  text-decoration: underline;
 }
