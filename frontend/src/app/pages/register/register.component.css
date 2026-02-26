@@ -146,6 +146,38 @@ form {
   font-size: 1rem;
 }
 
+/* ID box */
+.id-box {
+  width: 100%;
+  background: #fff8e1;
+  border: 1.5px solid #f7b733;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  box-sizing: border-box;
+}
+
+.id-label {
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.id-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #c0392b;
+  letter-spacing: 0.1em;
+}
+
+.id-hint {
+  font-size: 0.72rem;
+  color: #aaa;
+}
+
 .error-msg {
   width: 100%;
   background: #fee2e2;

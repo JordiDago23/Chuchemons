@@ -10,11 +10,13 @@ services:
       - ./frontend:/app
     ports:
       - "4200:4200"
-    command: sh -c "npm install && npm start -- --host 0.0.0.0 --poll"
+    command: sh -c "npm install && npm start -- --host 0.0.0.0 --poll 2000"
     networks:
       - app-network
     depends_on:
       - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
 
   # Servicio Backend - Laravel
   backend:

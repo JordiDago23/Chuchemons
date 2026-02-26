@@ -23,21 +23,33 @@
     </div>
 
     <div *ngIf="error" class="error-msg">{{ error }}</div>
+    <div *ngIf="passwordMismatch" class="error-msg">Les contrasenyes no coincideixen.</div>
 
     <form (ngSubmit)="onSubmit()">
       <div class="field">
-        <label>Nombre de usuario</label>
+        <label>Nom</label>
         <input
           type="text"
-          placeholder="XuxemonsMaster"
-          [(ngModel)]="form.nombre"
-          name="nombre"
+          placeholder="Ash"
+          [(ngModel)]="form.nom"
+          name="nom"
           required
         />
       </div>
 
       <div class="field">
-        <label>Correo Electrónico</label>
+        <label>Cognoms</label>
+        <input
+          type="text"
+          placeholder="Ketchum"
+          [(ngModel)]="form.cognoms"
+          name="cognoms"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Correu Electrònic</label>
         <input
           type="email"
           placeholder="chuchemons@email.com"
@@ -48,7 +60,7 @@
       </div>
 
       <div class="field">
-        <label>Contraseña</label>
+        <label>Contrasenya</label>
         <input
           type="password"
           placeholder="············"
@@ -59,7 +71,7 @@
       </div>
 
       <div class="field">
-        <label>Confirmar Contraseña</label>
+        <label>Repetir Contrasenya</label>
         <input
           type="password"
           placeholder="············"
@@ -71,7 +83,7 @@
 
       <button class="submit-btn" type="submit" [disabled]="loading">
         <span class="bolt">⚡</span>
-        {{ loading ? 'Registrando...' : 'Entrar' }}
+        {{ loading ? 'Registrant...' : 'Registrar-se' }}
       </button>
     </form>
 
