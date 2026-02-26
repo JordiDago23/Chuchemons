@@ -19,6 +19,7 @@
     </div>
 
     <h1 class="title">Chuchemons</h1>
+
     <p class="subtitle">Comienza tu nueva aventura</p>
 
     <!-- Tabs -->
@@ -31,10 +32,10 @@
 
     <form (ngSubmit)="onSubmit()">
       <div class="field">
-        <label>Correo Electrónico</label>
+        <label>ID</label>
         <input
           type="text"
-          placeholder="chuchemons@email.com"
+          placeholder="El teu ID de jugador"
           [(ngModel)]="form.player_id"
           name="player_id"
           required
