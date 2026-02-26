@@ -4,7 +4,10 @@
     <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
   </div>
 
-  <div *ngIf="user" class="user-card">
+  <div *ngIf="loading" class="loading">Cargando datos...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="user && !loading" class="user-card">
     <p><strong>ID:</strong> {{ user.player_id }}</p>
     <p><strong>Nombre:</strong> {{ user.nombre }} {{ user.apellidos }}</p>
     <p><strong>Email:</strong> {{ user.email }}</p>

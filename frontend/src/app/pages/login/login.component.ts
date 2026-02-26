@@ -20,13 +20,43 @@ export class LoginComponent {
 
   onSubmit() {
     this.error = '';
+    
+    if (!this.form.player_id || !this.form.password) {
+      this.error = 'Por favor completa todos los campos';
+      return;
+    }
+
     this.loading = true;
+    console.log('Intentando login con:', this.form.player_id);
 
     this.auth.login(this.form).subscribe({
-      next: () => this.router.navigate(['/home']),
-      error: (err) => {
+      next: (response: any) => {
+        console.log('Login exitoso:', response);
+        console.log('Token guardado:', this.auth.getToken());
+        console.log('isLoggedIn:', this.auth.isLoggedIn());
         this.loading = false;
-        this.error = err.error?.message || 'Credenciales incorrectas';
+        this.error = '';
+        console.log('Navegando a /home...');
+        setTimeout(() => {
+          this.router.navigate(['/home']).then(success => {
+            console.log('Navegación exitosa:', success);
+          }).catch(err => {
+            console.error('Error en navegación:', err);
+          });
+        }, 500);
+      },
+      error: (err: any) => {
+        this.loading = false;
+        console.error('Error de login completo:', err);
+        console.error('Status HTTP:', err.status);
+        if (err.error?.message) {
+          this.error = err.error.message;
+        } else if (err.message) {
+          this.error = err.message;
+        } else {
+          this.error = 'Credenciales incorrectas o error de conexión';
+        }
+        console.error('Mensaje de error mostrado:', this.error);
       }
     });
   }

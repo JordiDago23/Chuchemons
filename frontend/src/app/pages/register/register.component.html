@@ -23,33 +23,33 @@
     </div>
 
     <div *ngIf="error" class="error-msg">{{ error }}</div>
-    <div *ngIf="passwordMismatch" class="error-msg">Les contrasenyes no coincideixen.</div>
+    <div *ngIf="passwordMismatch" class="error-msg">Las contraseñas no coinciden.</div>
 
     <form (ngSubmit)="onSubmit()">
       <div class="field">
-        <label>Nom</label>
+        <label>Nombre</label>
         <input
           type="text"
           placeholder="Ash"
-          [(ngModel)]="form.nom"
-          name="nom"
+          [(ngModel)]="form.nombre"
+          name="nombre"
           required
         />
       </div>
 
       <div class="field">
-        <label>Cognoms</label>
+        <label>Apellidos</label>
         <input
           type="text"
           placeholder="Ketchum"
-          [(ngModel)]="form.cognoms"
-          name="cognoms"
+          [(ngModel)]="form.apellidos"
+          name="apellidos"
           required
         />
       </div>
 
       <div class="field">
-        <label>Correu Electrònic</label>
+        <label>Correo Electrónico</label>
         <input
           type="email"
           placeholder="chuchemons@email.com"
@@ -60,7 +60,7 @@
       </div>
 
       <div class="field">
-        <label>Contrasenya</label>
+        <label>Contraseña</label>
         <input
           type="password"
           placeholder="············"
@@ -71,7 +71,7 @@
       </div>
 
       <div class="field">
-        <label>Repetir Contrasenya</label>
+        <label>Repetir Contraseña</label>
         <input
           type="password"
           placeholder="············"
@@ -83,7 +83,7 @@
 
       <button class="submit-btn" type="submit" [disabled]="loading">
         <span class="bolt">⚡</span>
-        {{ loading ? 'Registrant...' : 'Registrar-se' }}
+        {{ loading ? 'Registrando...' : 'Registrarse' }}
       </button>
     </form>
 

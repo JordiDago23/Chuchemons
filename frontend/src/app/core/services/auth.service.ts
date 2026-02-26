@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -10,46 +11,83 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   register(data: any) {
+    console.log('AuthService: Enviando registro...');
     return this.http.post(`${this.apiUrl}/register`, data).pipe(
-      tap((res: any) => this.saveToken(res.token))
+      tap((res: any) => {
+        console.log('AuthService: Respuesta de registro recibida:', res);
+        this.saveToken(res.token);
+      }),
+      catchError(this.handleError)
     );
   }
 
   login(data: any) {
+    console.log('AuthService: Enviando login...');
     return this.http.post(`${this.apiUrl}/login`, data).pipe(
-      tap((res: any) => this.saveToken(res.token))
+      tap((res: any) => {
+        console.log('AuthService: Respuesta de login recibida:', res);
+        this.saveToken(res.token);
+      }),
+      catchError(this.handleError)
     );
   }
 
   me() {
-    return this.http.get(`${this.apiUrl}/me`);
+    return this.http.get(`${this.apiUrl}/me`).pipe(
+      catchError(this.handleError)
+    );
   }
 
   updateProfile(data: any) {
-    return this.http.put(`${this.apiUrl}/user/update`, data);
+    return this.http.put(`${this.apiUrl}/user/update`, data).pipe(
+      catchError(this.handleError)
+    );
   }
 
   deleteAccount() {
     return this.http.delete(`${this.apiUrl}/user`).pipe(
-      tap(() => this.logout())
+      tap(() => this.logout()),
+      catchError(this.handleError)
     );
   }
 
   logout() {
-    this.http.post(`${this.apiUrl}/logout`, {}).subscribe();
+    this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
+      error: () => {
+        // Error al hacer logout en el servidor, pero continuar locally
+        localStorage.removeItem('token');
+        this.router.navigate(['/login']);
+      }
+    });
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
 
   saveToken(token: string) {
+    console.log('AuthService: Guardando token en localStorage...');
+    console.log('Token:', token.substring(0, 20) + '...');
     localStorage.setItem('token', token);
+    console.log('AuthService: Token guardado. Verificando...');
+    console.log('Token en localStorage:', !!localStorage.getItem('token'));
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    console.log('AuthService: getToken() -', token ? 'Token presente' : 'Sin token');
+    return token;
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const result = !!this.getToken();
+    console.log('AuthService: isLoggedIn() -', result);
+    return result;
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    console.error('AuthService: HTTP Error');
+    console.error('Status:', error.status);
+    console.error('StatusText:', error.statusText);
+    console.error('Error body:', error.error);
+    return throwError(() => error);
   }
 }

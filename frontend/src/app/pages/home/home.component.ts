@@ -12,17 +12,32 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class HomeComponent implements OnInit {
   user: any = null;
+  loading = true;
+  error = '';
 
   constructor(private auth: AuthService) {}
 
   ngOnInit() {
+    console.log('Home: Componente inicializado');
+    console.log('Home: Token presente:', !!this.auth.getToken());
+    
     this.auth.me().subscribe({
-      next: (data) => this.user = data,
-      error: () => this.auth.logout()
+      next: (data) => {
+        console.log('Home: Datos del usuario recibidos:', data);
+        this.user = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Home: Error al obtener datos del usuario:', err);
+        this.error = 'Error al cargar los datos del usuario';
+        this.loading = false;
+        this.auth.logout();
+      }
     });
   }
 
   logout() {
+    console.log('Home: Cerrando sesión');
     this.auth.logout();
   }
 }

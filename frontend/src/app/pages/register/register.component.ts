@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent implements OnInit {
-  form = { nom: '', cognoms: '', email: '', password: '', password_confirmation: '', player_id: '' };
+  form = { nombre: '', apellidos: '', email: '', password: '', password_confirmation: '' };
   error = '';
   loading = false;
   passwordMismatch = false;
@@ -20,15 +20,7 @@ export class RegisterComponent implements OnInit {
   constructor(private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
-    this.form.player_id = this.generatePlayerId();
-  }
-
-  private generatePlayerId(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const randomPart = Array.from({ length: 6 }, () =>
-      chars.charAt(Math.floor(Math.random() * chars.length))
-    ).join('');
-    return `CHU-${randomPart}`;
+    // Inicialización si es necesaria en el futuro
   }
 
   onSubmit() {
@@ -40,13 +32,28 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
+    if (!this.form.nombre || !this.form.apellidos || !this.form.email || !this.form.password) {
+      this.error = 'Todos los campos son requeridos';
+      return;
+    }
+
     this.loading = true;
 
     this.auth.register(this.form).subscribe({
-      next: () => this.router.navigate(['/home']),
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/home']);
+      },
       error: (err: any) => {
         this.loading = false;
-        this.error = err.error?.message || 'Error en registrar-se';
+        console.error('Error de registro:', err);
+        if (err.error?.errors) {
+          this.error = Object.values(err.error.errors).flat().join(', ') as string;
+        } else if (err.error?.message) {
+          this.error = err.error.message;
+        } else {
+          this.error = 'Error en el registro. Por favor, intenta de nuevo.';
+        }
       }
     });
   }
