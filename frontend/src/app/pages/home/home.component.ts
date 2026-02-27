@@ -48,6 +48,12 @@ export class HomeComponent implements OnInit {
   constructor(private auth: AuthService) {}
 
   ngOnInit() {
+    const cached = this.auth.currentUser;
+    if (cached) {
+      this.user = cached;
+      this.loading = false;
+      return;
+    }
     this.auth.me().subscribe({
       next: (data) => {
         this.user = data;

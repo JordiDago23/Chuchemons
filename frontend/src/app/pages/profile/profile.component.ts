@@ -57,14 +57,24 @@ export class ProfileComponent implements OnInit {
 
   constructor(private auth: AuthService) {}
 
+  private fillForm(u: any) {
+    this.form.nombre    = u.nombre;
+    this.form.apellidos = u.apellidos;
+    this.form.email     = u.email;
+    this.form.bio       = u.bio || '';
+  }
+
   ngOnInit() {
+    const cached = this.auth.currentUser;
+    if (cached) {
+      this.user = cached;
+      this.fillForm(cached);
+      return;
+    }
     this.auth.me().subscribe({
       next: (u: any) => {
         this.user = u;
-        this.form.nombre    = u.nombre;
-        this.form.apellidos = u.apellidos;
-        this.form.email     = u.email;
-        this.form.bio       = u.bio || '';
+        this.fillForm(u);
       }
     });
   }

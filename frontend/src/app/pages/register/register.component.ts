@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,17 +11,13 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent {
   form = { nombre: '', apellidos: '', email: '', password: '', password_confirmation: '' };
   error = '';
   loading = false;
   passwordMismatch = false;
 
   constructor(private auth: AuthService, private router: Router) {}
-
-  ngOnInit(): void {
-    // Inicialización si es necesaria en el futuro
-  }
 
   onSubmit() {
     this.error = '';
@@ -46,13 +42,10 @@ export class RegisterComponent implements OnInit {
       },
       error: (err: any) => {
         this.loading = false;
-        console.error('Error de registro:', err);
         if (err.error?.errors) {
           this.error = Object.values(err.error.errors).flat().join(', ') as string;
-        } else if (err.error?.message) {
-          this.error = err.error.message;
         } else {
-          this.error = 'Error en el registro. Por favor, intenta de nuevo.';
+          this.error = err.error?.message || 'Error en el registro. Por favor, intenta de nuevo.';
         }
       }
     });
