@@ -1,20 +1,187 @@
-<div class="container">
-  <div class="header">
-    <h1>🎮 Bienvenido a Chuchemons</h1>
-    <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
-  </div>
+<div class="layout">
 
-  <div *ngIf="loading" class="loading">Cargando datos...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-pokeball">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
+          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
+        </svg>
+      </div>
+      <span class="brand-name">Chuchemons</span>
+      <span class="brand-sub">Captúralos a todos</span>
+    </div>
 
-  <div *ngIf="user && !loading" class="user-card">
-    <p><strong>ID:</strong> {{ user.player_id }}</p>
-    <p><strong>Nombre:</strong> {{ user.nombre }} {{ user.apellidos }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p *ngIf="user.is_admin" class="admin-badge">🤖 Administrador</p>
-  </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" routerLink="/home">
+        <span class="nav-icon">⌂</span> Inicio
+      </a>
+      <a class="nav-item" routerLink="/chuchedex">
+        <span class="nav-icon">📖</span> Chuchedex
+      </a>
+      <a class="nav-item" routerLink="/mochila">
+        <span class="nav-icon">🎒</span> Mochila
+      </a>
+      <a class="nav-item" routerLink="/amigos">
+        <span class="nav-icon">👥</span> Amigos
+      </a>
+      <a class="nav-item" routerLink="/batalla">
+        <span class="nav-icon">⚔</span> Batalla
+      </a>
+      <a class="nav-item" routerLink="/chat">
+        <span class="nav-icon">💬</span> Chat
+      </a>
+      <a class="nav-item" routerLink="/profile">
+        <span class="nav-icon">👤</span> Perfil
+      </a>
+    </nav>
 
-  <div class="actions">
-    <a routerLink="/profile" class="btn">👤 Mi Perfil</a>
-  </div>
+    <div class="sidebar-footer">
+      <ng-container *ngIf="user">
+        <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+        <div class="footer-info">
+          <span class="footer-name">{{ user.player_id }}</span>
+          <span class="footer-sub">{{ user.email }}</span>
+        </div>
+        <button class="footer-dots" (click)="logout()" title="Salir">⋯</button>
+      </ng-container>
+      <button class="salir-btn" (click)="logout()">
+        <span>↪</span> Salir
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" *ngIf="!loading">
+
+    <!-- BANNER -->
+    <div class="banner">
+      <div class="banner-text">
+        <h1>¡Bienvenido, Maestro {{ user?.nombre }}!</h1>
+        <p class="banner-sub">Entrenador nivel {{ stats.level }}</p>
+        <div class="xp-bar-wrap">
+          <span class="xp-label">Experiencia</span>
+          <span class="xp-val">{{ stats.xp }}/{{ stats.xpMax }} XP</span>
+        </div>
+        <div class="xp-track">
+          <div class="xp-fill" [style.width.%]="xpPercent"></div>
+        </div>
+      </div>
+      <div class="banner-level">
+        <span class="level-icon">↗</span>
+        <span class="level-num">{{ stats.level }}</span>
+        <span class="level-label">Nivel</span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Total de Chuchemons</span>
+          <span class="stat-icon orange">🎯</span>
+        </div>
+        <div class="stat-value">{{ stats.captured }}/{{ stats.total }}</div>
+        <div class="stat-desc">{{ (stats.captured / stats.total * 100).toFixed(0) }}% Descubierto</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Victorias</span>
+          <span class="stat-icon yellow">🏆</span>
+        </div>
+        <div class="stat-value">{{ stats.wins }}</div>
+        <div class="stat-desc">Batallas ganadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Derrotas</span>
+          <span class="stat-icon red">💔</span>
+        </div>
+        <div class="stat-value">{{ stats.losses }}</div>
+        <div class="stat-desc">Batallas Perdidas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Ratio V/D</span>
+          <span class="stat-icon green">↗</span>
+        </div>
+        <div class="stat-value">{{ winRatio }}</div>
+        <div class="stat-desc">Tasa de victorias</div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="team-empty" *ngIf="team.length === 0">
+      <span>🎒</span>
+      <p>Aún no tienes Chuchemons en tu equipo. ¡Empieza a capturar!</p>
+    </div>
+    <div class="team-grid" *ngIf="team.length > 0">
+      <div class="mon-card" *ngFor="let mon of team">
+        <div class="mon-tags">
+          <span class="tag tipo" [style.color]="typeColors[mon.type]" [style.border-color]="typeColors[mon.type]">
+            Tipo {{ mon.type }}
+          </span>
+          <span class="tag equipo">En el Equipo</span>
+        </div>
+        <div class="mon-emoji">{{ mon.emoji }}</div>
+        <div class="mon-footer">
+          <span class="mon-capture">📷</span>
+        </div>
+        <div class="mon-info">
+          <span class="mon-name">{{ mon.name }}</span>
+          <span class="mon-level">Nv. {{ mon.level }}</span>
+        </div>
+        <div class="mon-hp-row">
+          <span>HP ♥</span>
+          <span>{{ mon.hp }}/{{ mon.hpMax }}</span>
+        </div>
+        <div class="hp-track">
+          <div class="hp-fill" [style.width.%]="(mon.hp / mon.hpMax) * 100"></div>
+        </div>
+        <div class="mon-stats">
+          <div class="mon-stat">
+            <span class="stat-sym">⚔</span>
+            <span class="stat-num">{{ mon.atk }}</span>
+            <span class="stat-lbl">ATK</span>
+          </div>
+          <div class="mon-stat">
+            <span class="stat-sym">●</span>
+            <span class="stat-num">{{ mon.def }}</span>
+            <span class="stat-lbl">DEF</span>
+          </div>
+          <div class="mon-stat">
+            <span class="stat-sym">⚡</span>
+            <span class="stat-num">{{ mon.spd }}</span>
+            <span class="stat-lbl">SPD</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions-grid">
+      <div class="action-card red">
+        <span class="action-icon">🏆</span>
+        <span class="action-title">Iniciar Batalla</span>
+        <span class="action-desc">Prueba tus habilidades en combate</span>
+      </div>
+      <div class="action-card yellow">
+        <span class="action-icon">🎯</span>
+        <span class="action-title">Explorar la chuchedex</span>
+        <span class="action-desc">Descubre nuevos Chuchemons</span>
+      </div>
+      <div class="action-card orange">
+        <span class="action-icon">👥</span>
+        <span class="action-title">Conectar con los amigos</span>
+        <span class="action-desc">Chatea y desafía amigos</span>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="loading-overlay" *ngIf="loading">Cargando...</div>
+
 </div>

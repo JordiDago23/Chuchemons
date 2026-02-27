@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, timeout } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -34,6 +34,7 @@ export class AuthService {
 
   me() {
     return this.http.get(`${this.apiUrl}/me`).pipe(
+      timeout(8000),
       catchError(this.handleError)
     );
   }

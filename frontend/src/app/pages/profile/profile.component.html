@@ -1,49 +1,208 @@
-<div class="container">
-  <div class="header">
-    <a routerLink="/home" class="back">← Volver</a>
-    <h2>👤 Mi Perfil</h2>
-  </div>
+<div class="layout">
 
-  <div *ngIf="success" class="success">{{ success }}</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-pokeball">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
+          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
+        </svg>
+      </div>
+      <span class="brand-name">Chuchemons</span>
+      <span class="brand-sub">Captúralos a todos</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
+      <a class="nav-item" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
+      <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
+      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
+      <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
+      <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
+      <a class="nav-item active" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
+    </nav>
+    <div class="sidebar-footer">
+      <ng-container *ngIf="user">
+        <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+        <div class="footer-info">
+          <span class="footer-name">{{ user.player_id }}</span>
+          <span class="footer-sub">{{ user.email }}</span>
+        </div>
+      </ng-container>
+      <button class="salir-btn" (click)="logout()"><span>↪</span> Salir</button>
+    </div>
+  </aside>
 
-  <form (ngSubmit)="onUpdate()">
-    <label>Nombre</label>
-    <input type="text" [(ngModel)]="form.nombre" name="nombre" />
+  <!-- MAIN -->
+  <main class="main">
 
-    <label>Apellidos</label>
-    <input type="text" [(ngModel)]="form.apellidos" name="apellidos" />
+    <!-- PAGE TITLE -->
+    <div class="page-title">
+      <h1>Mi Perfil</h1>
+      <p>Gestiona tu información personal y estadísticas</p>
+    </div>
 
-    <label>Email</label>
-    <input type="email" [(ngModel)]="form.email" name="email" />
+    <!-- PROFILE BANNER -->
+    <div class="banner" *ngIf="user">
+      <div class="banner-left">
+        <div class="avatar-wrap">
+          <div class="avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+          <button class="avatar-edit" (click)="editMode = !editMode">✏</button>
+        </div>
+        <div class="banner-info">
+          <span class="banner-name">{{ user.player_id }}</span>
+          <span class="banner-email">{{ user.email }}</span>
+          <div class="banner-tags">
+            <span class="tag red">❤ Nivel {{ stats.level }}</span>
+            <span class="tag yellow">📅 Miembro desde el {{ memberSince }}</span>
+            <span class="tag gray">📦 {{ stats.captured }} Chuchemons atrapados</span>
+          </div>
+          <div class="xp-row">
+            <span class="xp-label">Experiencia</span>
+            <span class="xp-val">{{ stats.xp }}/{{ stats.xpMax }} XP</span>
+          </div>
+          <div class="xp-track"><div class="xp-fill" [style.width.%]="xpPercent"></div></div>
+        </div>
+      </div>
+      <button class="edit-btn" (click)="editMode = !editMode">✏ Editar Perfil</button>
+    </div>
 
-    <label>Nueva contraseña (dejar vacío para no cambiar)</label>
-    <input type="password" [(ngModel)]="form.password" name="password" />
+    <!-- TABS -->
+    <div class="tabs">
+      <button [class.active]="activeTab === 'info'"   (click)="activeTab = 'info'">👤 Informacion</button>
+      <button [class.active]="activeTab === 'stats'"  (click)="activeTab = 'stats'">↗ Estadísticas</button>
+      <button [class.active]="activeTab === 'logros'" (click)="activeTab = 'logros'">🏆 Logros</button>
+    </div>
 
-    <label>Repetir nueva contraseña</label>
-    <input type="password" [(ngModel)]="form.password_confirmation" name="password_confirmation" />
+    <!-- ALERTS -->
+    <div *ngIf="success" class="alert-success">{{ success }}</div>
+    <div *ngIf="error"   class="alert-error">{{ error }}</div>
 
-    <button type="submit" [disabled]="loading">
-      {{ loading ? 'Guardando...' : 'Guardar cambios' }}
-    </button>
-  </form>
+    <!-- TAB: INFORMACIÓN -->
+    <div class="tab-content" *ngIf="activeTab === 'info'">
+      <div class="info-card">
+        <h2>Informacion personal</h2>
+        <p class="section-sub">Actualiza tus datos personales</p>
 
-  <hr />
+        <ng-container *ngIf="!editMode">
+          <div class="info-field">
+            <label>Nombre de usuario</label>
+            <div class="info-value">{{ user?.nombre }} {{ user?.apellidos }}</div>
+          </div>
+          <div class="info-field">
+            <label>Correo electronica</label>
+            <div class="info-value email-val">✉ {{ user?.email }}</div>
+          </div>
+          <div class="info-field">
+            <label>Biografia</label>
+            <div class="info-value">{{ form.bio || 'Sin biografía' }}</div>
+          </div>
+          <div class="info-field">
+            <label>Data de registro</label>
+            <div class="info-value">{{ memberSince }}</div>
+          </div>
+        </ng-container>
 
-  <div class="danger-zone">
-    <h3>⚠️ Zona de peligro</h3>
-    <p>Si te das de baja no podrás volver a entrar con este usuario.</p>
-    <button class="delete-btn" (click)="confirmDelete()">Darme de baja</button>
-  </div>
+        <ng-container *ngIf="editMode">
+          <form (ngSubmit)="onUpdate()">
+            <div class="info-field">
+              <label>Nombre</label>
+              <input type="text" [(ngModel)]="form.nombre" name="nombre" class="input" />
+            </div>
+            <div class="info-field">
+              <label>Apellidos</label>
+              <input type="text" [(ngModel)]="form.apellidos" name="apellidos" class="input" />
+            </div>
+            <div class="info-field">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="form.email" name="email" class="input" />
+            </div>
+            <div class="info-field">
+              <label>Biografia</label>
+              <textarea [(ngModel)]="form.bio" name="bio" class="input textarea" rows="3" placeholder="Cuéntanos algo sobre ti..."></textarea>
+            </div>
+            <div class="info-field">
+              <label>Nueva contraseña (vacío = sin cambio)</label>
+              <input type="password" [(ngModel)]="form.password" name="password" class="input" />
+            </div>
+            <div class="info-field">
+              <label>Repetir contraseña</label>
+              <input type="password" [(ngModel)]="form.password_confirmation" name="password_confirmation" class="input" />
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-cancel" (click)="editMode = false">Cancelar</button>
+              <button type="submit" class="btn-save" [disabled]="loading">{{ loading ? 'Guardando...' : 'Guardar cambios' }}</button>
+            </div>
+          </form>
+          <div class="danger-zone">
+            <button class="btn-delete" (click)="showConfirm = true">Darme de baja</button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
 
-  <div *ngIf="showConfirm" class="overlay">
+    <!-- TAB: ESTADÍSTICAS -->
+    <div class="tab-content" *ngIf="activeTab === 'stats'">
+      <div class="stats-row">
+        <div class="stats-card">
+          <h2>Estadisticas de batalla</h2>
+          <div class="stat-item green">
+            <span>Victoria</span><span class="stat-num green">{{ stats.wins }}</span>
+          </div>
+          <div class="stat-item red">
+            <span>Derrota</span><span class="stat-num red">{{ stats.losses }}</span>
+          </div>
+          <div class="stat-item blue">
+            <span>tasa de victoria</span><span class="stat-num blue">{{ winRatio }}</span>
+          </div>
+          <div class="stat-item orange">
+            <span>Racha actual</span><span class="stat-num orange">{{ stats.streak }}</span>
+          </div>
+        </div>
+        <div class="stats-card">
+          <h2>Estadisticas de batalla</h2>
+          <div class="capture-header">
+            <span>Xuxemons Capturados</span>
+            <span class="capture-count">{{ stats.captured }}/{{ stats.captured + 1 }}</span>
+          </div>
+          <div class="capture-bar"><div class="capture-fill" [style.width.%]="xpPercent"></div></div>
+          <p class="capture-pct">{{ xpPercent }}% completado</p>
+          <div class="type-stat" *ngFor="let t of typeStats" [style.background]="t.color + '18'">
+            <span>{{ t.type }}</span>
+            <span class="type-num" [style.color]="t.color">{{ t.count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LOGROS -->
+    <div class="tab-content" *ngIf="activeTab === 'logros'">
+      <div class="logros-grid">
+        <div class="logro-card" *ngFor="let l of logros" [class.locked]="l.status === 'locked'">
+          <span class="logro-icon" [class.locked]="l.status === 'locked'">{{ l.icon }}</span>
+          <span class="logro-title" [class.locked]="l.status === 'locked'">{{ l.title }}</span>
+          <span class="logro-desc">{{ l.desc }}</span>
+          <span *ngIf="l.status === 'done'"     class="badge done">Completado</span>
+          <span *ngIf="l.status === 'progress'" class="badge progress">En progreso: {{ l.progress }}</span>
+          <span *ngIf="l.status === 'locked'"   class="badge locked">Bloqueado</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- CONFIRM DIALOG -->
+  <div class="overlay" *ngIf="showConfirm">
     <div class="dialog">
       <h3>¿Estás seguro?</h3>
       <p>Esta acción es irreversible. Tu cuenta será eliminada permanentemente.</p>
       <div class="dialog-actions">
-        <button class="cancel-btn" (click)="showConfirm = false">Cancelar</button>
-        <button class="confirm-btn" (click)="onDelete()">Sí, darme de baja</button>
+        <button class="btn-cancel" (click)="showConfirm = false">Cancelar</button>
+        <button class="btn-delete" (click)="onDelete()">Sí, darme de baja</button>
       </div>
     </div>
   </div>
+
 </div>
