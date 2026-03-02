@@ -22,14 +22,15 @@
       <button class="tab active" type="button">Regístrate</button>
     </div>
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
-    <div *ngIf="passwordMismatch" class="error-msg">Las contraseñas no coinciden.</div>
+    <div *ngIf="error" class="alert alert-danger fade-in" role="alert">{{ error }}</div>
+    <div *ngIf="passwordMismatch" class="alert alert-danger fade-in" role="alert">Las contraseñas no coinciden.</div>
 
     <form (ngSubmit)="onSubmit()">
-      <div class="field">
-        <label>Nombre</label>
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
         <input
           type="text"
+          class="form-control"
           placeholder="Ash"
           [(ngModel)]="form.nombre"
           name="nombre"
@@ -37,10 +38,11 @@
         />
       </div>
 
-      <div class="field">
-        <label>Apellidos</label>
+      <div class="mb-3">
+        <label class="form-label">Apellidos</label>
         <input
           type="text"
+          class="form-control"
           placeholder="Ketchum"
           [(ngModel)]="form.apellidos"
           name="apellidos"
@@ -48,10 +50,11 @@
         />
       </div>
 
-      <div class="field">
-        <label>Correo Electrónico</label>
+      <div class="mb-3">
+        <label class="form-label">Correo Electrónico</label>
         <input
           type="email"
+          class="form-control"
           placeholder="chuchemons@email.com"
           [(ngModel)]="form.email"
           name="email"
@@ -59,10 +62,11 @@
         />
       </div>
 
-      <div class="field">
-        <label>Contraseña</label>
+      <div class="mb-3">
+        <label class="form-label">Contraseña</label>
         <input
           type="password"
+          class="form-control"
           placeholder="············"
           [(ngModel)]="form.password"
           name="password"
@@ -70,10 +74,11 @@
         />
       </div>
 
-      <div class="field">
-        <label>Repetir Contraseña</label>
+      <div class="mb-3">
+        <label class="form-label">Repetir Contraseña</label>
         <input
           type="password"
+          class="form-control"
           placeholder="············"
           [(ngModel)]="form.password_confirmation"
           name="password_confirmation"
@@ -81,7 +86,7 @@
         />
       </div>
 
-      <button class="submit-btn" type="submit" [disabled]="loading">
+      <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading">
         <span class="bolt">⚡</span>
         {{ loading ? 'Registrando...' : 'Registrarse' }}
       </button>

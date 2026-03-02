@@ -28,13 +28,14 @@
       <a class="tab" routerLink="/register">Regístrate</a>
     </div>
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
+    <div *ngIf="error" class="alert alert-danger fade-in" role="alert">{{ error }}</div>
 
     <form (ngSubmit)="onSubmit()">
-      <div class="field">
-        <label>ID</label>
+      <div class="mb-3">
+        <label class="form-label">ID</label>
         <input
           type="text"
+          class="form-control"
           placeholder="#nombre1234"
           [(ngModel)]="form.player_id"
           name="player_id"
@@ -42,10 +43,11 @@
         />
       </div>
 
-      <div class="field">
-        <label>Contraseña</label>
+      <div class="mb-3">
+        <label class="form-label">Contraseña</label>
         <input
           type="password"
+          class="form-control"
           placeholder="············"
           [(ngModel)]="form.password"
           name="password"
@@ -53,7 +55,7 @@
         />
       </div>
 
-      <button class="submit-btn" type="submit" [disabled]="loading">
+      <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading">
         <span class="bolt">⚡</span>
         {{ loading ? 'Entrando...' : 'Entrar' }}
       </button>

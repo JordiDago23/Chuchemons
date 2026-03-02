@@ -16,6 +16,7 @@
 
 .card {
   background: #ffffff;
+  border: none !important;
   border-radius: 20px;
   padding: 2.5rem 2rem;
   width: 100%;
@@ -83,35 +84,31 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
 
-/* Fields */
-.field {
-  width: 100%;
-  margin-bottom: 1rem;
+/* Bootstrap form-control override */
+.card .form-control {
+  background: #f3f4f6 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 0.7rem 0.9rem !important;
+  font-size: 0.95rem !important;
+  color: #1a1a1a !important;
+  box-shadow: none !important;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
-.field label {
+.card .form-control:focus {
+  background: #e9eaf0 !important;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.25) !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.card .form-label {
   display: block;
-  font-size: 0.8rem;
-  color: #555;
-  margin-bottom: 0.35rem;
-  font-weight: 500;
-}
-
-.field input {
-  width: 100%;
-  padding: 0.7rem 0.9rem;
-  border: none;
-  border-radius: 8px;
-  background: #f3f4f6;
-  font-size: 0.95rem;
-  color: #1a1a1a;
-  box-sizing: border-box;
-  outline: none;
-  transition: background 0.2s;
-}
-
-.field input:focus {
-  background: #e9eaf0;
+  font-size: 0.8rem !important;
+  color: #555 !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.35rem !important;
 }
 
 form {
@@ -119,46 +116,56 @@ form {
 }
 
 /* Submit button */
-.submit-btn {
-  width: 100%;
-  padding: 0.8rem;
-  background: linear-gradient(90deg, #e63946, #c0392b);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
+.card .submit-btn {
+  background: linear-gradient(90deg, #e63946, #c0392b) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  padding: 0.8rem !important;
   margin-top: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s !important;
+  box-shadow: none !important;
 }
 
-.submit-btn:disabled {
-  opacity: 0.6;
+.card .submit-btn:disabled {
+  opacity: 0.6 !important;
   cursor: not-allowed;
 }
 
-.submit-btn:hover:not(:disabled) {
-  opacity: 0.9;
+.card .submit-btn:hover:not(:disabled) {
+  opacity: 0.9 !important;
+  background: linear-gradient(90deg, #e63946, #c0392b) !important;
+}
+
+.card .submit-btn:active,
+.card .submit-btn:focus {
+  background: linear-gradient(90deg, #e63946, #c0392b) !important;
+  box-shadow: none !important;
 }
 
 .bolt {
   font-size: 1rem;
 }
 
-/* Error */
-.error-msg {
-  width: 100%;
-  background: #fee2e2;
-  color: #b91c1c;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
+/* Alert animation */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert.fade-in {
+  animation: fadeInDown 0.3s ease forwards;
 }
 
 /* Forgot */
