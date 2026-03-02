@@ -308,3 +308,10 @@ hr {
   border-radius: 4px;
   cursor: pointer;
 }
+
+.field-error {
+  display: block;
+  font-size: 0.75rem;
+  color: #e63946;
+  margin-top: 0.25rem;
+}

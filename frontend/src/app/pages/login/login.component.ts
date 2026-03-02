@@ -1,34 +1,39 @@
 ﻿import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  form = { player_id: '', password: '' };
+  form: FormGroup;
   error = '';
   loading = false;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    this.form = this.fb.group({
+      player_id: ['', [Validators.required]],
+      password:  ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
+
+  get playerId() { return this.form.get('player_id')!; }
+  get password() { return this.form.get('password')!; }
 
   onSubmit() {
     this.error = '';
-
-    if (!this.form.player_id || !this.form.password) {
-      this.error = 'Por favor completa todos los campos';
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
-
     this.loading = true;
-
-    this.auth.login(this.form).subscribe({
+    this.auth.login(this.form.value).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/home']);

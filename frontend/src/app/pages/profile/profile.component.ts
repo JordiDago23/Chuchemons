@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -16,7 +16,7 @@ export class ProfileComponent implements OnInit {
   activeTab: 'info' | 'stats' | 'logros' = 'info';
   editMode = false;
 
-  form: any = { nombre: '', apellidos: '', email: '', bio: '', password: '', password_confirmation: '' };
+  editForm: FormGroup;
   error = '';
   success = '';
   loading = false;
@@ -55,13 +55,33 @@ export class ProfileComponent implements OnInit {
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
-  constructor(private auth: AuthService) {}
+  // Getters per controls del formulari
+  get nombre()    { return this.editForm.get('nombre')!; }
+  get apellidos() { return this.editForm.get('apellidos')!; }
+  get emailCtrl() { return this.editForm.get('email')!; }
+  get password()  { return this.editForm.get('password')!; }
+  get bioCtrl()   { return this.editForm.get('bio')!; }
+
+  constructor(private fb: FormBuilder, private auth: AuthService) {
+    this.editForm = this.fb.group({
+      nombre:                ['', [Validators.required]],
+      apellidos:             ['', [Validators.required]],
+      email:                 ['', [Validators.required, Validators.email]],
+      bio:                   [''],
+      password:              ['', [Validators.minLength(6)]],
+      password_confirmation: ['']
+    });
+  }
 
   private fillForm(u: any) {
-    this.form.nombre    = u.nombre;
-    this.form.apellidos = u.apellidos;
-    this.form.email     = u.email;
-    this.form.bio       = u.bio || '';
+    this.editForm.patchValue({
+      nombre:    u.nombre,
+      apellidos: u.apellidos,
+      email:     u.email,
+      bio:       u.bio || '',
+      password:  '',
+      password_confirmation: ''
+    });
   }
 
   ngOnInit() {
@@ -82,11 +102,16 @@ export class ProfileComponent implements OnInit {
   onUpdate() {
     this.error = '';
     this.success = '';
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
     this.loading = true;
-    const data: any = { nombre: this.form.nombre, apellidos: this.form.apellidos, email: this.form.email, bio: this.form.bio };
-    if (this.form.password) {
-      data.password = this.form.password;
-      data.password_confirmation = this.form.password_confirmation;
+    const v = this.editForm.value;
+    const data: any = { nombre: v.nombre, apellidos: v.apellidos, email: v.email, bio: v.bio };
+    if (v.password) {
+      data.password = v.password;
+      data.password_confirmation = v.password_confirmation;
     }
     this.auth.updateProfile(data).subscribe({
       next: (u: any) => {
@@ -94,8 +119,7 @@ export class ProfileComponent implements OnInit {
         this.success = 'Perfil actualizado correctamente';
         this.user = u.user || this.user;
         this.editMode = false;
-        this.form.password = '';
-        this.form.password_confirmation = '';
+        this.editForm.patchValue({ password: '', password_confirmation: '' });
       },
       error: (err: any) => {
         this.loading = false;
