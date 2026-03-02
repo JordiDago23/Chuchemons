@@ -28,18 +28,23 @@
       <a class="tab" routerLink="/register">Regístrate</a>
     </div>
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
+    @if (error) {
+      <div class="error-msg">{{ error }}</div>
+    }
 
-    <form (ngSubmit)="onSubmit()">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="field">
         <label>ID</label>
         <input
           type="text"
           placeholder="#nombre1234"
-          [(ngModel)]="form.player_id"
-          name="player_id"
-          required
+          formControlName="player_id"
         />
+        @if (playerId.invalid && playerId.touched) {
+          @if (playerId.errors?.['required']) {
+            <span class="field-error">El ID es obligatorio</span>
+          }
+        }
       </div>
 
       <div class="field">
@@ -47,10 +52,16 @@
         <input
           type="password"
           placeholder="············"
-          [(ngModel)]="form.password"
-          name="password"
-          required
+          formControlName="password"
         />
+        @if (password.invalid && password.touched) {
+          @if (password.errors?.['required']) {
+            <span class="field-error">La contraseña es obligatoria</span>
+          }
+          @if (password.errors?.['minlength']) {
+            <span class="field-error">Mínimo 6 caracteres</span>
+          }
+        }
       </div>
 
       <button class="submit-btn" type="submit" [disabled]="loading">

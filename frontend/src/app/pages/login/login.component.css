@@ -178,3 +178,10 @@ form {
 .recover-link:hover {
   text-decoration: underline;
 }
+
+.field-error {
+  display: block;
+  font-size: 0.75rem;
+  color: #e63946;
+  margin-top: 0.25rem;
+}

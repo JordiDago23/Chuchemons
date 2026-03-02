@@ -22,63 +22,75 @@
       <button class="tab active" type="button">Regístrate</button>
     </div>
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
-    <div *ngIf="passwordMismatch" class="error-msg">Las contraseñas no coinciden.</div>
+    @if (registeredId) {
+      <div class="id-confirm">
+        <div class="id-confirm-icon">✔️</div>
+        <p class="id-confirm-title">Compte creat!</p>
+        <p class="id-confirm-sub">El teu ID és:</p>
+        <div class="id-confirm-id">{{ registeredId }}</div>
+        <p class="id-confirm-hint">📌 Guarda'l! L'hauràs d'usar per iniciar sessió.</p>
+        <button class="submit-btn" (click)="router.navigate(['/home'])">Continuar ➡</button>
+      </div>
+    }
 
-    <form (ngSubmit)="onSubmit()">
+    @if (error) {
+      <div class="error-msg">{{ error }}</div>
+    }
+
+    @if (!registeredId) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="field">
         <label>Nombre</label>
-        <input
-          type="text"
-          placeholder="Ash"
-          [(ngModel)]="form.nombre"
-          name="nombre"
-          required
-        />
+        <input type="text" placeholder="Ash" formControlName="nombre" />
+        @if (nombre.invalid && nombre.touched) {
+          @if (nombre.errors?.['required']) {
+            <span class="field-error">El nombre es obligatorio</span>
+          }
+        }
       </div>
 
       <div class="field">
         <label>Apellidos</label>
-        <input
-          type="text"
-          placeholder="Ketchum"
-          [(ngModel)]="form.apellidos"
-          name="apellidos"
-          required
-        />
+        <input type="text" placeholder="Ketchum" formControlName="apellidos" />
+        @if (apellidos.invalid && apellidos.touched) {
+          @if (apellidos.errors?.['required']) {
+            <span class="field-error">Los apellidos son obligatorios</span>
+          }
+        }
       </div>
 
       <div class="field">
         <label>Correo Electrónico</label>
-        <input
-          type="email"
-          placeholder="chuchemons@email.com"
-          [(ngModel)]="form.email"
-          name="email"
-          required
-        />
+        <input type="email" placeholder="chuchemons@email.com" formControlName="email" />
+        @if (email.invalid && email.touched) {
+          @if (email.errors?.['required']) {
+            <span class="field-error">El email es obligatorio</span>
+          }
+          @if (email.errors?.['email']) {
+            <span class="field-error">Introduce un email válido</span>
+          }
+        }
       </div>
 
       <div class="field">
         <label>Contraseña</label>
-        <input
-          type="password"
-          placeholder="············"
-          [(ngModel)]="form.password"
-          name="password"
-          required
-        />
+        <input type="password" placeholder="············" formControlName="password" />
+        @if (password.invalid && password.touched) {
+          @if (password.errors?.['required']) {
+            <span class="field-error">La contraseña es obligatoria</span>
+          }
+          @if (password.errors?.['minlength']) {
+            <span class="field-error">Mínimo 6 caracteres</span>
+          }
+        }
       </div>
 
       <div class="field">
         <label>Repetir Contraseña</label>
-        <input
-          type="password"
-          placeholder="············"
-          [(ngModel)]="form.password_confirmation"
-          name="password_confirmation"
-          required
-        />
+        <input type="password" placeholder="············" formControlName="password_confirmation" />
+        @if (passwordConfirmation.touched && form.errors?.['passwordMatch']) {
+          <span class="field-error">Las contraseñas no coinciden</span>
+        }
       </div>
 
       <button class="submit-btn" type="submit" [disabled]="loading">
@@ -86,6 +98,7 @@
         {{ loading ? 'Registrando...' : 'Registrarse' }}
       </button>
     </form>
+    } <!-- end @if (!registeredId) -->
 
   </div>
 </div>
