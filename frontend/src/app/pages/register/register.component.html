@@ -29,19 +29,19 @@
         <p class="id-confirm-sub">El teu ID és:</p>
         <div class="id-confirm-id">{{ registeredId }}</div>
         <p class="id-confirm-hint">📌 Guarda'l! L'hauràs d'usar per iniciar sessió.</p>
-        <button class="submit-btn" (click)="router.navigate(['/home'])">Continuar ➡</button>
+        <button class="btn btn-danger w-100 submit-btn" (click)="router.navigate(['/home'])">Continuar ➡</button>
       </div>
     }
 
     @if (error) {
-      <div class="error-msg">{{ error }}</div>
+      <div class="alert alert-danger fade-in" role="alert">{{ error }}</div>
     }
 
     @if (!registeredId) {
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="field">
-        <label>Nombre</label>
-        <input type="text" placeholder="Ash" formControlName="nombre" />
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-control" placeholder="Ash" formControlName="nombre" />
         @if (nombre.invalid && nombre.touched) {
           @if (nombre.errors?.['required']) {
             <span class="field-error">El nombre es obligatorio</span>
@@ -49,9 +49,9 @@
         }
       </div>
 
-      <div class="field">
-        <label>Apellidos</label>
-        <input type="text" placeholder="Ketchum" formControlName="apellidos" />
+      <div class="mb-3">
+        <label class="form-label">Apellidos</label>
+        <input type="text" class="form-control" placeholder="Ketchum" formControlName="apellidos" />
         @if (apellidos.invalid && apellidos.touched) {
           @if (apellidos.errors?.['required']) {
             <span class="field-error">Los apellidos son obligatorios</span>
@@ -59,9 +59,9 @@
         }
       </div>
 
-      <div class="field">
-        <label>Correo Electrónico</label>
-        <input type="email" placeholder="chuchemons@email.com" formControlName="email" />
+      <div class="mb-3">
+        <label class="form-label">Correo Electrónico</label>
+        <input type="email" class="form-control" placeholder="chuchemons@email.com" formControlName="email" />
         @if (email.invalid && email.touched) {
           @if (email.errors?.['required']) {
             <span class="field-error">El email es obligatorio</span>
@@ -72,9 +72,9 @@
         }
       </div>
 
-      <div class="field">
-        <label>Contraseña</label>
-        <input type="password" placeholder="············" formControlName="password" />
+      <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-control" placeholder="············" formControlName="password" />
         @if (password.invalid && password.touched) {
           @if (password.errors?.['required']) {
             <span class="field-error">La contraseña es obligatoria</span>
@@ -85,9 +85,9 @@
         }
       </div>
 
-      <div class="field">
-        <label>Repetir Contraseña</label>
-        <input type="password" placeholder="············" formControlName="password_confirmation" />
+      <div class="mb-3">
+        <label class="form-label">Repetir Contraseña</label>
+        <input type="password" class="form-control" placeholder="············" formControlName="password_confirmation" />
         @if (passwordConfirmation.touched && form.errors?.['passwordMatch']) {
           <span class="field-error">Las contraseñas no coinciden</span>
         }
