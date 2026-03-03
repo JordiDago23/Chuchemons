@@ -1,104 +1,186 @@
 <div class="page">
-  <div class="card">
+  <main class="card" aria-labelledby="register-title">
 
-    <!-- Pokéball logo -->
-    <div class="pokeball">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="48" fill="white" stroke="#1a1a1a" stroke-width="4"/>
-        <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#e63946"/>
-        <rect x="2" y="46" width="96" height="8" fill="#1a1a1a"/>
-        <circle cx="50" cy="50" r="14" fill="#1a1a1a"/>
-        <circle cx="50" cy="50" r="9" fill="white"/>
-        <circle cx="50" cy="50" r="5" fill="#f0f0f0"/>
-      </svg>
-    </div>
+    <!-- Pokéball logo (decorativa) -->
+    <header class="register-header">
+      <div class="pokeball" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="#1a1a1a" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#e63946"/>
+          <rect x="2" y="46" width="96" height="8" fill="#1a1a1a"/>
+          <circle cx="50" cy="50" r="14" fill="#1a1a1a"/>
+          <circle cx="50" cy="50" r="9" fill="white"/>
+          <circle cx="50" cy="50" r="5" fill="#f0f0f0"/>
+        </svg>
+      </div>
 
-    <h1 class="title">Chuchemons</h1>
-    <p class="subtitle">Comienza tu nueva aventura</p>
+      <h1 id="register-title" class="title">Chuchemons</h1>
+      <p class="subtitle">Comienza tu nueva aventura</p>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <a class="tab" routerLink="/login">Iniciar Sesión</a>
-      <button class="tab active" type="button">Regístrate</button>
-    </div>
+      <!-- Tabs de navegació -->
+      <nav class="tabs" aria-label="Autenticació">
+        <a class="tab" routerLink="/login">Iniciar Sesión</a>
+        <button class="tab active" type="button" aria-current="page">Regístrate</button>
+      </nav>
+    </header>
 
+    <!-- Confirmació de registre -->
     @if (registeredId) {
-      <div class="id-confirm">
-        <div class="id-confirm-icon">✔️</div>
+      <section class="id-confirm" aria-live="polite" aria-label="Compte creat correctament">
+        <div class="id-confirm-icon" aria-hidden="true">✔️</div>
         <p class="id-confirm-title">Compte creat!</p>
         <p class="id-confirm-sub">El teu ID és:</p>
         <div class="id-confirm-id">{{ registeredId }}</div>
-        <p class="id-confirm-hint">📌 Guarda'l! L'hauràs d'usar per iniciar sessió.</p>
-        <button class="btn btn-danger w-100 submit-btn" (click)="router.navigate(['/home'])">Continuar ➡</button>
-      </div>
+        <p class="id-confirm-hint"><span aria-hidden="true">📌</span> Guarda'l! L'hauràs d'usar per iniciar sessió.</p>
+        <button class="btn btn-danger w-100 submit-btn" (click)="router.navigate(['/home'])">
+          Continuar <span aria-hidden="true">➡</span>
+        </button>
+      </section>
     }
 
-    @if (error) {
-      <div class="alert alert-danger fade-in" role="alert">{{ error }}</div>
-    }
+    <!-- Error general -->
+    <div aria-live="polite" aria-atomic="true">
+      @if (error) {
+        <div class="alert alert-danger fade-in" role="alert">{{ error }}</div>
+      }
+    </div>
 
     @if (!registeredId) {
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input type="text" class="form-control" placeholder="Ash" formControlName="nombre" />
-        @if (nombre.invalid && nombre.touched) {
-          @if (nombre.errors?.['required']) {
-            <span class="field-error">El nombre es obligatorio</span>
-          }
-        }
-      </div>
+    <section aria-label="Formulari de registre">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
-      <div class="mb-3">
-        <label class="form-label">Apellidos</label>
-        <input type="text" class="form-control" placeholder="Ketchum" formControlName="apellidos" />
-        @if (apellidos.invalid && apellidos.touched) {
-          @if (apellidos.errors?.['required']) {
-            <span class="field-error">Los apellidos son obligatorios</span>
-          }
-        }
-      </div>
+        <div class="mb-3">
+          <label for="reg-nombre" class="form-label">Nombre</label>
+          <input
+            id="reg-nombre"
+            type="text"
+            class="form-control"
+            placeholder="Ash"
+            formControlName="nombre"
+            autocomplete="given-name"
+            [attr.aria-invalid]="nombre.invalid && nombre.touched ? 'true' : null"
+            aria-describedby="reg-nombre-error"
+          />
+          <div id="reg-nombre-error" aria-live="polite" aria-atomic="true">
+            @if (nombre.invalid && nombre.touched) {
+              @if (nombre.errors?.['required']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> El nombre es obligatorio
+                </span>
+              }
+            }
+          </div>
+        </div>
 
-      <div class="mb-3">
-        <label class="form-label">Correo Electrónico</label>
-        <input type="email" class="form-control" placeholder="chuchemons@email.com" formControlName="email" />
-        @if (email.invalid && email.touched) {
-          @if (email.errors?.['required']) {
-            <span class="field-error">El email es obligatorio</span>
-          }
-          @if (email.errors?.['email']) {
-            <span class="field-error">Introduce un email válido</span>
-          }
-        }
-      </div>
+        <div class="mb-3">
+          <label for="reg-apellidos" class="form-label">Apellidos</label>
+          <input
+            id="reg-apellidos"
+            type="text"
+            class="form-control"
+            placeholder="Ketchum"
+            formControlName="apellidos"
+            autocomplete="family-name"
+            [attr.aria-invalid]="apellidos.invalid && apellidos.touched ? 'true' : null"
+            aria-describedby="reg-apellidos-error"
+          />
+          <div id="reg-apellidos-error" aria-live="polite" aria-atomic="true">
+            @if (apellidos.invalid && apellidos.touched) {
+              @if (apellidos.errors?.['required']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> Los apellidos son obligatorios
+                </span>
+              }
+            }
+          </div>
+        </div>
 
-      <div class="mb-3">
-        <label class="form-label">Contraseña</label>
-        <input type="password" class="form-control" placeholder="············" formControlName="password" />
-        @if (password.invalid && password.touched) {
-          @if (password.errors?.['required']) {
-            <span class="field-error">La contraseña es obligatoria</span>
-          }
-          @if (password.errors?.['minlength']) {
-            <span class="field-error">Mínimo 6 caracteres</span>
-          }
-        }
-      </div>
+        <div class="mb-3">
+          <label for="reg-email" class="form-label">Correo Electrónico</label>
+          <input
+            id="reg-email"
+            type="email"
+            class="form-control"
+            placeholder="chuchemons@email.com"
+            formControlName="email"
+            autocomplete="email"
+            [attr.aria-invalid]="email.invalid && email.touched ? 'true' : null"
+            aria-describedby="reg-email-error"
+          />
+          <div id="reg-email-error" aria-live="polite" aria-atomic="true">
+            @if (email.invalid && email.touched) {
+              @if (email.errors?.['required']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> El email es obligatorio
+                </span>
+              }
+              @if (email.errors?.['email']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> Introduce un email válido
+                </span>
+              }
+            }
+          </div>
+        </div>
 
-      <div class="mb-3">
-        <label class="form-label">Repetir Contraseña</label>
-        <input type="password" class="form-control" placeholder="············" formControlName="password_confirmation" />
-        @if (passwordConfirmation.touched && form.errors?.['passwordMatch']) {
-          <span class="field-error">Las contraseñas no coinciden</span>
-        }
-      </div>
+        <div class="mb-3">
+          <label for="reg-password" class="form-label">Contraseña</label>
+          <input
+            id="reg-password"
+            type="password"
+            class="form-control"
+            placeholder="············"
+            formControlName="password"
+            autocomplete="new-password"
+            [attr.aria-invalid]="password.invalid && password.touched ? 'true' : null"
+            aria-describedby="reg-password-error"
+          />
+          <div id="reg-password-error" aria-live="polite" aria-atomic="true">
+            @if (password.invalid && password.touched) {
+              @if (password.errors?.['required']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> La contraseña es obligatoria
+                </span>
+              }
+              @if (password.errors?.['minlength']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> Mínimo 6 caracteres
+                </span>
+              }
+            }
+          </div>
+        </div>
 
-      <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading">
-        <span class="bolt">⚡</span>
-        {{ loading ? 'Registrando...' : 'Registrarse' }}
-      </button>
-    </form>
+        <div class="mb-3">
+          <label for="reg-password-confirm" class="form-label">Repetir Contraseña</label>
+          <input
+            id="reg-password-confirm"
+            type="password"
+            class="form-control"
+            placeholder="············"
+            formControlName="password_confirmation"
+            autocomplete="new-password"
+            [attr.aria-invalid]="passwordConfirmation.touched && form.errors?.['passwordMatch'] ? 'true' : null"
+            aria-describedby="reg-password-confirm-error"
+          />
+          <div id="reg-password-confirm-error" aria-live="polite" aria-atomic="true">
+            @if (passwordConfirmation.touched && form.errors?.['passwordMatch']) {
+              <span class="field-error">
+                <span aria-hidden="true">✗</span> Las contraseñas no coinciden
+              </span>
+            }
+          </div>
+        </div>
+
+        <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading"
+                [attr.aria-busy]="loading ? 'true' : null">
+          <span class="bolt" aria-hidden="true">⚡</span>
+          {{ loading ? 'Registrando...' : 'Registrarse' }}
+        </button>
+
+      </form>
+    </section>
     } <!-- end @if (!registeredId) -->
 
-  </div>
+  </main>
 </div>

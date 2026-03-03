@@ -1,81 +1,108 @@
 <div class="page">
-  <div class="card">
+  <main class="card" aria-labelledby="login-title">
 
-    <!-- Pokéball logo -->
-    <div class="pokeball">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="48" fill="white" stroke="#1a1a1a" stroke-width="4"/>
-        <!-- Top half red -->
-        <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#e63946"/>
-        <!-- Middle band -->
-        <rect x="2" y="46" width="96" height="8" fill="#1a1a1a"/>
-        <!-- Center button outer -->
-        <circle cx="50" cy="50" r="14" fill="#1a1a1a"/>
-        <!-- Center button inner -->
-        <circle cx="50" cy="50" r="9" fill="white"/>
-        <!-- Center button shine -->
-        <circle cx="50" cy="50" r="5" fill="#f0f0f0"/>
-      </svg>
-    </div>
-
-    <h1 class="title">Chuchemons</h1>
-
-    <p class="subtitle">Comienza tu nueva aventura</p>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" type="button">Iniciar Sesión</button>
-      <a class="tab" routerLink="/register">Regístrate</a>
-    </div>
-
-    @if (error) {
-      <div class="error-msg">{{ error }}</div>
-    }
-
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="field">
-        <label>ID</label>
-        <input
-          type="text"
-          class="form-control"
-          placeholder="#nombre1234"
-          formControlName="player_id"
-        />
-        @if (playerId.invalid && playerId.touched) {
-          @if (playerId.errors?.['required']) {
-            <span class="field-error">El ID es obligatorio</span>
-          }
-        }
+    <!-- Pokéball logo (decorativa) -->
+    <header class="login-header">
+      <div class="pokeball" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="#1a1a1a" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#e63946"/>
+          <rect x="2" y="46" width="96" height="8" fill="#1a1a1a"/>
+          <circle cx="50" cy="50" r="14" fill="#1a1a1a"/>
+          <circle cx="50" cy="50" r="9" fill="white"/>
+          <circle cx="50" cy="50" r="5" fill="#f0f0f0"/>
+        </svg>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Contraseña</label>
-        <input
-          type="password"
-          class="form-control"
-          placeholder="············"
-          formControlName="password"
-        />
-        @if (password.invalid && password.touched) {
-          @if (password.errors?.['required']) {
-            <span class="field-error">La contraseña es obligatoria</span>
-          }
-          @if (password.errors?.['minlength']) {
-            <span class="field-error">Mínimo 6 caracteres</span>
-          }
-        }
-      </div>
+      <h1 id="login-title" class="title">Chuchemons</h1>
+      <p class="subtitle">Comienza tu nueva aventura</p>
 
-      <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading">
-        <span class="bolt">⚡</span>
-        {{ loading ? 'Entrando...' : 'Entrar' }}
-      </button>
-    </form>
+      <!-- Tabs de navegació -->
+      <nav class="tabs" aria-label="Autenticació">
+        <button class="tab active" type="button" aria-current="page">Iniciar Sesión</button>
+        <a class="tab" routerLink="/register">Regístrate</a>
+      </nav>
+    </header>
 
-    <p class="forgot">
-      ¿Has olvidado la contraseña?
-      <a routerLink="/recover" class="recover-link">Recuperar</a>
-    </p>
+    <!-- Error general (aria-live per actualitzacions dinàmiques) -->
+    <div aria-live="polite" aria-atomic="true">
+      @if (error) {
+        <div class="error-msg" role="alert">
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          {{ error }}
+        </div>
+      }
+    </div>
 
-  </div>
+    <section aria-label="Formulari d'inici de sessió">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+        <div class="field">
+          <label for="player-id" class="form-label">ID de jugador</label>
+          <input
+            id="player-id"
+            type="text"
+            class="form-control"
+            placeholder="#nombre1234"
+            formControlName="player_id"
+            autocomplete="username"
+            [attr.aria-invalid]="playerId.invalid && playerId.touched ? 'true' : null"
+            aria-describedby="player-id-error"
+          />
+          <div id="player-id-error" aria-live="polite" aria-atomic="true">
+            @if (playerId.invalid && playerId.touched) {
+              @if (playerId.errors?.['required']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> El ID es obligatorio
+                </span>
+              }
+            }
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="login-password" class="form-label">Contraseña</label>
+          <input
+            id="login-password"
+            type="password"
+            class="form-control"
+            placeholder="············"
+            formControlName="password"
+            autocomplete="current-password"
+            [attr.aria-invalid]="password.invalid && password.touched ? 'true' : null"
+            aria-describedby="login-password-error"
+          />
+          <div id="login-password-error" aria-live="polite" aria-atomic="true">
+            @if (password.invalid && password.touched) {
+              @if (password.errors?.['required']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> La contraseña es obligatoria
+                </span>
+              }
+              @if (password.errors?.['minlength']) {
+                <span class="field-error">
+                  <span aria-hidden="true">✗</span> Mínimo 6 caracteres
+                </span>
+              }
+            }
+          </div>
+        </div>
+
+        <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading"
+                [attr.aria-busy]="loading ? 'true' : null">
+          <span class="bolt" aria-hidden="true">⚡</span>
+          {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+        </button>
+
+      </form>
+    </section>
+
+    <footer class="card-footer">
+      <p class="forgot">
+        ¿Has olvidado la contraseña?
+        <a routerLink="/recover" class="recover-link">Recuperar contraseña</a>
+      </p>
+    </footer>
+
+  </main>
 </div>

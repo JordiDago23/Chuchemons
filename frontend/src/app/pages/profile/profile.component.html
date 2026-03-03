@@ -39,10 +39,10 @@
   <main class="main">
 
     <!-- PAGE TITLE -->
-    <div class="page-title">
-      <h1>Mi Perfil</h1>
+    <header class="page-title">
+      <h1 id="profile-title">Mi Perfil</h1>
       <p>Gestiona tu información personal y estadísticas</p>
-    </div>
+    </header>
 
     <!-- PROFILE BANNER -->
     @if (user) {
@@ -79,12 +79,14 @@
     </div>
 
     <!-- ALERTS -->
-    @if (success) {
-      <div class="alert-success">{{ success }}</div>
-    }
-    @if (error) {
-      <div class="alert-error">{{ error }}</div>
-    }
+    <div aria-live="polite" aria-atomic="true">
+      @if (success) {
+        <div class="alert-success" role="status">{{ success }}</div>
+      }
+      @if (error) {
+        <div class="alert-error" role="alert">{{ error }}</div>
+      }
+    </div>
 
     <!-- TAB: INFORMACIÓN -->
     @if (activeTab === 'info') {
@@ -113,53 +115,105 @@
           }
 
           @if (editMode) {
-            <form [formGroup]="editForm" (ngSubmit)="onUpdate()">
+            <form [formGroup]="editForm" (ngSubmit)="onUpdate()" novalidate aria-labelledby="profile-title">
               <div class="info-field">
-                <label>Nombre</label>
-                <input type="text" formControlName="nombre" class="input" />
-                @if (nombre.invalid && nombre.touched) {
-                  @if (nombre.errors?.['required']) {
-                    <span class="field-error">El nombre es obligatorio</span>
+                <label for="profile-nombre" class="info-label">Nombre</label>
+                <input
+                  id="profile-nombre"
+                  type="text"
+                  formControlName="nombre"
+                  class="input"
+                  autocomplete="given-name"
+                  [attr.aria-invalid]="nombre.invalid && nombre.touched ? 'true' : null"
+                  aria-describedby="profile-nombre-error"
+                />
+                <div id="profile-nombre-error" aria-live="polite" aria-atomic="true">
+                  @if (nombre.invalid && nombre.touched) {
+                    @if (nombre.errors?.['required']) {
+                      <span class="field-error"><span aria-hidden="true">✗</span> El nombre es obligatorio</span>
+                    }
                   }
-                }
+                </div>
               </div>
               <div class="info-field">
-                <label>Apellidos</label>
-                <input type="text" formControlName="apellidos" class="input" />
-                @if (apellidos.invalid && apellidos.touched) {
-                  @if (apellidos.errors?.['required']) {
-                    <span class="field-error">Los apellidos son obligatorios</span>
+                <label for="profile-apellidos" class="info-label">Apellidos</label>
+                <input
+                  id="profile-apellidos"
+                  type="text"
+                  formControlName="apellidos"
+                  class="input"
+                  autocomplete="family-name"
+                  [attr.aria-invalid]="apellidos.invalid && apellidos.touched ? 'true' : null"
+                  aria-describedby="profile-apellidos-error"
+                />
+                <div id="profile-apellidos-error" aria-live="polite" aria-atomic="true">
+                  @if (apellidos.invalid && apellidos.touched) {
+                    @if (apellidos.errors?.['required']) {
+                      <span class="field-error"><span aria-hidden="true">✗</span> Los apellidos son obligatorios</span>
+                    }
                   }
-                }
+                </div>
               </div>
               <div class="info-field">
-                <label>Email</label>
-                <input type="email" formControlName="email" class="input" />
-                @if (emailCtrl.invalid && emailCtrl.touched) {
-                  @if (emailCtrl.errors?.['required']) {
-                    <span class="field-error">El email es obligatorio</span>
+                <label for="profile-email" class="info-label">Email</label>
+                <input
+                  id="profile-email"
+                  type="email"
+                  formControlName="email"
+                  class="input"
+                  autocomplete="email"
+                  [attr.aria-invalid]="emailCtrl.invalid && emailCtrl.touched ? 'true' : null"
+                  aria-describedby="profile-email-error"
+                />
+                <div id="profile-email-error" aria-live="polite" aria-atomic="true">
+                  @if (emailCtrl.invalid && emailCtrl.touched) {
+                    @if (emailCtrl.errors?.['required']) {
+                      <span class="field-error"><span aria-hidden="true">✗</span> El email es obligatorio</span>
+                    }
+                    @if (emailCtrl.errors?.['email']) {
+                      <span class="field-error"><span aria-hidden="true">✗</span> Introduce un email válido</span>
+                    }
                   }
-                  @if (emailCtrl.errors?.['email']) {
-                    <span class="field-error">Introduce un email válido</span>
-                  }
-                }
+                </div>
               </div>
               <div class="info-field">
-                <label>Biografia</label>
-                <textarea formControlName="bio" class="input textarea" rows="3" placeholder="Cuéntanos algo sobre ti..."></textarea>
+                <label for="profile-bio" class="info-label">Biografia</label>
+                <textarea
+                  id="profile-bio"
+                  formControlName="bio"
+                  class="input textarea"
+                  rows="3"
+                  placeholder="Cuéntanos algo sobre ti..."
+                ></textarea>
               </div>
               <div class="info-field">
-                <label>Nueva contraseña (vacío = sin cambio)</label>
-                <input type="password" formControlName="password" class="input" />
-                @if (password.invalid && password.touched) {
-                  @if (password.errors?.['minlength']) {
-                    <span class="field-error">Mínimo 6 caracteres</span>
+                <label for="profile-password" class="info-label">Nueva contraseña (vacío = sin cambio)</label>
+                <input
+                  id="profile-password"
+                  type="password"
+                  formControlName="password"
+                  class="input"
+                  autocomplete="new-password"
+                  [attr.aria-invalid]="password.invalid && password.touched ? 'true' : null"
+                  aria-describedby="profile-password-error"
+                />
+                <div id="profile-password-error" aria-live="polite" aria-atomic="true">
+                  @if (password.invalid && password.touched) {
+                    @if (password.errors?.['minlength']) {
+                      <span class="field-error"><span aria-hidden="true">✗</span> Mínimo 6 caracteres</span>
+                    }
                   }
-                }
+                </div>
               </div>
               <div class="info-field">
-                <label>Repetir contraseña</label>
-                <input type="password" formControlName="password_confirmation" class="input" />
+                <label for="profile-password-confirm" class="info-label">Repetir contraseña</label>
+                <input
+                  id="profile-password-confirm"
+                  type="password"
+                  formControlName="password_confirmation"
+                  class="input"
+                  autocomplete="new-password"
+                />
               </div>
               <div class="form-actions">
                 <button type="button" class="btn-cancel" (click)="editMode = false">Cancelar</button>

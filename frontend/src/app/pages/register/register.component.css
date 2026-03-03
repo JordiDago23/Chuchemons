@@ -88,7 +88,7 @@
   border: none !important;
   border-radius: 8px !important;
   padding: 0.7rem 0.9rem !important;
-  font-size: 0.95rem !important;
+  font-size: 1rem !important;
   color: #1a1a1a !important;
   box-shadow: none !important;
   transition: background 0.2s, box-shadow 0.2s;
@@ -98,14 +98,15 @@
   background: #e9eaf0 !important;
   box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.25) !important;
   border: none !important;
-  outline: none !important;
+  outline: 2px solid #e63946 !important;
+  outline-offset: 2px !important;
 }
 
 .card .form-label {
   display: block;
-  font-size: 0.8rem !important;
-  color: #555 !important;
-  font-weight: 500 !important;
+  font-size: 1rem !important;
+  color: #333 !important;
+  font-weight: 600 !important;
   margin-bottom: 0.35rem !important;
 }
 
@@ -210,9 +211,26 @@ form {
 
 .field-error {
   display: block;
-  font-size: 0.75rem;
-  color: #e63946;
-  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #c0392b;
+  margin-top: 0.4rem;
+  font-weight: 500;
+}
+
+/* Focus visible for interactive elements */
+.tab:focus-visible,
+.submit-btn:focus-visible {
+  outline: 3px solid #e63946 !important;
+  outline-offset: 3px !important;
+  box-shadow: none !important;
+}
+
+/* Register header */
+.register-header {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .id-preview {
