@@ -21,5 +21,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'mochila',
+    loadComponent: () => import('./pages/mochila/mochila.component').then(m => m.MochilaComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: 'login' }
 ];

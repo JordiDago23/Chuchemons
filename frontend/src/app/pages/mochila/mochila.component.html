@@ -1,0 +1,213 @@
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-pokeball">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
+          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
+        </svg>
+      </div>
+      <span class="brand-name">Xuxemons</span>
+      <span class="brand-sub">Captúralos a todos</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
+      <a class="nav-item" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
+      <a class="nav-item active" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
+      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
+      <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
+      <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
+      <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <ng-container *ngIf="user">
+        <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+        <div class="footer-info">
+          <span class="footer-name">{{ user.player_id }}</span>
+          <span class="footer-sub">{{ user.email }}</span>
+        </div>
+      </ng-container>
+      <button class="salir-btn" (click)="logout()">
+        <span>↪</span> Salir
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ═════════════════════════════════════════════════════════════════ -->
+  <main class="main" *ngIf="!loading">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <h1>Mochila</h1>
+      <p class="page-sub">Tu inventario d'objectes i vacunes</p>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Total Xuxes</span>
+          <span class="stat-icon candy">🍬</span>
+        </div>
+        <div class="stat-value">{{ totalXuxQuantity }}</div>
+        <div class="stat-desc">{{ xuxTypeCount }} tipos diferentes</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Total Vacunas</span>
+          <span class="stat-icon vaccine">💉</span>
+        </div>
+        <div class="stat-value">{{ totalVacunaQuantity }}</div>
+        <div class="stat-desc">{{ vacunaTypeCount }} tipos diferentes</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Espacio Utilizado</span>
+          <span class="stat-icon bag">🎒</span>
+        </div>
+        <div class="stat-value">{{ usedSpaces }} / {{ MAX_SPACES }}</div>
+        <div class="stat-desc">{{ freeSpaces }} espacios libres</div>
+        <div class="space-bar-track">
+          <div class="space-bar-fill"
+               [style.width.%]="spacePercent"
+               [class.space-bar-warn]="spacePercent >= 80"
+               [class.space-bar-full]="spacePercent >= 100">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Tabs ──────────────────────────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab-btn" [class.tab-active]="activeTab === 'objetos'" (click)="setTab('objetos')">
+        🍬 Xuxes (Apilables)
+      </button>
+      <button class="tab-btn" [class.tab-active]="activeTab === 'vacunas'" (click)="setTab('vacunas')">
+        💉 Vacunas
+      </button>
+    </div>
+
+    <!-- ── OBJETOS tab ────────────────────────────────────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'objetos'">
+
+      <!-- Space info banner -->
+      <div class="space-info">
+        <span class="space-label">
+          🗂️ Las Xuxes se apilan de hasta <strong>{{ MAX_STACK }}</strong> por espacio.
+          Usas <strong>{{ totalXuxSlots }}</strong> espacio(s) para tus Xuxes.
+        </span>
+      </div>
+
+      <div class="items-grid" *ngIf="xuxItems.length > 0; else emptyXux">
+        <div class="item-card" *ngFor="let item of xuxItems">
+
+          <!-- quantity badge -->
+          <span class="qty-badge">x{{ item.quantity }}</span>
+
+          <!-- tag -->
+          <span class="item-tag" [ngClass]="'tag-' + item.tag.toLowerCase()">{{ item.tag }}</span>
+
+          <!-- image placeholder -->
+          <div class="item-img-wrap">
+            <div class="item-img-placeholder candy-img">
+              <span class="candy-emoji">🍬</span>
+            </div>
+          </div>
+
+          <div class="item-body">
+            <h3 class="item-name">{{ item.name }}</h3>
+            <p class="item-desc">{{ item.description }}</p>
+          </div>
+
+          <!-- stack breakdown -->
+          <div class="stack-info">
+            <span class="stack-label">Espacios:</span>
+            <div class="stack-slots">
+              <span class="slot-chip" *ngFor="let slotQty of xuxSlotBreakdown(item)">
+                x{{ slotQty }}
+              </span>
+            </div>
+          </div>
+
+          <button class="detail-btn">Ver Detalles</button>
+        </div>
+      </div>
+
+      <ng-template #emptyXux>
+        <div class="empty-state">
+          <span>🍬</span>
+          <p>No tienes Xuxes en la mochila.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <!-- ── VACUNAS tab ────────────────────────────────────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'vacunas'">
+
+      <div class="space-info">
+        <span class="space-label">
+          🗂️ Cada vacuna ocupa <strong>1</strong> espacio.
+          Usas <strong>{{ totalVacunaSlots }}</strong> espacio(s) para tus Vacunas.
+        </span>
+      </div>
+
+      <div class="items-grid" *ngIf="vacunaItems.length > 0; else emptyVac">
+        <div class="item-card" *ngFor="let item of vacunaItems">
+
+          <span class="qty-badge">x{{ item.quantity }}</span>
+          <span class="item-tag tag-defensa">{{ item.tag }}</span>
+
+          <div class="item-img-wrap">
+            <div class="item-img-placeholder vacuna-img">
+              <span class="candy-emoji">
+                <ng-container *ngIf="item.name === 'Xocolatina'">🍫</ng-container>
+                <ng-container *ngIf="item.name === 'Xal de fruites'">🍬</ng-container>
+                <ng-container *ngIf="item.name === 'Inxulina'">💉</ng-container>
+                <ng-container *ngIf="item.name !== 'Xocolatina' && item.name !== 'Xal de fruites' && item.name !== 'Inxulina'">💉</ng-container>
+              </span>
+            </div>
+          </div>
+
+          <div class="item-body">
+            <h3 class="item-name">{{ item.name }}</h3>
+            <p class="item-desc">{{ item.description }}</p>
+          </div>
+
+          <!-- each unit = 1 space -->
+          <div class="stack-info">
+            <span class="stack-label">Espacios:</span>
+            <span class="slot-chip" *ngFor="let idx of range(item.quantity)">
+              #{{ idx + 1 }}
+            </span>
+          </div>
+
+          <button class="detail-btn">Ver Detalles</button>
+        </div>
+      </div>
+
+      <ng-template #emptyVac>
+        <div class="empty-state">
+          <span>💉</span>
+          <p>No tienes Vacunas en la mochila.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+
+  </main>
+
+  <!-- Loading state -->
+  <main class="main" *ngIf="loading">
+    <div class="loading-state">Cargando mochila…</div>
+  </main>
+
+</div>
