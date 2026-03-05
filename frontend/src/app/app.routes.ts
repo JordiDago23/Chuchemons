@@ -12,6 +12,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'chuchedex',
+    loadComponent: () => import('./pages/Chuchedex/chuchedex.component').then(m => m.ChuchedexComponent)
+  },
+  {
     path: 'home',
     loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
     canActivate: [authGuard]

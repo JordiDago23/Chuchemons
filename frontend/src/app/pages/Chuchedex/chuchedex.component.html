@@ -1,0 +1,62 @@
+<div class="chuchedex-container">
+  <div class="header">
+    <h1>Chuchedex</h1>
+    <p class="subtitle">Enciclopedia de Chuchemons</p>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Buscar Chuchemón..." 
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()"
+      >
+    </div>
+
+    <div class="element-filter">
+      <label>Filtrar por elemento:</label>
+      <select [(ngModel)]="selectedElement" (change)="onElementChange()">
+        <option value="Todos">Todos</option>
+        <option value="Tierra">Tierra</option>
+        <option value="Aire">Aire</option>
+        <option value="Agua">Agua</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Cargando Chuchemons...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div *ngIf="!isLoading && !errorMessage" class="stats">
+    <p>Total: <strong>{{ filteredChuchemons.length }}</strong> Chuchemons</p>
+  </div>
+
+  <div class="chuchemons-grid" *ngIf="!isLoading && !errorMessage">
+    <div class="chuchemon-card" *ngFor="let chuchemon of filteredChuchemons">
+      <div class="card-image">
+        <img 
+          [src]="'http://localhost:8000/chuchemons/' + chuchemon.image" 
+          [alt]="chuchemon.name"
+          onerror="this.src='assets/placeholder.png'"
+        >
+      </div>
+      <div class="card-info">
+        <h3>{{ chuchemon.name }}</h3>
+        <div class="element-badge" [style.backgroundColor]="getElementColor(chuchemon.element)">
+          {{ chuchemon.element }}
+        </div>
+        <p class="id">#{{ chuchemon.id }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="no-results" *ngIf="!isLoading && !errorMessage && filteredChuchemons.length === 0">
+    <p>No se encontraron Chuchemons</p>
+  </div>
+</div>
