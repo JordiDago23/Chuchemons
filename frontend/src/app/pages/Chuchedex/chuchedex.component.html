@@ -1,62 +1,131 @@
-<div class="chuchedex-container">
-  <div class="header">
-    <h1>Chuchedex</h1>
-    <p class="subtitle">Enciclopedia de Chuchemons</p>
-  </div>
-
-  <div class="filters">
-    <div class="search-box">
-      <input 
-        type="text" 
-        placeholder="Buscar Chuchemón..." 
-        [(ngModel)]="searchQuery"
-        (input)="onSearchChange()"
-      >
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-pokeball">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
+          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
+        </svg>
+      </div>
+      <span class="brand-name">Xuxemons</span>
+      <span class="brand-sub">Captúralos a todos</span>
     </div>
 
-    <div class="element-filter">
-      <label>Filtrar por elemento:</label>
-      <select [(ngModel)]="selectedElement" (change)="onElementChange()">
-        <option value="Todos">Todos</option>
-        <option value="Tierra">Tierra</option>
-        <option value="Aire">Aire</option>
-        <option value="Agua">Agua</option>
-      </select>
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
+      <a class="nav-item active" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
+      <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
+      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
+      <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
+      <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
+      <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="salir-btn" (click)="logout()">
+        <span>↪</span> Salir
+      </button>
     </div>
-  </div>
+  </aside>
 
-  <div *ngIf="isLoading" class="loading">
-    <p>Cargando Chuchemons...</p>
-  </div>
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Page header -->
+    <div class="page-header">
+      <h1>Chuchedex</h1>
+      <p class="page-sub">Colección de chuchemons {{ totalCaptured }}/{{ totalChuchemons }}</p>
+    </div>
 
-  <div *ngIf="errorMessage" class="error">
-    <p>{{ errorMessage }}</p>
-  </div>
+    <!-- Barra de progreso -->
+    <div class="progress-section">
+      <div class="progress-info">
+        <span class="progress-label">Captura completada</span>
+        <span class="progress-percentage">{{ completionPercentage }}%</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" [style.width.%]="completionPercentage"></div>
+      </div>
+    </div>
 
-  <div *ngIf="!isLoading && !errorMessage" class="stats">
-    <p>Total: <strong>{{ filteredChuchemons.length }}</strong> Chuchemons</p>
-  </div>
-
-  <div class="chuchemons-grid" *ngIf="!isLoading && !errorMessage">
-    <div class="chuchemon-card" *ngFor="let chuchemon of filteredChuchemons">
-      <div class="card-image">
-        <img 
-          [src]="'http://localhost:8000/chuchemons/' + chuchemon.image" 
-          [alt]="chuchemon.name"
-          onerror="this.src='assets/placeholder.png'"
+    <!-- Filtros -->
+    <div class="filters-section">
+      <div class="search-box-wrapper">
+        <input 
+          type="text" 
+          placeholder="Buscar Chuchemón ..." 
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          class="search-input"
         >
       </div>
-      <div class="card-info">
-        <h3>{{ chuchemon.name }}</h3>
-        <div class="element-badge" [style.backgroundColor]="getElementColor(chuchemon.element)">
-          {{ chuchemon.element }}
-        </div>
-        <p class="id">#{{ chuchemon.id }}</p>
+
+      <div class="filter-select">
+        <select [(ngModel)]="selectedElement" (change)="onElementChange()" class="element-dropdown">
+          <option value="Todos">Todos los tipos</option>
+          <option value="Tierra">Tierra</option>
+          <option value="Aire">Aire</option>
+          <option value="Agua">Agua</option>
+        </select>
+      </div>
+
+      <div class="filter-select all-dropdown">
+        <select class="all-filter-dropdown">
+          <option>Todos</option>
+        </select>
       </div>
     </div>
-  </div>
 
-  <div class="no-results" *ngIf="!isLoading && !errorMessage && filteredChuchemons.length === 0">
-    <p>No se encontraron Chuchemons</p>
-  </div>
+    <div *ngIf="isLoading" class="loading">
+      <p>Cargando Chuchemons...</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="error">
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Grid de Chuchemons -->
+    <div class="chuchemons-grid" *ngIf="!isLoading && !errorMessage">
+      <div class="chuchemon-card" *ngFor="let chuchemon of filteredChuchemons">
+        <!-- Etiquetas superiores -->
+        <div class="card-labels">
+          <span class="type-label" [style.backgroundColor]="getElementColor(chuchemon.element)">
+            Tipo {{ chuchemon.element }}
+          </span>
+          <span class="team-label" *ngIf="isInTeam(chuchemon.id)">En el Equipo</span>
+        </div>
+
+        <!-- Imagen -->
+        <div class="card-image">
+          <img 
+            [src]="'http://localhost:8000/chuchemons/' + chuchemon.image" 
+            [alt]="chuchemon.name"
+            onerror="this.src='assets/placeholder.png'"
+          >
+        </div>
+
+        <!-- Info -->
+        <div class="card-info">
+          <div class="card-header">
+            <h3>{{ chuchemon.name }}</h3>
+            <span class="card-number">Nº. {{ chuchemon.id }}</span>
+          </div>
+          <div class="card-hp">
+            <span>HP</span>
+            <span class="hp-value">100/100</span>
+          </div>
+          <div class="hp-bar">
+            <div class="hp-fill" [style.width.%]="100"></div>
+          </div>
+          <button class="details-btn">Ver Detalles</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-results" *ngIf="!isLoading && !errorMessage && filteredChuchemons.length === 0">
+      <p>No se encontraron Chuchemons</p>
+    </div>
+  </main>
 </div>

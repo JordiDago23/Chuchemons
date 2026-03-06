@@ -48,6 +48,16 @@ class ChuchemonSeeder extends Seeder
             ['name' => 'Trompeta', 'element' => 'Aire', 'image' => 'trompeta.png'],
             ['name' => 'Trompi', 'element' => 'Tierra', 'image' => 'trompi.png'],
             ['name' => 'Tux', 'element' => 'Agua', 'image' => 'tux.png'],
+            ['name' => 'Chopper', 'element' => 'Aire', 'image' => 'chopper.png'],
+            ['name' => 'Cuellilargui', 'element' => 'Tierra', 'image' => 'cuellilargui.png'],
+            ['name' => 'Deskangoo', 'element' => 'Tierra', 'image' => 'deskangoo.png'],
+            ['name' => 'Doflamingo', 'element' => 'Aire', 'image' => 'doflamingo.png'],
+            ['name' => 'Dolly', 'element' => 'Tierra', 'image' => 'dolly.png'],
+            ['name' => 'Elconchudo', 'element' => 'Agua', 'image' => 'elconchudo.png'],
+            ['name' => 'Eldientes', 'element' => 'Tierra', 'image' => 'eldientes.png'],
+            ['name' => 'Elgominas', 'element' => 'Agua', 'image' => 'elgominas.png'],
+            ['name' => 'Flipper', 'element' => 'Agua', 'image' => 'flipper.png'],
+            ['name' => 'Floppi', 'element' => 'Aire', 'image' => 'floppi.png'],
         ];
 
         foreach ($chuchemons as $chuchemon) {
