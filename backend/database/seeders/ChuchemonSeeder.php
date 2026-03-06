@@ -44,7 +44,7 @@ class ChuchemonSeeder extends Seeder
             ['name' => 'Sesssi', 'element' => 'Tierra', 'image' => 'sesssi.png'],
             ['name' => 'Shelly', 'element' => 'Agua', 'image' => 'shelly.png'],
             ['name' => 'Sirucco', 'element' => 'Aire', 'image' => 'sirucco.png'],
-            ['name' => 'Torcas', 'element' => 'Agua', 'image' => 'torcas.png'],
+            ['name' => 'Peereira', 'element' => 'Agua', 'image' => 'peereira.png'],
             ['name' => 'Trompeta', 'element' => 'Aire', 'image' => 'trompeta.png'],
             ['name' => 'Trompi', 'element' => 'Tierra', 'image' => 'trompi.png'],
             ['name' => 'Tux', 'element' => 'Agua', 'image' => 'tux.png'],
