@@ -93,7 +93,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.team && Array.isArray(response.team)) {
-            this.team = response.team.filter(t => t !== null);
+            this.team = response.team.filter((t: Chuchemon | null) => t !== null);
           } else {
             this.team = [];
           }

@@ -66,7 +66,7 @@
             <div class="selected-chuchemon" *ngIf="selectedChuchemons[position] !== null">
               <div class="chuchemon-preview">
                 <img 
-                  [src]="'http://localhost:8000/chuchemons/' + (myChuchemons.find(c => c.id === selectedChuchemons[position])?.image || 'placeholder.png')" 
+                  [src]="'http://localhost:8000/chuchemons/' + getChuchemonImage(position)" 
                   [alt]="getSelectedChuchemonName(selectedChuchemons[position])"
                   onerror="this.src='assets/placeholder.png'"
                 >
@@ -81,7 +81,7 @@
             <div class="slot-empty" *ngIf="selectedChuchemons[position] === null">
               <p>Vacío</p>
               <div class="dropdown-trigger">
-                <select (change)="selectChuchemon(position, +$event.target.value)" class="slot-select">
+                <select (change)="selectChuchemon(position, +$any($event.target).value)" class="slot-select">
                   <option value="">Selecciona un Chuchemon</option>
                   <option *ngFor="let chuchemon of myChuchemons" [value]="chuchemon.id">
                     {{ chuchemon.name }} (x{{ chuchemon.count ?? 1 }})

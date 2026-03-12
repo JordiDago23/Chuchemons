@@ -74,8 +74,15 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
       });
   }
 
-  selectChuchemon(position: number, chuchemonId: number): void {
+  selectChuchemon(position: number, chuchemonId: number | null): void {
     this.selectedChuchemons[position] = chuchemonId;
+  }
+
+  getChuchemonImage(position: number): string {
+    const id = this.selectedChuchemons[position];
+    if (id == null) return 'placeholder.png';
+    const chuchemon = this.myChuchemons.find(c => c.id === id);
+    return chuchemon?.image ?? 'placeholder.png';
   }
 
   getSelectedChuchemonName(chuchemonId: number | null): string {
