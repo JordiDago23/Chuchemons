@@ -19,4 +19,13 @@ class Chuchemon extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    // Relaciones
+    public function capturedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_chuchemons')
+                    ->withPivot('count')
+                    ->withTimestamps();
+    }
 }
+

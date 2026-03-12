@@ -114,48 +114,41 @@
     </div>
 
     <!-- TEAM -->
-    <div class="team-empty" *ngIf="team.length === 0">
+    <div class="team-empty" *ngIf="team.length === 0 && !teamLoading">
       <span>🎒</span>
       <p>Aún no tienes Chuchemons en tu equipo. ¡Empieza a capturar!</p>
+      <a routerLink="/team-selector" class="team-action-btn">Selecciona tu Equipo</a>
     </div>
-    <div class="team-grid" *ngIf="team.length > 0">
-      <div class="mon-card" *ngFor="let mon of team">
-        <div class="mon-tags">
-          <span class="tag tipo" [style.color]="typeColors[mon.type]" [style.border-color]="typeColors[mon.type]">
-            Tipo {{ mon.type }}
-          </span>
-          <span class="tag equipo">En el Equipo</span>
-        </div>
-        <div class="mon-emoji">{{ mon.emoji }}</div>
-        <div class="mon-footer">
-          <span class="mon-capture">📷</span>
-        </div>
-        <div class="mon-info">
-          <span class="mon-name">{{ mon.name }}</span>
-          <span class="mon-level">Nv. {{ mon.level }}</span>
-        </div>
-        <div class="mon-hp-row">
-          <span>HP ♥</span>
-          <span>{{ mon.hp }}/{{ mon.hpMax }}</span>
-        </div>
-        <div class="hp-track">
-          <div class="hp-fill" [style.width.%]="(mon.hp / mon.hpMax) * 100"></div>
-        </div>
-        <div class="mon-stats">
-          <div class="mon-stat">
-            <span class="stat-sym">⚔</span>
-            <span class="stat-num">{{ mon.atk }}</span>
-            <span class="stat-lbl">ATK</span>
+    <div class="team-grid" *ngIf="team.length > 0 && !teamLoading">
+      <div class="team-header">
+        <h2>Tu Equipo</h2>
+        <a routerLink="/team-selector" class="edit-team-btn">Editar</a>
+      </div>
+      <div class="team-cards-container">
+        <div class="mon-card" *ngFor="let mon of team">
+          <div class="mon-tags">
+            <span class="tag tipo" [style.color]="typeColors[mon.element]" [style.border-color]="typeColors[mon.element]">
+              Tipo {{ mon.element }}
+            </span>
+            <span class="tag equipo">En el Equipo</span>
           </div>
-          <div class="mon-stat">
-            <span class="stat-sym">●</span>
-            <span class="stat-num">{{ mon.def }}</span>
-            <span class="stat-lbl">DEF</span>
+          <div class="mon-image">
+            <img 
+              [src]="'http://localhost:8000/chuchemons/' + mon.image" 
+              [alt]="mon.name"
+              onerror="this.src='assets/placeholder.png'"
+            >
           </div>
-          <div class="mon-stat">
-            <span class="stat-sym">⚡</span>
-            <span class="stat-num">{{ mon.spd }}</span>
-            <span class="stat-lbl">SPD</span>
+          <div class="mon-info">
+            <span class="mon-name">{{ mon.name }}</span>
+            <span class="mon-id">Nº. {{ mon.id }}</span>
+          </div>
+          <div class="mon-hp-row">
+            <span>HP ♥</span>
+            <span>100/100</span>
+          </div>
+          <div class="hp-track">
+            <div class="hp-fill" [style.width.%]="100"></div>
           </div>
         </div>
       </div>

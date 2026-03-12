@@ -21,4 +21,12 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout',     [AuthController::class, 'logout']);
     Route::put('/user/update', [UserController::class, 'update']);
     Route::delete('/user',     [UserController::class, 'delete']);
+
+    // ─── RUTAS DE CHUCHEMONS CAPTURADOS ──────────────────
+    Route::get('/user/chuchemons', [ChuchemonController::class, 'getMyChuchemons']);
+    Route::post('/user/chuchemons/{id}/capture', [ChuchemonController::class, 'captureChuchemon']);
+    
+    // ─── RUTAS DE EQUIPO ──────────────────────────────────
+    Route::get('/user/team', [ChuchemonController::class, 'getTeam']);
+    Route::post('/user/team', [ChuchemonController::class, 'saveTeam']);
 });

@@ -301,6 +301,63 @@
   font-weight: 600;
 }
 
+/* ─── MULTIPLICADOR ───────────────────────────────────────────────────────── */
+.multiplier-label {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #ff9800;
+  color: white;
+  font-size: 0.75em;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ─── BLOQUEADOS ──────────────────────────────────────────────────────────── */
+.chuchemon-card.locked {
+  opacity: 0.85;
+}
+
+.card-image.blurred {
+  filter: blur(6px);
+  position: relative;
+}
+
+.lock-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  z-index: 10;
+}
+
+.card-info.blurred-text h3,
+.card-info.blurred-text .card-number {
+  color: #999;
+  font-style: italic;
+}
+
+.capture-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: auto;
+}
+
+.capture-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+
 .card-image {
   width: 100%;
   height: 140px;
