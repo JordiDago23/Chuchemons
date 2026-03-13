@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-chuchedex',
@@ -15,6 +16,7 @@ import { ChuchemonService } from '../../services/chuchemon.service';
   styleUrls: ['./chuchedex.component.css']
 })
 export class ChuchedexComponent implements OnInit, OnDestroy {
+  user: any = null;
   chuchemons: Chuchemon[] = [];
   filteredChuchemons: Chuchemon[] = [];
   selectedElement: 'Todos' | 'Tierra' | 'Aire' | 'Agua' = 'Todos';
@@ -28,9 +30,13 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   private capturedChuchemons: Set<number> = new Set();
   private teamChuchemons: Set<number> = new Set();
 
-  constructor(private chuchemonService: ChuchemonService) { }
+  constructor(private chuchemonService: ChuchemonService, private auth: AuthService) { }
 
   ngOnInit(): void {
+    this.user = this.auth.currentUser;
+    if (!this.user) {
+      this.auth.me().subscribe({ next: (data) => this.user = data });
+    }
     this.loadCapturedChuchemons();
     this.loadChuchemons();
   }
@@ -117,8 +123,6 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    // Implement logout functionality
-    console.log('Logout clicked');
-    // window.location.href = '/login';
+    this.auth.logout();
   }
 }

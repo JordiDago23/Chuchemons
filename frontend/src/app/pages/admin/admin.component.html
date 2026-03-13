@@ -1,0 +1,296 @@
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-pokeball">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
+          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
+        </svg>
+      </div>
+      <span class="brand-name">Chuchemons</span>
+      <span class="brand-sub">Captúralos a todos</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
+      <a class="nav-item" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
+      <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
+      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
+      <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
+      <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
+      <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
+      <a class="nav-item active" routerLink="/admin"><span class="nav-icon">🛡</span> Admin</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      @if (user) {
+        <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+        <div class="footer-info">
+          <span class="footer-name">{{ user.player_id }}</span>
+          <span class="footer-sub">{{ user.email }}</span>
+        </div>
+      }
+      <button class="salir-btn" (click)="logout()"><span>↪</span> Salir</button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ═════════════════════════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- BANNER -->
+    <div class="admin-banner">
+      <div class="banner-shield">🛡</div>
+      <div>
+        <h1 class="banner-title">Panell d'Administració</h1>
+        <p class="banner-sub">Gestiona jugadors, recursos i configuració del joc</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-row">
+          <span class="stat-label">Jugadors</span>
+          <span class="stat-icon red">👤</span>
+        </div>
+        <div class="stat-value">{{ stats.jugadors }}</div>
+        <div class="stat-sub">Comptes de jugadors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-row">
+          <span class="stat-label">Total Usuaris</span>
+          <span class="stat-icon red">👥</span>
+        </div>
+        <div class="stat-value">{{ stats.totalUsuaris }}</div>
+        <div class="stat-sub">Tots els usuaris</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-row">
+          <span class="stat-label">Xuemons</span>
+          <span class="stat-icon orange">🎮</span>
+        </div>
+        <div class="stat-value">{{ stats.xuemons }}</div>
+        <div class="stat-sub">A la base de dades</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-row">
+          <span class="stat-label">Taxa Infecció</span>
+          <span class="stat-icon orange">⚡</span>
+        </div>
+        <div class="stat-value accent">{{ stats.taxaInfeccio }}%</div>
+        <div class="stat-sub">Probabilitat actual</div>
+      </div>
+    </div>
+
+    <!-- TAB NAV -->
+    <div class="tab-nav">
+      <button [class.active]="activeTab === 'jugadors'"    (click)="activeTab = 'jugadors'">
+        <span>👥</span> Jugadors
+      </button>
+      <button [class.active]="activeTab === 'recursos'"    (click)="activeTab = 'recursos'">
+        <span>📦</span> Recursos
+      </button>
+      <button [class.active]="activeTab === 'configuracio'" (click)="activeTab = 'configuracio'">
+        <span>⚙️</span> Configuració
+      </button>
+      <button [class.active]="activeTab === 'horaris'"     (click)="activeTab = 'horaris'">
+        <span>🕐</span> Horaris
+      </button>
+    </div>
+
+    <!-- ── TAB: JUGADORS ──────────────────────────────────────────────────── -->
+    @if (activeTab === 'jugadors') {
+
+      <!-- Afegir Xuxes a Jugadors -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>🔥 Afegir Xuxes a Jugadors <span class="arrow">↓</span></h2>
+          <p class="section-sub">Afegeix una quantitat específica de Xuxes a la motxilla d'un jugador</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Selecciona Jugador <span class="arrow-sm">↓</span></label>
+            <select [(ngModel)]="xuxPlayerId">
+              <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
+              @for (u of nonAdminUsers; track u.id) {
+                <option [ngValue]="u.id">{{ u.player_id }} · Nv. {{ u.level }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantitat de Xuxes</label>
+            <input type="number" [(ngModel)]="xuxQty" min="1" max="500" />
+          </div>
+        </div>
+        <div class="alert-warn">
+          <span class="alert-icon">⚠️</span>
+          <div>
+            <strong>Important: Límit de la Motxilla</strong><br>
+            Si la motxilla del jugador està plena (20 espais màxim), no es podran afegir més Xuxes. Les Xuxes sobrants es descartaran automàticament.
+          </div>
+        </div>
+        @if (xuxFeedback) {
+          <div [class]="'alert-result ' + xuxFeedbackType">{{ xuxFeedback }}</div>
+        }
+        <button class="btn btn-red" (click)="addXux()" [disabled]="xuxLoading || !xuxPlayerId">
+          @if (xuxLoading) { <span class="spinner"></span> } @else { <span>+</span> }
+          Afegir Xuxes al Jugador
+        </button>
+      </div>
+
+      <!-- Afegir Xuxemon Aleatori -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>🎲 Afegir Xuxemon Aleatori a Jugadors <span class="arrow">↓</span></h2>
+          <p class="section-sub">Afegeix un Xuxemon aleatori a la col·lecció d'un jugador</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label>Selecciona Jugador <span class="arrow-sm">↓</span></label>
+            <select [(ngModel)]="aleatorioPlayerId">
+              <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
+              @for (u of nonAdminUsers; track u.id) {
+                <option [ngValue]="u.id">{{ u.player_id }} · Nv. {{ u.level }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="alert-info">
+          <span class="alert-icon">ℹ️</span>
+          <div>
+            <strong>Xuxemon Aleatori</strong><br>
+            El sistema seleccionarà un Xuxemon aleatori de grandària Petita i s'afegirà automàticament a la Xuxedex del jugador.
+          </div>
+        </div>
+        @if (aleatorioFeedback) {
+          <div [class]="'alert-result ' + aleatorioFeedbackType">{{ aleatorioFeedback }}</div>
+        }
+        <button class="btn btn-yellow" (click)="addRandomChuchemon()" [disabled]="aleatorioLoading || !aleatorioPlayerId">
+          @if (aleatorioLoading) { <span class="spinner"></span> } @else { <span>+</span> }
+          Afegir Xuxemon Aleatori
+        </button>
+      </div>
+
+      <!-- Afegir Vacunes -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>💉 Afegir Vacunes a Jugadors <span class="arrow">↓</span></h2>
+          <p class="section-sub">Afegeix una vacuna específica a la motxilla d'un jugador</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Selecciona Jugador <span class="arrow-sm">↓</span></label>
+            <select [(ngModel)]="vacunaPlayerId">
+              <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
+              @for (u of nonAdminUsers; track u.id) {
+                <option [ngValue]="u.id">{{ u.player_id }} · Nv. {{ u.level }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tipus de Vacuna</label>
+            <select [(ngModel)]="vacunaType">
+              @for (v of vacunaTypes; track v) {
+                <option [value]="v">{{ v }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="alert-success-box">
+          <span class="alert-icon">✅</span>
+          <div>
+            <strong>Vacunes No Apilables</strong><br>
+            Cada vacuna ocupa 1 espai a la motxilla. Les vacunes curen malalties específiques dels Xuxemons.
+          </div>
+        </div>
+        @if (vacunaFeedback) {
+          <div [class]="'alert-result ' + vacunaFeedbackType">{{ vacunaFeedback }}</div>
+        }
+        <button class="btn btn-green" (click)="addVacuna()" [disabled]="vacunaLoading || !vacunaPlayerId">
+          @if (vacunaLoading) { <span class="spinner"></span> } @else { <span>+</span> }
+          Afegir Vacuna al Jugador
+        </button>
+      </div>
+
+      <!-- Llista de Jugadors -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>📋 Llista de Jugadors <span class="arrow">↓</span></h2>
+          <p class="section-sub">Tots els jugadors registrats al sistema</p>
+        </div>
+        @if (usersLoading) {
+          <div class="loading-row">Carregant jugadors...</div>
+        } @else {
+          <table class="players-table">
+            <thead>
+              <tr>
+                <th>Jugador</th>
+                <th>Email</th>
+                <th>Nivell</th>
+                <th>Xuemons</th>
+                <th>Victòries</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (u of nonAdminUsers; track u.id) {
+                <tr>
+                  <td>
+                    <div class="player-cell">
+                      <div class="player-avatar" [style.background]="avatarColor(u.player_id)">
+                        {{ u.nombre?.charAt(0) | uppercase }}
+                      </div>
+                      <div>
+                        <span class="player-name">{{ u.player_id }}</span>
+                        <span class="player-badge">↑ Jugador</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-muted">{{ u.email }}</td>
+                  <td><span class="level-pill">{{ u.level }}</span></td>
+                  <td>{{ u.xux_count }}</td>
+                  <td class="text-accent">{{ u.wins }}</td>
+                </tr>
+              }
+              @empty {
+                <tr><td colspan="5" class="empty-row">No hi ha jugadors registrats.</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
+
+    <!-- ── TAB: RECURSOS ──────────────────────────────────────────────────── -->
+    @if (activeTab === 'recursos') {
+      <div class="section-card placeholder-section">
+        <span class="placeholder-icon">📦</span>
+        <h3>Recursos</h3>
+        <p>Secció en desenvolupament. Aviat podràs gestionar els recursos del joc.</p>
+      </div>
+    }
+
+    <!-- ── TAB: CONFIGURACIÓ ──────────────────────────────────────────────── -->
+    @if (activeTab === 'configuracio') {
+      <div class="section-card placeholder-section">
+        <span class="placeholder-icon">⚙️</span>
+        <h3>Configuració</h3>
+        <p>Secció en desenvolupament. Aviat podràs configurar els paràmetres del joc.</p>
+      </div>
+    }
+
+    <!-- ── TAB: HORARIS ───────────────────────────────────────────────────── -->
+    @if (activeTab === 'horaris') {
+      <div class="section-card placeholder-section">
+        <span class="placeholder-icon">🕐</span>
+        <h3>Horaris</h3>
+        <p>Secció en desenvolupament. Aviat podràs gestionar els horaris d'esdeveniments.</p>
+      </div>
+    }
+
+  </main>
+</div>
+

@@ -37,6 +37,9 @@
       <a class="nav-item" routerLink="/profile">
         <span class="nav-icon">👤</span> Perfil
       </a>
+      <a *ngIf="user?.is_admin" class="nav-item" routerLink="/admin">
+        <span class="nav-icon">🛡</span> Admin
+      </a>
     </nav>
 
     <div class="sidebar-footer">

@@ -39,6 +39,7 @@
 }
 .nav-item:hover { background: #fef2f2; color: #e63946; }
 .nav-item.active { background: #e63946; color: #fff; font-weight: 600; }
+
 .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
 .sidebar-footer { padding: 0.8rem; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 0.5rem; }
 .footer-avatar {
@@ -87,6 +88,7 @@
 .tag.red    { background: #e63946; color: #fff; }
 .tag.yellow { background: #f4a611; color: #fff; }
 .tag.gray   { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+.tag.admin  { background: #7c3aed; color: #fff; }
 .xp-row  { display: flex; justify-content: space-between; font-size: 0.72rem; color: rgba(255,255,255,0.9); margin-top: 0.3rem; width: 280px; }
 .xp-track{ width: 280px; height: 7px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; }
 .xp-fill { height: 100%; background: #fff; border-radius: 99px; }

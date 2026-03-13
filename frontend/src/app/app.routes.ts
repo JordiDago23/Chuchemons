@@ -30,5 +30,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/mochila/mochila.component').then(m => m.MochilaComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'admin',
+    loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: 'login' }
 ];

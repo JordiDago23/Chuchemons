@@ -23,6 +23,7 @@
       <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
       <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
       <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
+      <a *ngIf="user?.is_admin" class="nav-item" routerLink="/admin"><span class="nav-icon">🛡</span> Admin</a>
     </nav>
 
     <div class="sidebar-footer">
@@ -89,6 +90,9 @@
 
     <!-- ── Tabs ──────────────────────────────────────────────────────────────── -->
     <div class="tabs">
+      <button class="tab-btn" [class.tab-active]="activeTab === 'chuchemons'" (click)="setTab('chuchemons')">
+        🐾 Chuchemons
+      </button>
       <button class="tab-btn" [class.tab-active]="activeTab === 'objetos'" (click)="setTab('objetos')">
         🍬 Xuxes (Apilables)
       </button>
@@ -97,56 +101,156 @@
       </button>
     </div>
 
+    <!-- ── CHUCHEMONS tab ────────────────────────────────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'chuchemons'">
+
+      <div class="space-info">
+        <span class="space-label">
+          🗂️ Espai lliure a la motxilla: <strong>{{ backendFreeSpaces }}</strong> / {{ MAX_SPACES }} espais.
+          <ng-container *ngIf="backendFreeSpaces === 0">
+            <span class="full-badge">MOTXILLA PLENA</span>
+          </ng-container>
+        </span>
+      </div>
+
+      <!-- Admin-only: add xuxes panel -->
+      <ng-container *ngIf="user?.is_admin">
+        <div class="admin-banner">
+          <span class="admin-icon">🛠️</span>
+          Mode administrador — pots afegir Xuxes a la motxilla des de la llista de Chuchemons.
+        </div>
+
+        <div class="chuchemons-loading" *ngIf="chucemonsLoading">Carregant Chuchemons…</div>
+
+        <div class="chuchemons-grid" *ngIf="!chucemonsLoading && chuchemons.length > 0">
+          <div class="chuchemon-add-card" *ngFor="let c of chuchemons">
+
+            <!-- Image -->
+            <div class="chuchemon-img-wrap">
+              <img *ngIf="c.image" [src]="c.image" [alt]="c.name" class="chuchemon-img" />
+              <div *ngIf="!c.image" class="chuchemon-img-placeholder">🐾</div>
+            </div>
+
+            <!-- Info -->
+            <div class="chuchemon-info">
+              <h3 class="chuchemon-name">{{ c.name }}</h3>
+              <span class="chuchemon-element element-{{ c.element | lowercase }}">{{ c.element }}</span>
+            </div>
+
+            <!-- Current xuxes in mochila for this chuchemon -->
+            <div class="chuchemon-current-qty">
+              Xuxes actuals:
+              <strong>{{ getMochilaItem(c.id)?.quantity ?? 0 }}</strong>
+            </div>
+
+            <!-- Add form -->
+            <div class="add-xux-form" [class.disabled]="backendFreeSpaces === 0">
+              <input
+                type="number"
+                class="qty-input"
+                [(ngModel)]="addQtyMap[c.id]"
+                min="1"
+                max="500"
+                [disabled]="backendFreeSpaces === 0 || addingMap[c.id]"
+              />
+              <button
+                class="add-xux-btn"
+                (click)="addXuxes(c)"
+                [disabled]="backendFreeSpaces === 0 || addingMap[c.id] || (addQtyMap[c.id] ?? 1) < 1"
+              >
+                <ng-container *ngIf="!addingMap[c.id]">+ Afegir Xuxes</ng-container>
+                <ng-container *ngIf="addingMap[c.id]">Afegint…</ng-container>
+              </button>
+            </div>
+
+            <!-- Feedback -->
+            <div
+              class="xux-feedback"
+              *ngIf="feedbackMap[c.id]"
+              [class.feedback-success]="feedbackMap[c.id].type === 'success'"
+              [class.feedback-warn]="feedbackMap[c.id].type === 'warn'"
+              [class.feedback-error]="feedbackMap[c.id].type === 'error'"
+            >
+              {{ feedbackMap[c.id].msg }}
+            </div>
+
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!chucemonsLoading && chuchemons.length === 0">
+          <span>🐾</span>
+          <p>No hi ha Chuchemons a la base de dades.</p>
+        </div>
+      </ng-container>
+
+      <!-- Non-admin: just show chuchemons list -->
+      <ng-container *ngIf="!user?.is_admin">
+        <div class="chuchemons-loading" *ngIf="chucemonsLoading">Carregant Chuchemons…</div>
+        <div class="chuchemons-grid" *ngIf="!chucemonsLoading && chuchemons.length > 0">
+          <div class="chuchemon-view-card" *ngFor="let c of chuchemons">
+            <div class="chuchemon-img-wrap">
+              <img *ngIf="c.image" [src]="c.image" [alt]="c.name" class="chuchemon-img" />
+              <div *ngIf="!c.image" class="chuchemon-img-placeholder">🐾</div>
+            </div>
+            <div class="chuchemon-info">
+              <h3 class="chuchemon-name">{{ c.name }}</h3>
+              <span class="chuchemon-element element-{{ c.element | lowercase }}">{{ c.element }}</span>
+            </div>
+            <div class="chuchemon-current-qty">
+              Xuxes:
+              <strong>{{ getMochilaItem(c.id)?.quantity ?? 0 }}</strong>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </ng-container>
+
     <!-- ── OBJETOS tab ────────────────────────────────────────────────────────── -->
     <ng-container *ngIf="activeTab === 'objetos'">
 
       <!-- Space info banner -->
       <div class="space-info">
         <span class="space-label">
-          🗂️ Las Xuxes se apilan de hasta <strong>{{ MAX_STACK }}</strong> por espacio.
-          Usas <strong>{{ totalXuxSlots }}</strong> espacio(s) para tus Xuxes.
+          🗂️ Les Xuxes s'apilen fins a <strong>{{ MAX_STACK }}</strong> per espai.
+          Uses <strong>{{ totalXuxSlots }}</strong> espai(s) per a les teves Xuxes.
         </span>
       </div>
 
-      <div class="items-grid" *ngIf="xuxItems.length > 0; else emptyXux">
-        <div class="item-card" *ngFor="let item of xuxItems">
+      <div class="items-grid" *ngIf="mochilaXuxes.length > 0; else emptyXux">
+        <div class="item-card" *ngFor="let item of mochilaXuxes">
 
-          <!-- quantity badge -->
           <span class="qty-badge">x{{ item.quantity }}</span>
+          <span class="item-tag tag-mejora">Xux</span>
 
-          <!-- tag -->
-          <span class="item-tag" [ngClass]="'tag-' + item.tag.toLowerCase()">{{ item.tag }}</span>
-
-          <!-- image placeholder -->
           <div class="item-img-wrap">
             <div class="item-img-placeholder candy-img">
-              <span class="candy-emoji">🍬</span>
+              <img *ngIf="item.chuchemon?.image" [src]="item.chuchemon.image" [alt]="item.chuchemon.name" style="width:70px;height:70px;object-fit:contain;" />
+              <span *ngIf="!item.chuchemon?.image" class="candy-emoji">🍬</span>
             </div>
           </div>
 
           <div class="item-body">
-            <h3 class="item-name">{{ item.name }}</h3>
-            <p class="item-desc">{{ item.description }}</p>
+            <h3 class="item-name">Xux de {{ item.chuchemon?.name ?? '?' }}</h3>
+            <p class="item-desc">Element {{ item.chuchemon?.element ?? '?' }}</p>
           </div>
 
-          <!-- stack breakdown -->
           <div class="stack-info">
-            <span class="stack-label">Espacios:</span>
+            <span class="stack-label">Espais:</span>
             <div class="stack-slots">
-              <span class="slot-chip" *ngFor="let slotQty of xuxSlotBreakdown(item)">
+              <span class="slot-chip" *ngFor="let slotQty of xuxSlotBreakdownForItem(item)">
                 x{{ slotQty }}
               </span>
             </div>
           </div>
 
-          <button class="detail-btn">Ver Detalles</button>
         </div>
       </div>
 
       <ng-template #emptyXux>
         <div class="empty-state">
           <span>🍬</span>
-          <p>No tienes Xuxes en la mochila.</p>
+          <p>No tens Xuxes a la motxilla.</p>
         </div>
       </ng-template>
     </ng-container>
