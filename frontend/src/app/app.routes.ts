@@ -13,7 +13,13 @@ export const routes: Routes = [
   },
   {
     path: 'chuchedex',
-    loadComponent: () => import('./pages/Chuchedex/chuchedex.component').then(m => m.ChuchedexComponent)
+    loadComponent: () => import('./pages/Chuchedex/chuchedex.component').then(m => m.ChuchedexComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'team-selector',
+    loadComponent: () => import('./pages/team-selector/team-selector.component').then(m => m.TeamSelectorComponent),
+    canActivate: [authGuard]
   },
   {
     path: 'home',

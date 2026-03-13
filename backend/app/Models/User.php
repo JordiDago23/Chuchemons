@@ -37,4 +37,17 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    // Relaciones
+    public function capturedChuchemons()
+    {
+        return $this->belongsToMany(Chuchemon::class, 'user_chuchemons')
+                    ->withPivot('count')
+                    ->withTimestamps();
+    }
+
+    public function team()
+    {
+        return $this->hasOne(UserTeam::class);
+    }
 }

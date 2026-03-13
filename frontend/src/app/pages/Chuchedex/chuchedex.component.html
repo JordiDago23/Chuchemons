@@ -72,9 +72,10 @@
         </select>
       </div>
 
-      <div class="filter-select all-dropdown">
-        <select class="all-filter-dropdown">
-          <option>Todos</option>
+      <div class="filter-select all-dropdown" *ngIf="!isAdmin">
+        <select class="all-filter-dropdown" [(ngModel)]="selectedTab" (change)="onTabChange(selectedTab)">
+          <option value="todos">Todos</option>
+          <option value="mis">Mis Chuchemons</option>
         </select>
       </div>
     </div>
@@ -89,38 +90,48 @@
 
     <!-- Grid de Chuchemons -->
     <div class="chuchemons-grid" *ngIf="!isLoading && !errorMessage">
-      <div class="chuchemon-card" *ngFor="let chuchemon of filteredChuchemons">
+      <div class="chuchemon-card" *ngFor="let chuchemon of filteredChuchemons" [class.locked]="isBlockedForDisplay(chuchemon)">
         <!-- Etiquetas superiores -->
         <div class="card-labels">
           <span class="type-label" [style.backgroundColor]="getElementColor(chuchemon.element)">
             Tipo {{ chuchemon.element }}
           </span>
           <span class="team-label" *ngIf="isInTeam(chuchemon.id)">En el Equipo</span>
+          <!-- Multiplicador para chuchemons capturados -->
+          <span class="multiplier-label" *ngIf="isCaptured(chuchemon) && getMultiplier(chuchemon) > 1">
+            x{{ getMultiplier(chuchemon) }}
+          </span>
         </div>
 
-        <!-- Imagen -->
-        <div class="card-image">
+        <!-- Imagen (con efecto de bloqueo si no está capturado) -->
+        <div class="card-image" [class.blurred]="isBlockedForDisplay(chuchemon)">
           <img 
             [src]="'http://localhost:8000/chuchemons/' + chuchemon.image" 
             [alt]="chuchemon.name"
             onerror="this.src='assets/placeholder.png'"
           >
+          <!-- Candado para chuchemons bloqueados -->
+          <div class="lock-icon" *ngIf="isBlockedForDisplay(chuchemon)">
+            🔒
+          </div>
         </div>
 
         <!-- Info -->
-        <div class="card-info">
+        <div class="card-info" [class.blurred-text]="isBlockedForDisplay(chuchemon)">
           <div class="card-header">
-            <h3>{{ chuchemon.name }}</h3>
-            <span class="card-number">Nº. {{ chuchemon.id }}</span>
+            <h3>{{ isCaptured(chuchemon) || isAdmin || selectedTab === 'mis' ? chuchemon.name : '?????' }}</h3>
+            <span class="card-number">Nº. {{ isCaptured(chuchemon) || isAdmin || selectedTab === 'mis' ? chuchemon.id : '?' }}</span>
           </div>
-          <div class="card-hp">
+          <div class="card-hp" *ngIf="isCaptured(chuchemon) || isAdmin || selectedTab === 'mis'">
             <span>HP</span>
             <span class="hp-value">100/100</span>
           </div>
-          <div class="hp-bar">
+          <div class="hp-bar" *ngIf="isCaptured(chuchemon) || isAdmin || selectedTab === 'mis'">
             <div class="hp-fill" [style.width.%]="100"></div>
           </div>
-          <button class="details-btn">Ver Detalles</button>
+          <button class="details-btn" *ngIf="(isCaptured(chuchemon) || isAdmin) && selectedTab === 'mis'">Ver Detalles</button>
+          <button class="capture-btn" *ngIf="!isCaptured(chuchemon) && isAdmin === false && selectedTab === 'todos'" (click)="captureChuchemon(chuchemon.id)">Capturar</button>
+          <button class="details-btn" *ngIf="isAdmin">Ver Detalles</button>
         </div>
       </div>
     </div>

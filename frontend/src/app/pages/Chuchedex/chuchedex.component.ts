@@ -8,6 +8,11 @@ import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { AuthService } from '../../core/services/auth.service';
 
+interface ChuchemonExtended extends Chuchemon {
+  captured?: boolean;
+  count?: number;
+}
+
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
@@ -16,34 +21,53 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./chuchedex.component.css']
 })
 export class ChuchedexComponent implements OnInit, OnDestroy {
-  user: any = null;
-  chuchemons: Chuchemon[] = [];
-  filteredChuchemons: Chuchemon[] = [];
+  chuchemons: ChuchemonExtended[] = [];
+  myChuchemons: ChuchemonExtended[] = [];
+  filteredChuchemons: ChuchemonExtended[] = [];
   selectedElement: 'Todos' | 'Tierra' | 'Aire' | 'Agua' = 'Todos';
+  selectedTab: 'todos' | 'mis' = 'todos';
   searchQuery: string = '';
   isLoading: boolean = true;
   errorMessage: string | null = null;
   totalChuchemons: number = 0;
   totalCaptured: number = 0;
   completionPercentage: number = 0;
+  isAdmin: boolean = false;
   private destroy$ = new Subject<void>();
-  private capturedChuchemons: Set<number> = new Set();
   private teamChuchemons: Set<number> = new Set();
 
-  constructor(private chuchemonService: ChuchemonService, private auth: AuthService) { }
+  constructor(
+    private chuchemonService: ChuchemonService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    this.user = this.auth.currentUser;
-    if (!this.user) {
-      this.auth.me().subscribe({ next: (data) => this.user = data });
-    }
-    this.loadCapturedChuchemons();
+    this.checkAdminStatus();
     this.loadChuchemons();
+    // Solo cargar mis chuchemons si no es admin
+    setTimeout(() => {
+      if (!this.isAdmin) {
+        this.loadMyChuchemons();
+      }
+    }, 500);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  checkAdminStatus(): void {
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (user) => {
+          this.isAdmin = user?.is_admin ?? false;
+        },
+        error: (error) => {
+          console.error('Error checking admin status:', error);
+        }
+      });
   }
 
   loadChuchemons(): void {
@@ -54,8 +78,12 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          this.chuchemons = data;
+          this.chuchemons = data as ChuchemonExtended[];
           this.totalChuchemons = data.length;
+          
+          // Contar los capturados
+          this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
+          
           this.updateCompletionPercentage();
           this.applyFilters();
           this.isLoading = false;
@@ -68,15 +96,18 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       });
   }
 
-  loadCapturedChuchemons(): void {
-    // Simular chuchemons capturados - TODOS los 48
-    const capturedIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48];
-    this.capturedChuchemons = new Set(capturedIds);
-    this.totalCaptured = capturedIds.length;
-    
-    // Solo 3 en el equipo - seleccionados por el usuario
-    const teamIds = [1, 2, 3];
-    this.teamChuchemons = new Set(teamIds);
+  loadMyChuchemons(): void {
+    this.chuchemonService.getMyChuchemons()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.myChuchemons = data as ChuchemonExtended[];
+          this.applyFilters();
+        },
+        error: (error) => {
+          console.error('Error loading my Chuchemons:', error);
+        }
+      });
   }
 
   updateCompletionPercentage(): void {
@@ -86,8 +117,18 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    let filtered = this.chuchemons;
+    let filtered: ChuchemonExtended[] = [];
 
+    // Determinar qué lista usar según la pestaña
+    if (this.selectedTab === 'todos') {
+      // En "Todos" mostrar TODOS los chuchemons
+      filtered = [...this.chuchemons];
+    } else {
+      // En "Mis Chuchemons" mostrar solo los capturados
+      filtered = [...this.myChuchemons];
+    }
+
+    // Aplicar filtros de elemento y búsqueda
     if (this.selectedElement !== 'Todos') {
       filtered = filtered.filter(c => c.element === this.selectedElement);
     }
@@ -102,6 +143,11 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   onElementChange(): void {
+    this.applyFilters();
+  }
+
+  onTabChange(tab: 'todos' | 'mis'): void {
+    this.selectedTab = tab;
     this.applyFilters();
   }
 
@@ -122,7 +168,39 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     return this.teamChuchemons.has(chuchemonId);
   }
 
+  isCaptured(chuchemon: ChuchemonExtended): boolean {
+    return chuchemon.captured ?? false;
+  }
+
+  isBlockedForDisplay(chuchemon: ChuchemonExtended): boolean {
+    // Mostrar bloqueado si: es usuario normal, está en tab "Todos" y no lo ha capturado
+    if (this.isAdmin) return false;
+    if (this.selectedTab === 'mis') return false;
+    return !this.isCaptured(chuchemon);
+  }
+
+  getMultiplier(chuchemon: ChuchemonExtended): number {
+    return chuchemon.count ?? 1;
+  }
+
+  captureChuchemon(chuchemonId: number): void {
+    this.chuchemonService.captureChuchemon(chuchemonId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Recargar datos
+          this.loadChuchemons();
+          this.loadMyChuchemons();
+        },
+        error: (error) => {
+          console.error('Error capturing chuchemon:', error);
+          this.errorMessage = 'Error al capturar el Chuchemon';
+        }
+      });
+  }
+
   logout(): void {
-    this.auth.logout();
+    this.authService.logout();
   }
 }
+
