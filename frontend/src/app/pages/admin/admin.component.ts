@@ -40,12 +40,75 @@ export class AdminComponent implements OnInit {
 
   // ── Afegir Vacunes ────────────────────────────────────────────────────────
   vacunaPlayerId: number | null = null;
-  vacunaType = 'Vacuna Mareig';
+  vacunaType = 'Vacuna Mareo';
   vacunaLoading = false;
   vacunaFeedback = '';
   vacunaFeedbackType: 'success' | 'error' | '' = '';
 
-  readonly vacunaTypes = ['Vacuna Mareig', 'Vacuna Atracón', 'Inxulina'];
+  readonly vacunaTypes = ['Vacuna Mareo', 'Vacuna Atracón', 'Insulina'];
+
+  // ── Configuració ─────────────────────────────────────────────────────────
+  cfg = { xuxPetitMitja: 3, xuxMitjaGran: 5 };
+  cfgLoading = false;
+  cfgFeedback = '';
+  cfgFeedbackType: 'success' | 'error' | '' = '';
+
+  taxaInfeccioEdit = 12;
+  taxaLoading = false;
+  taxaFeedback = '';
+  taxaFeedbackType: 'success' | 'error' | '' = '';
+
+  saveConfig() {
+    this.cfgLoading = true;
+    this.cfgFeedback = '';
+    setTimeout(() => {
+      this.stats.xuemons = this.stats.xuemons; // placeholder — no backend endpoint yet
+      this.cfgFeedback = 'Configuración guardada correctamente.';
+      this.cfgFeedbackType = 'success';
+      this.cfgLoading = false;
+    }, 600);
+  }
+
+  saveTaxa() {
+    this.taxaLoading = true;
+    this.taxaFeedback = '';
+    setTimeout(() => {
+      this.stats.taxaInfeccio = this.taxaInfeccioEdit;
+      this.taxaFeedback = `Tasa de infección actualizada al ${this.taxaInfeccioEdit}%.`;
+      this.taxaFeedbackType = 'success';
+      this.taxaLoading = false;
+    }, 600);
+  }
+
+  // ── Horaris ────────────────────────────────────────────────────────────────
+  horariXuxes    = { hora: '06:00', quantitat: 10 };
+  horariXuxemon  = { hora: '08:00' };
+  horariXuxesLoading   = false;
+  horariXuxemoLoading  = false;
+  horariXuxesFeedback  = '';
+  horariXuxemoFeedback = '';
+  horariXuxesFeedbackType:  'success' | 'error' | '' = '';
+  horariXuxemoFeedbackType: 'success' | 'error' | '' = '';
+
+  saveHorariXuxes() {
+    this.horariXuxesLoading = true;
+    this.horariXuxesFeedback = '';
+    setTimeout(() => {
+      this.horariXuxesFeedback = `Horario de Xuxes guardado: ${this.horariXuxes.hora} · ${this.horariXuxes.quantitat} Xuxes/día.`;
+      this.horariXuxesFeedbackType = 'success';
+      this.horariXuxesLoading = false;
+    }, 600);
+  }
+
+  saveHorariXuxemon() {
+    this.horariXuxemoLoading = true;
+    this.horariXuxemoFeedback = '';
+    setTimeout(() => {
+      this.horariXuxemoFeedback = `Horario de Xuxemon guardado: ${this.horariXuxemon.hora} cada día.`;
+      this.horariXuxemoFeedbackType = 'success';
+      this.horariXuxemoLoading = false;
+    }, 600);
+  }
 
   constructor(private auth: AuthService, private router: Router, private http: HttpClient) {}
 
@@ -104,7 +167,7 @@ export class AdminComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.xuxFeedback     = err.error?.message || 'Error en afegir Xuxes.';
+        this.xuxFeedback     = err.error?.message || 'Error al añadir Xuxes.';
         this.xuxFeedbackType = 'error';
         this.xuxLoading      = false;
       }
@@ -122,7 +185,7 @@ export class AdminComponent implements OnInit {
         this.aleatorioLoading      = false;
       },
       error: (err) => {
-        this.aleatorioFeedback     = err.error?.message || 'Error en afegir el Xuxemon.';
+        this.aleatorioFeedback     = err.error?.message || 'Error al añadir el Xuxemon.';
         this.aleatorioFeedbackType = 'error';
         this.aleatorioLoading      = false;
       }
@@ -136,7 +199,7 @@ export class AdminComponent implements OnInit {
     // Vacunes are not yet stored in DB — show a placeholder response
     setTimeout(() => {
       const player = this.users.find(u => u.id === this.vacunaPlayerId);
-      this.vacunaFeedback     = `S'ha afegit 1 ${this.vacunaType} a la motxilla de ${player?.player_id ?? 'jugador'}.`;
+      this.vacunaFeedback     = `Se ha añadido 1 ${this.vacunaType} a la mochila de ${player?.player_id ?? 'jugador'}.`;
       this.vacunaFeedbackType = 'success';
       this.vacunaLoading      = false;
     }, 600);

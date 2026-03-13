@@ -45,8 +45,8 @@
     <div class="admin-banner">
       <div class="banner-shield">🛡</div>
       <div>
-        <h1 class="banner-title">Panell d'Administració</h1>
-        <p class="banner-sub">Gestiona jugadors, recursos i configuració del joc</p>
+        <h1 class="banner-title">Panel de Administración</h1>
+        <p class="banner-sub">Gestiona jugadores, recursos y configuración del juego</p>
       </div>
     </div>
 
@@ -54,19 +54,19 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-row">
-          <span class="stat-label">Jugadors</span>
+          <span class="stat-label">Jugadores</span>
           <span class="stat-icon red">👤</span>
         </div>
         <div class="stat-value">{{ stats.jugadors }}</div>
-        <div class="stat-sub">Comptes de jugadors</div>
+        <div class="stat-sub">Cuentas de jugadores</div>
       </div>
       <div class="stat-card">
         <div class="stat-row">
-          <span class="stat-label">Total Usuaris</span>
+          <span class="stat-label">Total Usuarios</span>
           <span class="stat-icon red">👥</span>
         </div>
         <div class="stat-value">{{ stats.totalUsuaris }}</div>
-        <div class="stat-sub">Tots els usuaris</div>
+        <div class="stat-sub">Todos los usuarios</div>
       </div>
       <div class="stat-card">
         <div class="stat-row">
@@ -74,32 +74,24 @@
           <span class="stat-icon orange">🎮</span>
         </div>
         <div class="stat-value">{{ stats.xuemons }}</div>
-        <div class="stat-sub">A la base de dades</div>
+        <div class="stat-sub">En la base de datos</div>
       </div>
       <div class="stat-card">
         <div class="stat-row">
-          <span class="stat-label">Taxa Infecció</span>
+          <span class="stat-label">Tasa de Infección</span>
           <span class="stat-icon orange">⚡</span>
         </div>
         <div class="stat-value accent">{{ stats.taxaInfeccio }}%</div>
-        <div class="stat-sub">Probabilitat actual</div>
+        <div class="stat-sub">Probabilidad actual</div>
       </div>
     </div>
 
     <!-- TAB NAV -->
     <div class="tab-nav">
-      <button [class.active]="activeTab === 'jugadors'"    (click)="activeTab = 'jugadors'">
-        <span>👥</span> Jugadors
-      </button>
-      <button [class.active]="activeTab === 'recursos'"    (click)="activeTab = 'recursos'">
-        <span>📦</span> Recursos
-      </button>
-      <button [class.active]="activeTab === 'configuracio'" (click)="activeTab = 'configuracio'">
-        <span>⚙️</span> Configuració
-      </button>
-      <button [class.active]="activeTab === 'horaris'"     (click)="activeTab = 'horaris'">
-        <span>🕐</span> Horaris
-      </button>
+      <button [class.active]="activeTab === 'jugadors'"    (click)="activeTab = 'jugadors'">Jugadores</button>
+      <button [class.active]="activeTab === 'recursos'"    (click)="activeTab = 'recursos'">Recursos</button>
+      <button [class.active]="activeTab === 'configuracio'" (click)="activeTab = 'configuracio'">Configuración</button>
+      <button [class.active]="activeTab === 'horaris'"     (click)="activeTab = 'horaris'">Horarios</button>
     </div>
 
     <!-- ── TAB: JUGADORS ──────────────────────────────────────────────────── -->
@@ -108,12 +100,12 @@
       <!-- Afegir Xuxes a Jugadors -->
       <div class="section-card">
         <div class="section-header">
-          <h2>🔥 Afegir Xuxes a Jugadors <span class="arrow">↓</span></h2>
-          <p class="section-sub">Afegeix una quantitat específica de Xuxes a la motxilla d'un jugador</p>
+          <h2>Añadir Xuxes a Jugadores</h2>
+          <p class="section-sub">Añade una cantidad específica de Xuxes a la mochila de un jugador</p>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Selecciona Jugador <span class="arrow-sm">↓</span></label>
+            <label>Selecciona Jugador</label>
             <select [(ngModel)]="xuxPlayerId">
               <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
               @for (u of nonAdminUsers; track u.id) {
@@ -122,15 +114,14 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Quantitat de Xuxes</label>
+            <label>Cantidad de Xuxes</label>
             <input type="number" [(ngModel)]="xuxQty" min="1" max="500" />
           </div>
         </div>
         <div class="alert-warn">
-          <span class="alert-icon">⚠️</span>
           <div>
-            <strong>Important: Límit de la Motxilla</strong><br>
-            Si la motxilla del jugador està plena (20 espais màxim), no es podran afegir més Xuxes. Les Xuxes sobrants es descartaran automàticament.
+            <strong>Importante: Límite de la Mochila</strong><br>
+            Si la mochila del jugador está llena (20 espacios máximo), no se podrán añadir más Xuxes. Las Xuxes sobrantes se descartarán automáticamente.
           </div>
         </div>
         @if (xuxFeedback) {
@@ -138,19 +129,19 @@
         }
         <button class="btn btn-red" (click)="addXux()" [disabled]="xuxLoading || !xuxPlayerId">
           @if (xuxLoading) { <span class="spinner"></span> } @else { <span>+</span> }
-          Afegir Xuxes al Jugador
+          Añadir Xuxes al Jugador
         </button>
       </div>
 
       <!-- Afegir Xuxemon Aleatori -->
       <div class="section-card">
         <div class="section-header">
-          <h2>🎲 Afegir Xuxemon Aleatori a Jugadors <span class="arrow">↓</span></h2>
-          <p class="section-sub">Afegeix un Xuxemon aleatori a la col·lecció d'un jugador</p>
+          <h2>Añadir Xuxemon Aleatorio a Jugadores</h2>
+          <p class="section-sub">Añade un Xuxemon aleatorio a la colección de un jugador</p>
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1">
-            <label>Selecciona Jugador <span class="arrow-sm">↓</span></label>
+            <label>Selecciona Jugador</label>
             <select [(ngModel)]="aleatorioPlayerId">
               <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
               @for (u of nonAdminUsers; track u.id) {
@@ -160,10 +151,9 @@
           </div>
         </div>
         <div class="alert-info">
-          <span class="alert-icon">ℹ️</span>
           <div>
-            <strong>Xuxemon Aleatori</strong><br>
-            El sistema seleccionarà un Xuxemon aleatori de grandària Petita i s'afegirà automàticament a la Xuxedex del jugador.
+            <strong>Xuxemon Aleatorio</strong><br>
+            El sistema seleccionará un Xuxemon aleatorio de tamaño Pequeño y se añadirá automáticamente a la Xuxedex del jugador.
           </div>
         </div>
         @if (aleatorioFeedback) {
@@ -171,19 +161,19 @@
         }
         <button class="btn btn-yellow" (click)="addRandomChuchemon()" [disabled]="aleatorioLoading || !aleatorioPlayerId">
           @if (aleatorioLoading) { <span class="spinner"></span> } @else { <span>+</span> }
-          Afegir Xuxemon Aleatori
+          Añadir Xuxemon Aleatorio
         </button>
       </div>
 
       <!-- Afegir Vacunes -->
       <div class="section-card">
         <div class="section-header">
-          <h2>💉 Afegir Vacunes a Jugadors <span class="arrow">↓</span></h2>
-          <p class="section-sub">Afegeix una vacuna específica a la motxilla d'un jugador</p>
+          <h2>Añadir Vacunas a Jugadores</h2>
+          <p class="section-sub">Añade una vacuna específica a la mochila de un jugador</p>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Selecciona Jugador <span class="arrow-sm">↓</span></label>
+            <label>Selecciona Jugador</label>
             <select [(ngModel)]="vacunaPlayerId">
               <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
               @for (u of nonAdminUsers; track u.id) {
@@ -192,7 +182,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Tipus de Vacuna</label>
+            <label>Tipo de Vacuna</label>
             <select [(ngModel)]="vacunaType">
               @for (v of vacunaTypes; track v) {
                 <option [value]="v">{{ v }}</option>
@@ -201,10 +191,9 @@
           </div>
         </div>
         <div class="alert-success-box">
-          <span class="alert-icon">✅</span>
           <div>
-            <strong>Vacunes No Apilables</strong><br>
-            Cada vacuna ocupa 1 espai a la motxilla. Les vacunes curen malalties específiques dels Xuxemons.
+            <strong>Vacunas No Apilables</strong><br>
+            Cada vacuna ocupa 1 espacio en la mochila. Las vacunas curan enfermedades específicas de los Xuxemons.
           </div>
         </div>
         @if (vacunaFeedback) {
@@ -212,27 +201,27 @@
         }
         <button class="btn btn-green" (click)="addVacuna()" [disabled]="vacunaLoading || !vacunaPlayerId">
           @if (vacunaLoading) { <span class="spinner"></span> } @else { <span>+</span> }
-          Afegir Vacuna al Jugador
+          Añadir Vacuna al Jugador
         </button>
       </div>
 
       <!-- Llista de Jugadors -->
       <div class="section-card">
         <div class="section-header">
-          <h2>📋 Llista de Jugadors <span class="arrow">↓</span></h2>
-          <p class="section-sub">Tots els jugadors registrats al sistema</p>
+          <h2>Lista de Jugadores</h2>
+          <p class="section-sub">Todos los jugadores registrados en el sistema</p>
         </div>
         @if (usersLoading) {
-          <div class="loading-row">Carregant jugadors...</div>
+          <div class="loading-row">Cargando jugadores...</div>
         } @else {
           <table class="players-table">
             <thead>
               <tr>
                 <th>Jugador</th>
                 <th>Email</th>
-                <th>Nivell</th>
+                <th>Nivel</th>
                 <th>Xuemons</th>
-                <th>Victòries</th>
+                <th>Victorias</th>
               </tr>
             </thead>
             <tbody>
@@ -256,7 +245,7 @@
                 </tr>
               }
               @empty {
-                <tr><td colspan="5" class="empty-row">No hi ha jugadors registrats.</td></tr>
+                <tr><td colspan="5" class="empty-row">No hay jugadores registrados.</td></tr>
               }
             </tbody>
           </table>
@@ -266,28 +255,211 @@
 
     <!-- ── TAB: RECURSOS ──────────────────────────────────────────────────── -->
     @if (activeTab === 'recursos') {
-      <div class="section-card placeholder-section">
-        <span class="placeholder-icon">📦</span>
-        <h3>Recursos</h3>
-        <p>Secció en desenvolupament. Aviat podràs gestionar els recursos del joc.</p>
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Tipos de Recursos</h2>
+          <p class="section-sub">Todos los recursos disponibles en el juego</p>
+        </div>
+
+        <div class="recursos-grid">
+
+          <!-- XUXES -->
+          <div class="recurs-card recurs-card--red">
+            <div class="recurs-card-title">Xuxes (Apilables)</div>
+            <ul class="recurs-list">
+              <li class="recurs-item">
+                <span class="recurs-name">Xuxa Roja</span>
+                <span class="recurs-badge badge-red">Apilable x5</span>
+              </li>
+              <li class="recurs-item">
+                <span class="recurs-name">Xuxa Amarilla</span>
+                <span class="recurs-badge badge-red">Apilable x5</span>
+              </li>
+              <li class="recurs-item">
+                <span class="recurs-name">Xuxa Azul</span>
+                <span class="recurs-badge badge-red">Apilable x5</span>
+              </li>
+            </ul>
+            <p class="recurs-footer">Las Xuxes se usan para alimentar y hacer crecer a los Xuxemons</p>
+          </div>
+
+          <!-- VACUNES -->
+          <div class="recurs-card recurs-card--green">
+            <div class="recurs-card-title">Vacunas (No Apilables)</div>
+            <ul class="recurs-list">
+              <li class="recurs-item">
+                <span class="recurs-name">Vacuna Resfriado</span>
+                <span class="recurs-badge badge-gray">1 espacio</span>
+              </li>
+              <li class="recurs-item">
+                <span class="recurs-name">Vacuna Fiebre</span>
+                <span class="recurs-badge badge-gray">1 espacio</span>
+              </li>
+              <li class="recurs-item">
+                <span class="recurs-name">Vacuna Tos</span>
+                <span class="recurs-badge badge-gray">1 espacio</span>
+              </li>
+              <li class="recurs-item">
+                <span class="recurs-name">Vacuna Mareo</span>
+                <span class="recurs-badge badge-gray">1 espacio</span>
+              </li>
+              <li class="recurs-item">
+                <span class="recurs-name">Vacuna Debilidad</span>
+                <span class="recurs-badge badge-gray">1 espacio</span>
+              </li>
+            </ul>
+            <p class="recurs-footer">Las Vacunas curan enfermedades específicas de los Xuxemons</p>
+          </div>
+
+        </div>
       </div>
     }
 
     <!-- ── TAB: CONFIGURACIÓ ──────────────────────────────────────────────── -->
     @if (activeTab === 'configuracio') {
-      <div class="section-card placeholder-section">
-        <span class="placeholder-icon">⚙️</span>
-        <h3>Configuració</h3>
-        <p>Secció en desenvolupament. Aviat podràs configurar els paràmetres del joc.</p>
+
+      <!-- Xuxes per Créixer -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Xuxes para Hacer Crecer Xuxemons</h2>
+          <p class="section-sub">Configura la cantidad de Xuxes necesarias para hacer crecer a los Xuxemons</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Pequeño → Mediano (Xuxes necesarias)</label>
+            <input type="number" [(ngModel)]="cfg.xuxPetitMitja" min="1" max="100" />
+            <span class="input-hint">Valor por defecto: 3 Xuxes</span>
+          </div>
+          <div class="form-group">
+            <label>Mediano → Grande (Xuxes necesarias)</label>
+            <input type="number" [(ngModel)]="cfg.xuxMitjaGran" min="1" max="100" />
+            <span class="input-hint">Valor por defecto: 5 Xuxes</span>
+          </div>
+        </div>
+        @if (cfgFeedback) {
+          <div [class]="'alert-result ' + cfgFeedbackType">{{ cfgFeedback }}</div>
+        }
+        <button class="btn btn-red btn-full" (click)="saveConfig()" [disabled]="cfgLoading">
+          @if (cfgLoading) { <span class="spinner"></span> }
+          Guardar Configuración
+        </button>
+      </div>
+
+      <!-- Taxa d'Infecció -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Tasa de Infección de Enfermedades</h2>
+          <p class="section-sub">Modifica el porcentaje de probabilidad de infección al alimentar Xuxemons</p>
+        </div>
+        <div class="form-group">
+          <label>Porcentaje de Infección (%)</label>
+          <div class="input-with-badge">
+            <input type="number" [(ngModel)]="taxaInfeccioEdit" min="0" max="100" />
+            <span class="pct-pill">{{ taxaInfeccioEdit }}%</span>
+          </div>
+          <span class="input-hint">Por cada Xuxa con la que se alimente un Xuxemon, existe este % de probabilidad de infección aleatoria de una enfermedad. Valor por defecto: 15%</span>
+        </div>
+        <div class="alert-warn">
+          <div>
+            <strong>Sistema de Infección</strong><br>
+            Un Xuxemon puede estar enfermo de varias enfermedades simultáneamente. Hay que usar las vacunas correspondientes para curarlos.
+          </div>
+        </div>
+        @if (taxaFeedback) {
+          <div [class]="'alert-result ' + taxaFeedbackType">{{ taxaFeedback }}</div>
+        }
+        <button class="btn btn-yellow btn-full" (click)="saveTaxa()" [disabled]="taxaLoading">
+          @if (taxaLoading) { <span class="spinner"></span> }
+          Actualizar Tasa de Infección
+        </button>
       </div>
     }
 
     <!-- ── TAB: HORARIS ───────────────────────────────────────────────────── -->
     @if (activeTab === 'horaris') {
-      <div class="section-card placeholder-section">
-        <span class="placeholder-icon">🕐</span>
-        <h3>Horaris</h3>
-        <p>Secció en desenvolupament. Aviat podràs gestionar els horaris d'esdeveniments.</p>
+
+      <!-- Xuxes Diàries -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Xuxes Diarias</h2>
+          <p class="section-sub">Configura la hora y la cantidad de Xuxes que reciben los jugadores cada día</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Hora de Recepción</label>
+            <input type="time" [(ngModel)]="horariXuxes.hora" />
+            <span class="input-hint">Valor por defecto: 06:00 AM</span>
+          </div>
+          <div class="form-group">
+            <label>Cantidad Diaria</label>
+            <input type="number" [(ngModel)]="horariXuxes.quantitat" min="1" max="999" />
+            <span class="input-hint">Valor por defecto: 10 Xuxes aleatorias</span>
+          </div>
+        </div>
+        <div class="alert-info">
+          <div>
+            <strong>Distribución Automática</strong><br>
+            A la hora configurada, todos los jugadores recibirán automáticamente la cantidad de Xuxes especificada (tipo aleatorio) en su mochila.
+          </div>
+        </div>
+        @if (horariXuxesFeedback) {
+          <div [class]="'alert-result ' + horariXuxesFeedbackType">{{ horariXuxesFeedback }}</div>
+        }
+        <button class="btn btn-red btn-full" (click)="saveHorariXuxes()" [disabled]="horariXuxesLoading">
+          @if (horariXuxesLoading) { <span class="spinner"></span> }
+          Guardar Horario de Xuxes
+        </button>
+      </div>
+
+      <!-- Xuxemon Diari -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Xuxemon Diario</h2>
+          <p class="section-sub">Configura la hora en que los jugadores reciben un Xuxemon aleatorio cada día</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Hora de Recepción</label>
+            <input type="time" [(ngModel)]="horariXuxemon.hora" />
+            <span class="input-hint">Valor por defecto: 08:00 AM</span>
+          </div>
+        </div>
+        <div class="alert-success-box">
+          <div>
+            <strong>Xuxemon Aleatorio Pequeño</strong><br>
+            A la hora configurada, todos los jugadores recibirán automáticamente 1 Xuxemon aleatorio de tamaño Pequeño en su Xuxedex.
+          </div>
+        </div>
+        @if (horariXuxemoFeedback) {
+          <div [class]="'alert-result ' + horariXuxemoFeedbackType">{{ horariXuxemoFeedback }}</div>
+        }
+        <button class="btn btn-green btn-full" (click)="saveHorariXuxemon()" [disabled]="horariXuxemoLoading">
+          @if (horariXuxemoLoading) { <span class="spinner"></span> }
+          Guardar Horario de Xuxemon
+        </button>
+      </div>
+
+      <!-- Resum d'Horaris -->
+      <div class="section-card horaris-resum">
+        <h2 class="resum-title">Resumen de Horarios Configurados</h2>
+        <div class="resum-item resum-item--red">
+          <div class="resum-left">
+            <div>
+              <span class="resum-name">Xuxes Diarias</span>
+              <span class="resum-desc">{{ horariXuxes.quantitat }} Xuxes aleatorias para todos los jugadores</span>
+            </div>
+          </div>
+          <span class="resum-hora">{{ horariXuxes.hora }}</span>
+        </div>
+        <div class="resum-item resum-item--orange">
+          <div class="resum-left">
+            <div>
+              <span class="resum-name">Xuxemon Diario</span>
+              <span class="resum-desc">1 Xuxemon aleatorio pequeño para todos los jugadores</span>
+            </div>
+          </div>
+          <span class="resum-hora">{{ horariXuxemon.hora }}</span>
+        </div>
       </div>
     }
 

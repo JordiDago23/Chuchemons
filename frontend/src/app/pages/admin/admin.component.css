@@ -198,6 +198,99 @@
 .text-accent { color: #e63946; font-weight: 700; }
 .empty-row   { text-align: center; color: #aaa; padding: 1.5rem; }
 
+/* ─── RECURSOS ────────────────────────────────────────── */
+.recursos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+.recurs-card {
+  border-radius: 10px;
+  border: 2px solid transparent;
+  padding: 1.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.recurs-card--red   { border-color: #e63946; background: #fff; }
+.recurs-card--green { border-color: #16a34a; background: #fff; }
+.recurs-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1d1d1d;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.recurs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.recurs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #333;
+}
+.recurs-name  { display: flex; align-items: center; gap: 0.45rem; }
+.recurs-emoji { font-size: 1rem; }
+.recurs-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.badge-red  { background: #e63946; color: #fff; }
+.badge-gray { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.recurs-footer {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+  padding-top: 0.3rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ─── CONFIGURACIÓ ───────────────────────────────────────*/
+.cfg-icon          { font-size: 1.1rem; margin-right: 0.3rem; }
+.cfg-icon--red     { color: #e63946; }
+.cfg-icon--orange  { color: #f4a611; }
+.input-hint        { font-size: 0.73rem; color: #94a3b8; margin-top: 0.2rem; }
+.input-with-badge  { display: flex; gap: 0.6rem; align-items: center; }
+.input-with-badge input { flex: 1; }
+.pct-pill {
+  min-width: 52px; text-align: center;
+  background: #f1f5f9; color: #334155;
+  border: 1px solid #e2e8f0; border-radius: 7px;
+  padding: 0.52rem 0.8rem; font-size: 0.9rem; font-weight: 700;
+}
+.btn-full { align-self: stretch; justify-content: center; }
+
+/* ─── HORARIS ────────────────────────────────────────── */
+.horaris-resum { border: 2px solid #fca5a5; background: #fff; }
+.resum-title { font-size: 1rem; font-weight: 700; color: #1d1d1d; margin: 0 0 0.8rem; }
+.resum-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1rem; border-radius: 8px; gap: 0.75rem;
+}
+.resum-item + .resum-item { margin-top: 0.5rem; }
+.resum-item--red    { background: #fff5f5; }
+.resum-item--orange { background: #fffbeb; }
+.resum-left  { display: flex; align-items: center; gap: 0.75rem; }
+.resum-icon  { font-size: 1.3rem; }
+.resum-name  { display: block; font-size: 0.88rem; font-weight: 700; color: #1d1d1d; }
+.resum-desc  { display: block; font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+.resum-hora {
+  font-size: 0.88rem; font-weight: 700; color: #334155;
+  background: #f1f5f9; border: 1px solid #e2e8f0;
+  border-radius: 7px; padding: 4px 12px; white-space: nowrap;
+}
+
 /* ─── PLACEHOLDER SECTIONS ────────────────────────────── */
 .placeholder-section {
   align-items: center; justify-content: center; min-height: 220px; text-align: center; color: #94a3b8;
@@ -205,4 +298,5 @@
 .placeholder-icon { font-size: 3rem; margin-bottom: 0.5rem; display: block; }
 .placeholder-section h3 { font-size: 1.1rem; font-weight: 700; color: #64748b; margin: 0 0 0.4rem; }
 .placeholder-section p  { font-size: 0.85rem; margin: 0; max-width: 360px; }
+
 
