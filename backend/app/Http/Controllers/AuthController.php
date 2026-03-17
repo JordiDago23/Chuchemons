@@ -16,10 +16,10 @@ class AuthController extends Controller
     {
         Log::info('Registro - Datos recibidos:', $request->all());
         
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [   
             'nombre'            => 'required|string|max:255',
             'apellidos'         => 'required|string|max:255',
-            'email'             => 'required|email|unique:users',
+            'email'             => 'required|email|unique:users',  //Validador de usuario existente
             'password'          => 'required|min:6|confirmed',
         ]);
 
@@ -43,7 +43,7 @@ class AuthController extends Controller
                 'nombre'    => $request->nombre,
                 'apellidos' => $request->apellidos,
                 'email'     => $request->email,
-                'password'  => Hash::make($request->password),
+                'password'  => Hash::make($request->password),  //Encriptar contraseña 
                 'player_id' => $playerId,
                 'is_admin'  => $isAdmin,
             ]);

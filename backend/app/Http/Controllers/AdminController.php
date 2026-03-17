@@ -15,7 +15,7 @@ class AdminController extends Controller
     private const MAX_SPACES = 20;
     private const STACK_SIZE = 5;
 
-    private function checkAdmin(): ?JsonResponse
+    private function checkAdmin(): ?JsonResponse  //Admin check en caso de que sea administrador le deje avanzar sino le devuelva un error
     {
         if (!JWTAuth::parseToken()->authenticate()?->is_admin) {
             return response()->json(['message' => 'No autoritzat'], 403);

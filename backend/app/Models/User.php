@@ -25,7 +25,7 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $casts = [
-        'is_admin' => 'boolean',
+        'is_admin' => 'boolean',  //Rol de administrador
     ];
 
     public function getJWTIdentifier()
