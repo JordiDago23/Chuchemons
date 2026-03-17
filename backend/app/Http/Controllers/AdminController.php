@@ -8,6 +8,7 @@ use App\Models\MochilaXux;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AdminController extends Controller
 {
@@ -16,7 +17,7 @@ class AdminController extends Controller
 
     private function checkAdmin(): ?JsonResponse
     {
-        if (!auth()->user()?->is_admin) {
+        if (!JWTAuth::parseToken()->authenticate()?->is_admin) {
             return response()->json(['message' => 'No autoritzat'], 403);
         }
         return null;

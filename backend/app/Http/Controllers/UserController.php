@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
     // ─── ACTUALIZAR PERFIL ────────────────────────────────
     public function update(Request $request)
     {
-        $user = auth()->user();
+        $user = JWTAuth::parseToken()->authenticate();
 
         $validator = Validator::make($request->all(), [
             'nombre'    => 'sometimes|string|max:255',
@@ -42,8 +43,8 @@ class UserController extends Controller
     // ─── DARSE DE BAJA ────────────────────────────────────
     public function delete()
     {
-        $user = auth()->user();
-        auth()->logout();
+        $user = JWTAuth::parseToken()->authenticate();
+        JWTAuth::invalidate(JWTAuth::getToken());
         $user->delete();
 
         return response()->json(['message' => 'Cuenta eliminada correctamente']);
