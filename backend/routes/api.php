@@ -24,6 +24,11 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/user/update', [UserController::class, 'update']);
     Route::delete('/user',     [UserController::class, 'delete']);
 
+    // ─── USUARIO - CHUCHEMONS ──────────────────────────────
+    Route::get('/user/chuchemons',          [ChuchemonController::class, 'getMyChuchemons']);
+    Route::post('/user/chuchemons/{id}/capture', [ChuchemonController::class, 'capture']);
+    Route::get('/user/team',                [ChuchemonController::class, 'getTeam']);
+
     // ─── MOCHILA ───────────────────────────────────────────
     Route::get('/mochila',          [MochilaController::class, 'index']);
     Route::post('/mochila/add-xux', [MochilaController::class, 'addXux']);

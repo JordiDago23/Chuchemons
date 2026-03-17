@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserTeam;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ChuchemonController extends Controller
@@ -123,7 +124,7 @@ class ChuchemonController extends Controller
 
             return response()->json($myChuchemons->values()->all());
         } catch (\Exception $e) {
-            \Log::error('Error en getMyChuchemons: ' . $e->getMessage());
+            Log::error('Error en getMyChuchemons: ' . $e->getMessage());
             return response()->json(['message' => 'Sin chuchemons capturados'], 200);
         }
     }
@@ -131,7 +132,7 @@ class ChuchemonController extends Controller
     /**
      * Captura un Chuchemon (incrementa el contador)
      */
-    public function captureChuchemon(int $id): JsonResponse
+    public function capture(int $id): JsonResponse
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
