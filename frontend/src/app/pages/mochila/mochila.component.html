@@ -225,14 +225,14 @@
 
           <div class="item-img-wrap">
             <div class="item-img-placeholder candy-img">
-              <img *ngIf="item.chuchemon?.image" [src]="item.chuchemon.image" [alt]="item.chuchemon.name" style="width:70px;height:70px;object-fit:contain;" />
-              <span *ngIf="!item.chuchemon?.image" class="candy-emoji">🍬</span>
+              <img *ngIf="item.chuchemon.image" [src]="item.chuchemon.image" [alt]="item.chuchemon.name" style="width:70px;height:70px;object-fit:contain;" />
+              <span *ngIf="!item.chuchemon.image" class="candy-emoji">🍬</span>
             </div>
           </div>
 
           <div class="item-body">
-            <h3 class="item-name">Xux de {{ item.chuchemon?.name ?? '?' }}</h3>
-            <p class="item-desc">Element {{ item.chuchemon?.element ?? '?' }}</p>
+            <h3 class="item-name">Xux de {{ item.chuchemon.name ?? '?' }}</h3>
+            <p class="item-desc">Element {{ item.chuchemon.element ?? '?' }}</p>
           </div>
 
           <div class="stack-info">

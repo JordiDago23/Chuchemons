@@ -22,7 +22,7 @@
       <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
       <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
       <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
-      <a *ngIf="user?.is_admin" class="nav-item" routerLink="/admin"><span class="nav-icon">🛡</span> Admin</a>
+      <a *ngIf="isAdmin" class="nav-item" routerLink="/admin"><span class="nav-icon">🛡</span> Admin</a>
     </nav>
 
     <div class="sidebar-footer">
