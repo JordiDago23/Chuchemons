@@ -28,6 +28,12 @@ export interface VacunaItem extends ItemBase {
 
 export type Item = XuxItem | VacunaItem;
 
+interface InventorySlot {
+  index: number;
+  kind: 'xux' | 'vacuna' | 'empty';
+  label: string;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 @Component({
   selector: 'app-mochila',
@@ -208,6 +214,24 @@ export class MochilaComponent implements OnInit {
     return this.vacunaItems.filter(i => i.quantity > 0).length;
   }
 
+  get inventorySlots(): InventorySlot[] {
+    const slots: InventorySlot[] = [];
+    const xuxSlots = Math.min(this.totalXuxSlots, this.MAX_SPACES);
+    const vacunaSlots = Math.min(this.totalVacunaSlots, this.MAX_SPACES - xuxSlots);
+
+    for (let i = 1; i <= this.MAX_SPACES; i++) {
+      if (i <= xuxSlots) {
+        slots.push({ index: i, kind: 'xux', label: 'Xux' });
+      } else if (i <= xuxSlots + vacunaSlots) {
+        slots.push({ index: i, kind: 'vacuna', label: 'Vacuna' });
+      } else {
+        slots.push({ index: i, kind: 'empty', label: 'Lliure' });
+      }
+    }
+
+    return slots;
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   getMochilaItem(chuchemonId: number): MochilaXuxItem | undefined {
     return this.mochilaXuxes.find(i => i.chuchemon_id === chuchemonId);
@@ -215,6 +239,10 @@ export class MochilaComponent implements OnInit {
 
   range(n: number): number[] {
     return Array.from({ length: n }, (_, i) => i);
+  }
+
+  trackBySlot(_index: number, slot: InventorySlot): number {
+    return slot.index;
   }
 
   setTab(tab: 'objetos' | 'vacunas' | 'chuchemons') {

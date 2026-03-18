@@ -14,8 +14,9 @@ Route::post('/login',    [AuthController::class, 'login']);
 // ─── RUTAS CHUCHEMONS (públicas) ───────────────────────
 Route::get('/chuchemons', [ChuchemonController::class, 'index']);
 Route::get('/chuchemons/element/{element}', [ChuchemonController::class, 'filterByElement']);
-Route::get('/chuchemons/search/{query}', [ChuchemonController::class, 'search']);
-Route::get('/chuchemons/{id}', [ChuchemonController::class, 'show']);
+Route::get('/chuchemons/mida/{mida}',       [ChuchemonController::class, 'filterByMida']);
+Route::get('/chuchemons/search/{query}',    [ChuchemonController::class, 'search']);
+Route::get('/chuchemons/{id}',              [ChuchemonController::class, 'show']);
 
 // ─── RUTAS PROTEGIDAS (requieren JWT) ────────────────────
 Route::middleware('auth:api')->group(function () {
@@ -30,14 +31,21 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user/team',                [ChuchemonController::class, 'getTeam']);
 
     // ─── MOCHILA ───────────────────────────────────────────
-    Route::get('/mochila',          [MochilaController::class, 'index']);
-    Route::post('/mochila/add-xux', [MochilaController::class, 'addXux']);
+    Route::get('/mochila',              [MochilaController::class, 'index']);
+    Route::post('/mochila/add-xux',     [MochilaController::class, 'addXux']);
+    Route::put('/mochila/{id}',         [MochilaController::class, 'update']);
+    Route::delete('/mochila/{id}',      [MochilaController::class, 'destroy']);
 
-    // ─── ADMIN ─────────────────────────────────────────────
+    // ─── ADMIN ────────────────────────────────────────────────────────
     Route::prefix('admin')->group(function () {
         Route::get('/stats',                        [AdminController::class, 'stats']);
         Route::get('/users',                        [AdminController::class, 'listUsers']);
         Route::post('/users/{id}/add-xux',          [AdminController::class, 'addXuxToUser']);
         Route::post('/users/{id}/add-chuchemon',    [AdminController::class, 'addRandomChuchemon']);
+
+        // CRUD Xuxemons (admin)
+        Route::post('/chuchemons',       [ChuchemonController::class, 'store']);
+        Route::put('/chuchemons/{id}',   [ChuchemonController::class, 'update']);
+        Route::delete('/chuchemons/{id}',[ChuchemonController::class, 'destroy']);
     });
 });

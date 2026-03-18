@@ -7,6 +7,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ChuchemonCardComponent } from '../../components/chuchemon-card/chuchemon-card.component';
 
 interface ChuchemonExtended extends Chuchemon {
   captured?: boolean;
@@ -16,7 +17,7 @@ interface ChuchemonExtended extends Chuchemon {
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ChuchemonCardComponent],
   templateUrl: './chuchedex.component.html',
   styleUrls: ['./chuchedex.component.css']
 })
@@ -25,6 +26,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   myChuchemons: ChuchemonExtended[] = [];
   filteredChuchemons: ChuchemonExtended[] = [];
   selectedElement: 'Todos' | 'Tierra' | 'Aire' | 'Agua' = 'Todos';
+  selectedSize: 'Todas' | 'Petit' | 'Mitjà' | 'Gran' = 'Todas';
   selectedTab: 'todos' | 'mis' = 'todos';
   searchQuery: string = '';
   isLoading: boolean = true;
@@ -133,6 +135,10 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(c => c.element === this.selectedElement);
     }
 
+    if (this.selectedSize !== 'Todas') {
+      filtered = filtered.filter(c => this.getSizeBadge(c) === this.selectedSize);
+    }
+
     if (this.searchQuery.trim() !== '') {
       filtered = filtered.filter(c => 
         c.name.toLowerCase().includes(this.searchQuery.toLowerCase())
@@ -140,6 +146,10 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     }
 
     this.filteredChuchemons = filtered;
+  }
+
+  onSizeChange(): void {
+    this.applyFilters();
   }
 
   onElementChange(): void {
@@ -181,6 +191,20 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
 
   getMultiplier(chuchemon: ChuchemonExtended): number {
     return chuchemon.count ?? 1;
+  }
+
+  getSizeBadge(chuchemon: ChuchemonExtended): 'Petit' | 'Mitja' | 'Gran' {
+    const quantity = this.getMultiplier(chuchemon);
+    if (quantity >= 5) return 'Gran';
+    if (quantity >= 3) return 'Mitja';
+    return 'Petit';
+  }
+
+  getQuantityBadge(chuchemon: ChuchemonExtended): string {
+    if (!this.isCaptured(chuchemon) && !this.isAdmin && this.selectedTab === 'todos') {
+      return 'x?';
+    }
+    return `x${this.getMultiplier(chuchemon)}`;
   }
 
   captureChuchemon(chuchemonId: number): void {

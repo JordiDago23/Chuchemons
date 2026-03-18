@@ -1,8 +1,12 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // Aliases requerits pel nivell 2
+  { path: 'xuxedex',   redirectTo: 'chuchedex', pathMatch: 'full' },
+  { path: 'inventory', redirectTo: 'mochila',   pathMatch: 'full' },
   {
     path: 'register',
     loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent)
@@ -39,7 +43,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, adminGuard]
   },
   { path: '**', redirectTo: 'login' }
 ];

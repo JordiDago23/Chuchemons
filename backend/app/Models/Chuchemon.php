@@ -12,6 +12,7 @@ class Chuchemon extends Model
     protected $fillable = [
         'name',
         'element',
+        'mida',
         'image',
     ];
 

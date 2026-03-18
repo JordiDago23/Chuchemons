@@ -15,14 +15,16 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
-      <a class="nav-item active" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
-      <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
-      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
-      <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
-      <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
-      <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
-      <a *ngIf="isAdmin" class="nav-item" routerLink="/admin"><span class="nav-icon">🛡</span> Admin</a>
+      <a class="nav-item" routerLink="/home"><span class="nav-icon" aria-hidden="true">⌂</span> Inicio</a>
+      <a class="nav-item active" routerLink="/chuchedex" aria-current="page"><span class="nav-icon" aria-hidden="true">📖</span> Chuchedex</a>
+      <a class="nav-item" routerLink="/mochila"><span class="nav-icon" aria-hidden="true">🎒</span> Mochila</a>
+      <a class="nav-item" routerLink="/amigos"><span class="nav-icon" aria-hidden="true">👥</span> Amigos</a>
+      <a class="nav-item" routerLink="/batalla"><span class="nav-icon" aria-hidden="true">⚔</span> Batalla</a>
+      <a class="nav-item" routerLink="/chat"><span class="nav-icon" aria-hidden="true">💬</span> Chat</a>
+      <a class="nav-item" routerLink="/profile"><span class="nav-icon" aria-hidden="true">👤</span> Perfil</a>
+      @if (isAdmin) {
+        <a class="nav-item" routerLink="/admin"><span class="nav-icon" aria-hidden="true">🛡</span> Admin</a>
+      }
     </nav>
 
     <div class="sidebar-footer">
@@ -41,7 +43,14 @@
     </div>
 
     <!-- Barra de progreso -->
-    <div class="progress-section">
+    <div
+      class="progress-section"
+      role="progressbar"
+      [attr.aria-valuenow]="completionPercentage"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-label]="'Progrés de captura: ' + completionPercentage + '%'"
+    >
       <div class="progress-info">
         <span class="progress-label">Captura completada</span>
         <span class="progress-percentage">{{ completionPercentage }}%</span>
@@ -52,92 +61,88 @@
     </div>
 
     <!-- Filtros -->
-    <div class="filters-section">
+    <div class="filters-section" role="search" aria-label="Filtres de la col·lecció">
       <div class="search-box-wrapper">
-        <input 
-          type="text" 
-          placeholder="Buscar Chuchemón ..." 
+        <input
+          type="text"
+          placeholder="Buscar Chuchemón ..."
           [(ngModel)]="searchQuery"
           (input)="onSearchChange()"
           class="search-input"
         >
       </div>
 
+      <!-- Filtre per tipus (Agua/Tierra/Aire) -->
       <div class="filter-select">
         <select [(ngModel)]="selectedElement" (change)="onElementChange()" class="element-dropdown">
           <option value="Todos">Todos los tipos</option>
-          <option value="Tierra">Tierra</option>
-          <option value="Aire">Aire</option>
-          <option value="Agua">Agua</option>
+          <option value="Tierra">🌍 Tierra</option>
+          <option value="Aire">💨 Aire</option>
+          <option value="Agua">💧 Agua</option>
         </select>
       </div>
 
-      <div class="filter-select all-dropdown" *ngIf="!isAdmin">
-        <select class="all-filter-dropdown" [(ngModel)]="selectedTab" (change)="onTabChange(selectedTab)">
-          <option value="todos">Todos</option>
-          <option value="mis">Mis Chuchemons</option>
+      <!-- Filtre per mida (Petit/Mitjà/Gran) -->
+      <div class="filter-select">
+        <select [(ngModel)]="selectedSize" (change)="onSizeChange()" class="element-dropdown">
+          <option value="Todas">Todas las midas</option>
+          <option value="Petit">Petit (x1–x2)</option>
+          <option value="Mitjà">Mitjà (x3–x4)</option>
+          <option value="Gran">Gran (x5+)</option>
         </select>
       </div>
+
+      @if (!isAdmin) {
+        <div class="filter-select">
+          <select class="all-filter-dropdown" [(ngModel)]="selectedTab" (change)="onTabChange(selectedTab)">
+            <option value="todos">Todos</option>
+            <option value="mis">Mis Chuchemons</option>
+          </select>
+        </div>
+      }
     </div>
 
-    <div *ngIf="isLoading" class="loading">
-      <p>Cargando Chuchemons...</p>
-    </div>
+    @if (isLoading) {
+      <div class="loading" role="status" aria-live="polite"><p>Cargando Chuchemons...</p></div>
+    }
 
-    <div *ngIf="errorMessage" class="error">
-      <p>{{ errorMessage }}</p>
-    </div>
+    @if (errorMessage) {
+      <div class="error" role="alert"><p>{{ errorMessage }}</p></div>
+    }
 
-    <!-- Grid de Chuchemons -->
-    <div class="chuchemons-grid" *ngIf="!isLoading && !errorMessage">
-      <div class="chuchemon-card" *ngFor="let chuchemon of filteredChuchemons" [class.locked]="isBlockedForDisplay(chuchemon)">
-        <!-- Etiquetas superiores -->
-        <div class="card-labels">
-          <span class="type-label" [style.backgroundColor]="getElementColor(chuchemon.element)">
-            Tipo {{ chuchemon.element }}
-          </span>
-          <span class="team-label" *ngIf="isInTeam(chuchemon.id)">En el Equipo</span>
-          <!-- Multiplicador para chuchemons capturados -->
-          <span class="multiplier-label" *ngIf="isCaptured(chuchemon) && getMultiplier(chuchemon) > 1">
-            x{{ getMultiplier(chuchemon) }}
-          </span>
-        </div>
-
-        <!-- Imagen (con efecto de bloqueo si no está capturado) -->
-        <div class="card-image" [class.blurred]="isBlockedForDisplay(chuchemon)">
-          <img 
-            [src]="'http://localhost:8000/chuchemons/' + chuchemon.image" 
-            [alt]="chuchemon.name"
-            onerror="this.src='assets/placeholder.png'"
-          >
-          <!-- Candado para chuchemons bloqueados -->
-          <div class="lock-icon" *ngIf="isBlockedForDisplay(chuchemon)">
-            🔒
-          </div>
-        </div>
-
-        <!-- Info -->
-        <div class="card-info" [class.blurred-text]="isBlockedForDisplay(chuchemon)">
-          <div class="card-header">
-            <h3>{{ isCaptured(chuchemon) || isAdmin || selectedTab === 'mis' ? chuchemon.name : '?????' }}</h3>
-            <span class="card-number">Nº. {{ isCaptured(chuchemon) || isAdmin || selectedTab === 'mis' ? chuchemon.id : '?' }}</span>
-          </div>
-          <div class="card-hp" *ngIf="isCaptured(chuchemon) || isAdmin || selectedTab === 'mis'">
-            <span>HP</span>
-            <span class="hp-value">100/100</span>
-          </div>
-          <div class="hp-bar" *ngIf="isCaptured(chuchemon) || isAdmin || selectedTab === 'mis'">
-            <div class="hp-fill" [style.width.%]="100"></div>
-          </div>
-          <button class="details-btn" *ngIf="(isCaptured(chuchemon) || isAdmin) && selectedTab === 'mis'">Ver Detalles</button>
-          <button class="capture-btn" *ngIf="!isCaptured(chuchemon) && isAdmin === false && selectedTab === 'todos'" (click)="captureChuchemon(chuchemon.id)">Capturar</button>
-          <button class="details-btn" *ngIf="isAdmin">Ver Detalles</button>
-        </div>
+    <!-- Grid de Chuchemons — section + @for + @if + [ngClass] -->
+    @if (!isLoading && !errorMessage) {
+      <section
+        class="chuchemons-collection"
+        aria-labelledby="col-heading"
+        aria-live="polite"
+        [attr.aria-label]="'Col·lecció de Xuxemons: ' + filteredChuchemons.length + ' resultats'"
+      >
+        <h2 id="col-heading" class="sr-only">Col·lecció de Xuxemons</h2>
+      <div
+        class="chuchemons-grid"
+        [ngClass]="{
+          'grid-col-6': filteredChuchemons.length > 8,
+          'grid-col-4': filteredChuchemons.length > 4 && filteredChuchemons.length <= 8,
+          'grid-col-2': filteredChuchemons.length <= 4
+        }"
+      >
+        @for (chuchemon of filteredChuchemons; track chuchemon.id) {
+          <app-chuchemon-card
+            [chuchemon]="chuchemon"
+            [locked]="isBlockedForDisplay(chuchemon)"
+            [showCaptureBtn]="!isCaptured(chuchemon) && !isAdmin && selectedTab === 'todos'"
+            [showDetailsBtn]="(isCaptured(chuchemon) || isAdmin)"
+            [showTeamBadge]="isInTeam(chuchemon.id)"
+            (capture)="captureChuchemon($event)"
+          ></app-chuchemon-card>
+        }
       </div>
-    </div>
+      </section> <!-- /chuchemons-collection -->
+    }
 
-    <div class="no-results" *ngIf="!isLoading && !errorMessage && filteredChuchemons.length === 0">
-      <p>No se encontraron Chuchemons</p>
-    </div>
+    @if (!isLoading && !errorMessage && filteredChuchemons.length === 0) {
+      <div class="no-results" role="status"><p>No se encontraron Chuchemons</p></div>
+    }
   </main>
 </div>

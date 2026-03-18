@@ -8,6 +8,7 @@ use App\Models\UserTeam;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ChuchemonController extends Controller
@@ -48,6 +49,7 @@ class ChuchemonController extends Controller
                 'id' => $chuchemon->id,
                 'name' => $chuchemon->name,
                 'element' => $chuchemon->element,
+                'mida' => $chuchemon->mida,
                 'image' => $chuchemon->image,
                 'captured' => $captured,
                 'count' => $count,
@@ -79,6 +81,15 @@ class ChuchemonController extends Controller
     public function filterByElement(string $element): JsonResponse
     {
         $chuchemons = Chuchemon::where('element', $element)->get();
+        return response()->json($chuchemons);
+    }
+
+    /**
+     * Filtra Chuchemons per mida (Petit, Mitjà, Gran)
+     */
+    public function filterByMida(string $mida): JsonResponse
+    {
+        $chuchemons = Chuchemon::where('mida', $mida)->get();
         return response()->json($chuchemons);
     }
 
@@ -259,6 +270,72 @@ class ChuchemonController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
+    }
+
+    // ─── CRUD ADMIN ──────────────────────────────────────────────────────────
+
+    /**
+     * Crea un nou Xuxemon (admin)
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name'    => 'required|string|max:100|unique:chuchemons,name',
+            'element' => 'required|in:Tierra,Aire,Agua',
+            'mida'    => 'required|in:Petit,Mitjà,Gran',
+            'image'   => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $chuchemon = Chuchemon::create($request->only(['name', 'element', 'mida', 'image']));
+
+        return response()->json($chuchemon, 201);
+    }
+
+    /**
+     * Actualitza un Xuxemon (admin)
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $chuchemon = Chuchemon::find($id);
+
+        if (!$chuchemon) {
+            return response()->json(['message' => 'Chuchemon no trobat'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name'    => 'sometimes|string|max:100|unique:chuchemons,name,' . $id,
+            'element' => 'sometimes|in:Tierra,Aire,Agua',
+            'mida'    => 'sometimes|in:Petit,Mitjà,Gran',
+            'image'   => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $chuchemon->update($request->only(['name', 'element', 'mida', 'image']));
+
+        return response()->json($chuchemon);
+    }
+
+    /**
+     * Elimina un Xuxemon (admin)
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $chuchemon = Chuchemon::find($id);
+
+        if (!$chuchemon) {
+            return response()->json(['message' => 'Chuchemon no trobat'], 404);
+        }
+
+        $chuchemon->delete();
+
+        return response()->json(['message' => 'Chuchemon eliminat correctament']);
     }
 }
 

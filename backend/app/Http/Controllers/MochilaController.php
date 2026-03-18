@@ -122,4 +122,86 @@ class MochilaController extends Controller
             'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
         ]);
     }
+
+    /**
+     * Modifica la quantitat d'un item de la mochila de l'usuari.
+     * Si quantity = 0, elimina l'item.
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $user = auth()->user();
+
+        $item = MochilaXux::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$item) {
+            return response()->json(['message' => 'Item no trobat'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'quantity' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $newQty = (int) $request->quantity;
+
+        if ($newQty === 0) {
+            $item->delete();
+            return response()->json(['message' => 'Item eliminat de la mochila']);
+        }
+
+        // Check space constraints: slots used by other items + new slots for this item
+        $others           = MochilaXux::where('user_id', $user->id)->where('id', '!=', $id)->get();
+        $usedByOthers     = $others->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+        $slotsForNewQty   = (int) ceil($newQty / self::STACK_SIZE);
+
+        if ($usedByOthers + $slotsForNewQty > self::MAX_SPACES) {
+            return response()->json(['message' => 'La mochila no té prou espai per a aquesta quantitat'], 422);
+        }
+
+        $item->quantity = $newQty;
+        $item->save();
+        $item->load('chuchemon');
+
+        $allItems      = MochilaXux::where('user_id', $user->id)->get();
+        $newUsedSpaces = $allItems->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+
+        return response()->json([
+            'message'     => 'Quantitat actualitzada correctament',
+            'item'        => $item,
+            'used_spaces' => $newUsedSpaces,
+            'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
+        ]);
+    }
+
+    /**
+     * Elimina un item de la mochila de l'usuari.
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $user = auth()->user();
+
+        $item = MochilaXux::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$item) {
+            return response()->json(['message' => 'Item no trobat'], 404);
+        }
+
+        $item->delete();
+
+        $allItems      = MochilaXux::where('user_id', $user->id)->get();
+        $newUsedSpaces = $allItems->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+
+        return response()->json([
+            'message'     => 'Item eliminat de la mochila correctament',
+            'used_spaces' => $newUsedSpaces,
+            'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
+        ]);
+    }
 }
