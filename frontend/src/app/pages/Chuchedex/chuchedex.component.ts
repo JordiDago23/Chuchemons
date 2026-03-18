@@ -1,13 +1,15 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, interval } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { EvolutionService } from '../../services/evolution.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonCardComponent } from '../../components/chuchemon-card/chuchemon-card.component';
+import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 
 interface ChuchemonExtended extends Chuchemon {
   captured?: boolean;
@@ -17,7 +19,7 @@ interface ChuchemonExtended extends Chuchemon {
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ChuchemonCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ChuchemonCardComponent, ConfirmDialogComponent],
   templateUrl: './chuchedex.component.html',
   styleUrls: ['./chuchedex.component.css']
 })
@@ -38,25 +40,59 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private teamChuchemons: Set<number> = new Set();
 
+  // Evolution dialog properties
+  showEvolutionDialog = false;
+  evolvingChuchemonId: number | null = null;
+  evolvingChuchemonName = '';
+  evolvingChuchemonNextMida = '';
+
+  private pageVisible = true;
+  private autoRefreshSubscription: any;
+
   constructor(
     private chuchemonService: ChuchemonService,
+    private evolutionService: EvolutionService,
     private authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.checkAdminStatus();
     this.loadChuchemons();
-    // Solo cargar mis chuchemons si no es admin
-    setTimeout(() => {
-      if (!this.isAdmin) {
-        this.loadMyChuchemons();
+    
+    // Auto-refresh every 10 seconds when page is visible
+    this.setupAutoRefresh();
+    
+    // Reload when page/tab becomes visible
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        this.loadChuchemons();
       }
-    }, 500);
+    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.autoRefreshSubscription) {
+      this.autoRefreshSubscription.unsubscribe();
+    }
+  }
+
+  private setupAutoRefresh(): void {
+    // Auto-refresh every 10 seconds
+    this.autoRefreshSubscription = interval(10000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (!this.isLoading && !document.hidden) {
+          this.loadChuchemons();
+        }
+      });
+  }
+
+  @HostListener('window:focus', ['$event'])
+  onWindowFocus(event: any): void {
+    // Reload when window regains focus
+    this.loadChuchemons();
   }
 
   checkAdminStatus(): void {
@@ -87,8 +123,14 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
           this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
           
           this.updateCompletionPercentage();
-          this.applyFilters();
-          this.isLoading = false;
+          
+          // Reload my chuchemons to sync captured status
+          if (!this.isAdmin) {
+            this.loadMyChuchemons();
+          } else {
+            this.applyFilters();
+            this.isLoading = false;
+          }
         },
         error: (error) => {
           console.error('Error loading Chuchemons:', error);
@@ -104,10 +146,17 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.myChuchemons = data as ChuchemonExtended[];
+          // Update captured status in all chuchemons list
+          const myIds = new Set(this.myChuchemons.map(c => c.id));
+          this.chuchemons.forEach(c => c.captured = myIds.has(c.id));
+          this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
+          this.updateCompletionPercentage();
           this.applyFilters();
+          this.isLoading = false;
         },
         error: (error) => {
           console.error('Error loading my Chuchemons:', error);
+          this.isLoading = false;
         }
       });
   }
@@ -158,7 +207,13 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
 
   onTabChange(tab: 'todos' | 'mis'): void {
     this.selectedTab = tab;
-    this.applyFilters();
+    // Reload all data when switching tabs to sync with potential admin changes
+    if (!this.isAdmin) {
+      this.isLoading = true;
+      this.loadChuchemons();
+    } else {
+      this.applyFilters();
+    }
   }
 
   onSearchChange(): void {
@@ -221,6 +276,53 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
           this.errorMessage = 'Error al capturar el Chuchemon';
         }
       });
+  }
+
+  openEvolutionDialog(chuchemonId: number, chuchemonName: string): void {
+    this.evolutionService.getEvolutionInfo(chuchemonId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (info) => {
+          if (info.can_evolve) {
+            this.evolvingChuchemonId = chuchemonId;
+            this.evolvingChuchemonName = chuchemonName;
+            this.evolvingChuchemonNextMida = info.next_mida || '';
+            this.showEvolutionDialog = true;
+          } else {
+            alert('Este Xuxemon ya está en su máxima evolución.');
+          }
+        },
+        error: (error) => {
+          console.error('Error getting evolution info:', error);
+          alert('Error al obtener la información de evolución');
+        }
+      });
+  }
+
+  confirmEvolution(): void {
+    if (this.evolvingChuchemonId === null) return;
+
+    this.evolutionService.evolveChuchemon(this.evolvingChuchemonId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          alert(response.message);
+          this.showEvolutionDialog = false;
+          this.evolvingChuchemonId = null;
+          // Recargar datos
+          this.loadChuchemons();
+          this.loadMyChuchemons();
+        },
+        error: (error) => {
+          console.error('Error evolving chuchemon:', error);
+          alert('Error al evolucionar el Xuxemon');
+        }
+      });
+  }
+
+  cancelEvolution(): void {
+    this.showEvolutionDialog = false;
+    this.evolvingChuchemonId = null;
   }
 
   logout(): void {

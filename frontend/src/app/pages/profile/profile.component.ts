@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ConfirmDialogComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -21,6 +22,7 @@ export class ProfileComponent implements OnInit {
   success = '';
   loading = false;
   showConfirm = false;
+  showDeleteConfirm = false;
 
   // Stats mock — por defecto en 0 para cuentas nuevas
   stats = { level: 0, xp: 0, xpMax: 100, wins: 0, losses: 0, streak: 0, captured: 0 };
@@ -129,7 +131,25 @@ export class ProfileComponent implements OnInit {
   }
 
   onDelete() {
-    this.auth.deleteAccount().subscribe();
+    this.showDeleteConfirm = true;
+  }
+
+  confirmDelete() {
+    this.loading = true;
+    this.auth.deleteAccount().subscribe({
+      next: () => {
+        this.loading = false;
+        this.showDeleteConfirm = false;
+      },
+      error: (err: any) => {
+        this.loading = false;
+        this.error = err.error?.message || 'Error al eliminar la cuenta';
+      }
+    });
+  }
+
+  cancelDelete() {
+    this.showDeleteConfirm = false;
   }
 
   logout() {

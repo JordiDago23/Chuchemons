@@ -8,6 +8,7 @@ class MochilaXux extends Model
 {
     protected $fillable = [
         'user_id',
+        'item_id',
         'chuchemon_id',
         'quantity',
     ];
@@ -20,5 +21,10 @@ class MochilaXux extends Model
     public function chuchemon()
     {
         return $this->belongsTo(Chuchemon::class);
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(Item::class);
     }
 }

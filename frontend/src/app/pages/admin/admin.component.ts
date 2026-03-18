@@ -183,6 +183,7 @@ export class AdminComponent implements OnInit {
         this.aleatorioFeedback     = res.message;
         this.aleatorioFeedbackType = 'success';
         this.aleatorioLoading      = false;
+        this.loadUsers();
       },
       error: (err) => {
         this.aleatorioFeedback     = err.error?.message || 'Error al añadir el Xuxemon.';

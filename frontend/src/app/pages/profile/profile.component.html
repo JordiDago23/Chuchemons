@@ -227,7 +227,7 @@
               </div>
             </form>
             <div class="danger-zone">
-              <button class="btn-delete" (click)="showConfirm = true">Darme de baja</button>
+              <button class="btn-delete" (click)="onDelete()">Darme de baja</button>
             </div>
           }
         </div>
@@ -298,18 +298,15 @@
 
   </main>
 
-  <!-- CONFIRM DIALOG -->
-  @if (showConfirm) {
-    <div class="overlay">
-      <div class="dialog">
-        <h3>¿Estás seguro?</h3>
-        <p>Esta acción es irreversible. Tu cuenta será eliminada permanentemente.</p>
-        <div class="dialog-actions">
-          <button class="btn-cancel" (click)="showConfirm = false">Cancelar</button>
-          <button class="btn-delete" (click)="onDelete()">Sí, darme de baja</button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- DELETE CONFIRM DIALOG -->
+  <app-confirm-dialog
+    [isVisible]="showDeleteConfirm"
+    title="Darse de baja"
+    message="¿Estás seguro? Esta acción es irreversible. Tu cuenta será eliminada permanentemente."
+    [confirmLabel]="loading ? 'Eliminando...' : 'Sí, darme de baja'"
+    cancelLabel="Cancelar"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()"
+  ></app-confirm-dialog>
 
 </div>

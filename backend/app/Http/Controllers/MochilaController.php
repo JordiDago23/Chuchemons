@@ -6,6 +6,7 @@ use App\Models\MochilaXux;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class MochilaController extends Controller
 {
@@ -17,7 +18,11 @@ class MochilaController extends Controller
      */
     public function index(): JsonResponse
     {
-        $user = auth()->user();
+        $user = JWTAuth::parseToken()->authenticate();
+        
+        if (!$user) {
+            return response()->json(['message' => 'No autoritzat'], 401);
+        }
 
         $items = MochilaXux::with('chuchemon')
             ->where('user_id', $user->id)
@@ -41,7 +46,13 @@ class MochilaController extends Controller
      */
     public function addXux(Request $request): JsonResponse
     {
-        if (!auth()->user()->is_admin) {
+        $user = JWTAuth::parseToken()->authenticate();
+        
+        if (!$user) {
+            return response()->json(['message' => 'No autoritzat'], 401);
+        }
+        
+        if (!$user->is_admin) {
             return response()->json(['message' => 'No autoritzat'], 403);
         }
 
@@ -54,7 +65,6 @@ class MochilaController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user        = auth()->user();
         $chuchemonId = (int) $request->chuchemon_id;
         $qtyToAdd    = (int) $request->quantity;
 
@@ -129,7 +139,11 @@ class MochilaController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = auth()->user();
+        $user = JWTAuth::parseToken()->authenticate();
+        
+        if (!$user) {
+            return response()->json(['message' => 'No autoritzat'], 401);
+        }
 
         $item = MochilaXux::where('id', $id)
             ->where('user_id', $user->id)
@@ -183,7 +197,11 @@ class MochilaController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $user = auth()->user();
+        $user = JWTAuth::parseToken()->authenticate();
+        
+        if (!$user) {
+            return response()->json(['message' => 'No autoritzat'], 401);
+        }
 
         $item = MochilaXux::where('id', $id)
             ->where('user_id', $user->id)
@@ -200,6 +218,90 @@ class MochilaController extends Controller
 
         return response()->json([
             'message'     => 'Item eliminat de la mochila correctament',
+            'used_spaces' => $newUsedSpaces,
+            'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
+        ]);
+    }
+
+    /**
+     * Add a generic Item (xux) to the user's mochila.
+     * For items marked as 'apilable', the system will stack up to STACK_SIZE per space.
+     */
+    public function addItem(Request $request): JsonResponse
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        
+        if (!$user) {
+            return response()->json(['message' => 'No autoritzat'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'item_id' => 'required|integer|exists:items,id',
+            'quantity' => 'required|integer|min:1|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $itemId = (int) $request->item_id;
+        $qtyToAdd = (int) $request->quantity;
+
+        $item = \App\Models\Item::find($itemId);
+        if (!$item) {
+            return response()->json(['message' => 'Item no trobat'], 404);
+        }
+
+        // For non-apilable items, each occupies 1 space regardless of quantity
+        $spacesNeeded = $item->type === 'no_apilable' ? $qtyToAdd : (int) ceil($qtyToAdd / self::STACK_SIZE);
+
+        // Current mochila state
+        $mochilaItems = MochilaXux::where('user_id', $user->id)->get();
+        $usedSpaces = $mochilaItems->sum(function($i) {
+            // Get the item type if it has item_id, otherwise assume apilable
+            $itemType = $i->item ? $i->item->type : 'apilable';
+            return $itemType === 'no_apilable' ? $i->quantity : (int) ceil($i->quantity / self::STACK_SIZE);
+        });
+        $freeSpaces = self::MAX_SPACES - $usedSpaces;
+
+        if ($freeSpaces < $spacesNeeded) {
+            $discarded = $qtyToAdd - ($freeSpaces * ($item->type === 'no_apilable' ? 1 : self::STACK_SIZE));
+            return response()->json([
+                'message' => 'La mochila no té prou espai.',
+                'added' => 0,
+                'discarded' => max(0, $discarded),
+            ], 422);
+        }
+
+        // Check for existing item
+        $existingMochilaItem = MochilaXux::where('user_id', $user->id)
+            ->where('item_id', $itemId)
+            ->first();
+
+        if ($existingMochilaItem) {
+            $existingMochilaItem->quantity += $qtyToAdd;
+            $existingMochilaItem->save();
+        } else {
+            $existingMochilaItem = MochilaXux::create([
+                'user_id' => $user->id,
+                'item_id' => $itemId,
+                'quantity' => $qtyToAdd,
+            ]);
+        }
+
+        $existingMochilaItem->load('item');
+
+        // Recalculate
+        $newMochilaItems = MochilaXux::where('user_id', $user->id)->get();
+        $newUsedSpaces = $newMochilaItems->sum(function($i) {
+            $itemType = $i->item ? $i->item->type : 'apilable';
+            return $itemType === 'no_apilable' ? $i->quantity : (int) ceil($i->quantity / self::STACK_SIZE);
+        });
+
+        return response()->json([
+            'message' => "S'han afegit {$qtyToAdd} items correctament.",
+            'added' => $qtyToAdd,
+            'item' => $existingMochilaItem,
             'used_spaces' => $newUsedSpaces,
             'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
         ]);

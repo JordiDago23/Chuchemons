@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { MochilaService, MochilaXuxItem } from '../../services/mochila.service';
+import { ItemService, Item, MochilaItem } from '../../services/item.service';
 import { Chuchemon } from '../../models/chuchemon.model';
 
 // ── Models ────────────────────────────────────────────────────────────────────
@@ -46,10 +47,19 @@ export class MochilaComponent implements OnInit {
   user: any = null;
   loading = true;
 
-  activeTab: 'objetos' | 'vacunas' | 'chuchemons' = 'chuchemons';
+  activeTab: 'items' | 'objetos' | 'vacunas' | 'chuchemons' = 'chuchemons';
 
   readonly MAX_SPACES = 20;
   readonly MAX_STACK = 5;
+
+  // ── Items from backend ────────────────────────────────────────────────────
+  items: Item[] = [];
+  itemsLoading = false;
+  /** Per-item quantity input map { itemId → qty } */
+  addItemQtyMap: { [id: number]: number } = {};
+  /** Per-item feedback { itemId → { type, msg } } */
+  itemFeedbackMap: { [id: number]: { type: 'success' | 'warn' | 'error'; msg: string } } = {};
+  addingItemMap: { [id: number]: boolean } = {};
 
   // ── Xuxes from backend ────────────────────────────────────────────────────
   mochilaXuxes: MochilaXuxItem[] = [];
@@ -77,6 +87,7 @@ export class MochilaComponent implements OnInit {
     private auth: AuthService,
     private chuchemonService: ChuchemonService,
     private mochilaService: MochilaService,
+    private itemService: ItemService,
   ) {}
 
   ngOnInit() {
@@ -101,8 +112,21 @@ export class MochilaComponent implements OnInit {
   }
 
   private afterUserLoaded() {
+    this.loadItems();
     this.loadMochila();
     this.loadChuchemons();
+  }
+
+  private loadItems() {
+    this.itemsLoading = true;
+    this.itemService.getItems().subscribe({
+      next: (items) => {
+        this.items = items;
+        items.forEach(item => this.addItemQtyMap[item.id] = 1);
+        this.itemsLoading = false;
+      },
+      error: () => { this.itemsLoading = false; }
+    });
   }
 
   private loadMochila() {
@@ -230,6 +254,37 @@ export class MochilaComponent implements OnInit {
     }
 
     return slots;
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  get spriteUrl(): string {
+    return 'assets/pokemon-sprites/';
+  }
+
+  // ── Add items ──────────────────────────────────────────────────────────────
+  addItems(item: Item) {
+    const qty = this.addItemQtyMap[item.id] ?? 1;
+    if (qty < 1) return;
+
+    this.addingItemMap[item.id] = true;
+    delete this.itemFeedbackMap[item.id];
+
+    this.itemService.addItem(item.id, qty).subscribe({
+      next: (res) => {
+        this.backendUsedSpaces = res.used_spaces;
+        this.backendFreeSpaces = res.free_spaces;
+        this.itemFeedbackMap[item.id] = {
+          type: res.added < qty ? 'warn' : 'success',
+          msg: res.message,
+        };
+        this.addingItemMap[item.id] = false;
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Error en afegir items.';
+        this.itemFeedbackMap[item.id] = { type: 'error', msg };
+        this.addingItemMap[item.id] = false;
+      }
+    });
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────

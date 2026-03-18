@@ -88,6 +88,13 @@ import { CommonModule } from '@angular/common';
             [attr.aria-label]="'Veure detalls de ' + (chuchemon?.name ?? 'aquest Xuxemon')"
           >Veure Detalls</button>
         }
+        @if (!locked && showEvolveBtn) {
+          <button
+            class="cc-btn cc-btn-evolve"
+            (click)="onEvolve($event)"
+            [attr.aria-label]="'Evolucionar ' + (chuchemon?.name ?? 'aquest Xuxemon')"
+          >⬆️ Evolucionar</button>
+        }
       </div>
     </article>
   `,
@@ -179,6 +186,8 @@ import { CommonModule } from '@angular/common';
     .cc-btn-capture:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(76,175,80,.3); }
     .cc-btn-details { background: linear-gradient(135deg,#e63946,#f4722b); color: #fff; }
     .cc-btn-details:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(230,57,70,.3); }
+    .cc-btn-evolve { background: linear-gradient(135deg,#8e44ad,#6c3483); color: #fff; }
+    .cc-btn-evolve:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(142,68,173,.3); }
 
     /* locked card */
     .cc-locked { opacity: .85; }
@@ -210,9 +219,11 @@ export class ChuchemonCardComponent {
   @Input() showCaptureBtn = false;
   @Input() showDetailsBtn = false;
   @Input() showTeamBadge = false;
+  @Input() showEvolveBtn = false;
 
   @Output() capture  = new EventEmitter<number>();
   @Output() details  = new EventEmitter<number>();
+  @Output() evolve  = new EventEmitter<number>();
   @Output() cardClick = new EventEmitter<any>();
 
   get sizeBadge(): string {
@@ -235,6 +246,11 @@ export class ChuchemonCardComponent {
   onDetails(e: Event): void {
     e.stopPropagation();
     if (this.chuchemon?.id) this.details.emit(this.chuchemon.id);
+  }
+
+  onEvolve(e: Event): void {
+    e.stopPropagation();
+    if (this.chuchemon?.id) this.evolve.emit(this.chuchemon.id);
   }
 
   onCardClick(): void {

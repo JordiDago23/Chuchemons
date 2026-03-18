@@ -133,8 +133,10 @@
             [locked]="isBlockedForDisplay(chuchemon)"
             [showCaptureBtn]="!isCaptured(chuchemon) && !isAdmin && selectedTab === 'todos'"
             [showDetailsBtn]="(isCaptured(chuchemon) || isAdmin)"
+            [showEvolveBtn]="isCaptured(chuchemon) && selectedTab === 'mis'"
             [showTeamBadge]="isInTeam(chuchemon.id)"
             (capture)="captureChuchemon($event)"
+            (evolve)="openEvolutionDialog($event, chuchemon.name)"
           ></app-chuchemon-card>
         }
       </div>
@@ -144,5 +146,16 @@
     @if (!isLoading && !errorMessage && filteredChuchemons.length === 0) {
       <div class="no-results" role="status"><p>No se encontraron Chuchemons</p></div>
     }
+
+    <!-- Evolution dialog -->
+    <app-confirm-dialog
+      [isVisible]="showEvolutionDialog"
+      [title]="'Evolucionar ' + evolvingChuchemonName"
+      [message]="'¿Estás seguro que quieres evolucionar a ' + evolvingChuchemonNextMida + '?'"
+      [confirmLabel]="'Evolucionar'"
+      [cancelLabel]="'Cancelar'"
+      (confirm)="confirmEvolution()"
+      (cancel)="cancelEvolution()"
+    ></app-confirm-dialog>
   </main>
 </div>

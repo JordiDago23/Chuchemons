@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserTeam;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -27,22 +28,29 @@ class ChuchemonController extends Controller
             // Sin autenticación, está bien
             $user = null;
         }
+
+        $allChuchemons = Chuchemon::all();
         
-        $chuchemons = Chuchemon::all()->map(function ($chuchemon) use ($user) {
+        // Get all captured chuchemons for this user (if authenticated)
+        $capturedIds = [];
+        $capturedCounts = [];
+        if ($user) {
+            $userChuchemons = DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->get();
+            foreach ($userChuchemons as $uc) {
+                $capturedIds[] = $uc->chuchemon_id;
+                $capturedCounts[$uc->chuchemon_id] = $uc->count;
+            }
+        }
+
+        $chuchemons = $allChuchemons->map(function ($chuchemon) use ($capturedIds, $capturedCounts, $user) {
             $captured = null;
             $count = 0;
             
             if ($user) {
-                $userChuchemon = $user->capturedChuchemons()
-                    ->where('chuchemon_id', $chuchemon->id)
-                    ->first();
-                
-                if ($userChuchemon) {
-                    $captured = true;
-                    $count = $userChuchemon->pivot->count;
-                } else {
-                    $captured = false;
-                }
+                $captured = in_array($chuchemon->id, $capturedIds);
+                $count = $capturedCounts[$chuchemon->id] ?? 0;
             }
             
             return [
@@ -114,26 +122,27 @@ class ChuchemonController extends Controller
                 return response()->json(['message' => 'Usuario no autenticado'], 401);
             }
 
-            // Para ahora, devolver array vacío si no hay chuchemons capturados
-            try {
-                $myChuchemons = $user->capturedChuchemons()->get()->map(function ($chuchemon) {
+            // Get captured chuchemons directly from user_chuchemons table
+            $userChuchemons = DB::table('user_chuchemons')
+                ->join('chuchemons', 'user_chuchemons.chuchemon_id', '=', 'chuchemons.id')
+                ->where('user_chuchemons.user_id', $user->id)
+                ->select('chuchemons.*', 'user_chuchemons.count')
+                ->get()
+                ->map(function ($chuchemon) {
                     return [
                         'id' => $chuchemon->id,
                         'name' => $chuchemon->name,
                         'element' => $chuchemon->element,
+                        'mida' => $chuchemon->mida,
                         'image' => $chuchemon->image,
-                        'count' => $chuchemon->pivot->count ?? 1,
+                        'count' => $chuchemon->count ?? 1,
                         'captured' => true,
                         'created_at' => $chuchemon->created_at,
                         'updated_at' => $chuchemon->updated_at,
                     ];
                 });
-            } catch (\Exception $relationError) {
-                // Si hay error en la relación, devolver vacío
-                $myChuchemons = collect([]);
-            }
 
-            return response()->json($myChuchemons->values()->all());
+            return response()->json($userChuchemons->values()->all());
         } catch (\Exception $e) {
             Log::error('Error en getMyChuchemons: ' . $e->getMessage());
             return response()->json(['message' => 'Sin chuchemons capturados'], 200);
@@ -337,5 +346,118 @@ class ChuchemonController extends Controller
 
         return response()->json(['message' => 'Chuchemon eliminat correctament']);
     }
+
+    /**
+     * Evoluciona un Xuxemon capturado del usuario
+     * Petit -> Mitjà -> Gran
+     */
+    public function evolve(Request $request): JsonResponse
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            
+            if (!$user) {
+                return response()->json(['message' => 'Usuario no autenticado'], 401);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'chuchemon_id' => 'required|exists:chuchemons,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $chuchemonId = $request->chuchemon_id;
+
+            // Get the user's captured Chuchemon
+            $userChuchemon = $user->capturedChuchemsWithEvolution()
+                ->where('chuchemon_id', $chuchemonId)
+                ->first();
+
+            if (!$userChuchemon) {
+                return response()->json(['message' => 'No has capturado este Xuxemon'], 404);
+            }
+
+            $currentMida = $userChuchemon->pivot->current_mida;
+            $nextMida = null;
+
+            // Determine next size
+            if ($currentMida === 'Petit') {
+                $nextMida = 'Mitjà';
+            } elseif ($currentMida === 'Mitjà') {
+                $nextMida = 'Gran';
+            } elseif ($currentMida === 'Gran') {
+                return response()->json(['message' => 'Tu Xuxemon ya está en su máxima evolución'], 400);
+            }
+
+            // Update the pivot table
+            DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->where('chuchemon_id', $chuchemonId)
+                ->update([
+                    'current_mida' => $nextMida,
+                    'evolution_count' => DB::raw('evolution_count + 1'),
+                ]);
+
+            // Get updated data
+            $updated = $user->capturedChuchemsWithEvolution()
+                ->where('chuchemon_id', $chuchemonId)
+                ->first();
+
+            return response()->json([
+                'message' => "Tu {$userChuchemon->name} ha evolucionado a {$nextMida}!",
+                'chuchemon' => [
+                    'id' => $updated->id,
+                    'name' => $updated->name,
+                    'element' => $updated->element,
+                    'mida' => $updated->mida,
+                    'image' => $updated->image,
+                    'current_mida' => $updated->pivot->current_mida,
+                    'evolution_count' => $updated->pivot->evolution_count,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get evolution info for a captured Chuchemon
+     */
+    public function getEvolutionInfo(int $chuchemonId): JsonResponse
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            
+            if (!$user) {
+                return response()->json(['message' => 'Usuario no autenticado'], 401);
+            }
+
+            $userChuchemon = $user->capturedChuchemsWithEvolution()
+                ->where('chuchemon_id', $chuchemonId)
+                ->first();
+
+            if (!$userChuchemon) {
+                return response()->json(['message' => 'No has capturado este Xuxemon'], 404);
+            }
+
+            $currentMida = $userChuchemon->pivot->current_mida;
+            $canEvolve = $currentMida !== 'Gran';
+            $nextMida = $currentMida === 'Petit' ? 'Mitjà' : ($currentMida === 'Mitjà' ? 'Gran' : null);
+
+            return response()->json([
+                'chuchemon_id' => $chuchemonId,
+                'name' => $userChuchemon->name,
+                'current_mida' => $currentMida,
+                'next_mida' => $nextMida,
+                'can_evolve' => $canEvolve,
+                'evolution_count' => $userChuchemon->pivot->evolution_count,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
 }
+
 

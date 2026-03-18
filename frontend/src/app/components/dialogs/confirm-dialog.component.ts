@@ -1,0 +1,117 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-confirm-dialog',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="confirm-dialog-overlay" *ngIf="isVisible" (click)="close($event)">
+      <div class="confirm-dialog" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h2>{{ title }}</h2>
+          <button class="close-btn" (click)="onCancel()">×</button>
+        </div>
+        <div class="dialog-content">
+          <p>{{ message }}</p>
+        </div>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" (click)="onCancel()">{{ cancelLabel }}</button>
+          <button class="btn btn-danger" (click)="onConfirm()">{{ confirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .confirm-dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .confirm-dialog {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+    }
+    .dialog-content {
+      padding: 16px;
+    }
+    .dialog-actions {
+      display: flex;
+      gap: 8px;
+      padding: 16px;
+      border-top: 1px solid #e0e0e0;
+      justify-content: flex-end;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+  `]
+})
+export class ConfirmDialogComponent {
+  @Input() isVisible = false;
+  @Input() title = 'Confirmació';
+  @Input() message = 'Estàs segur?';
+  @Input() cancelLabel = 'Cancel·lar';
+  @Input() confirmLabel = 'Confirmar';
+  
+  @Output() confirm = new EventEmitter<void>();
+  @Output() cancel = new EventEmitter<void>();
+
+  onConfirm() {
+    this.confirm.emit();
+    this.isVisible = false;
+  }
+
+  onCancel() {
+    this.cancel.emit();
+    this.isVisible = false;
+  }
+
+  close(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      this.onCancel();
+    }
+  }
+}

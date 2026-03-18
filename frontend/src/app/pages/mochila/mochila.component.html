@@ -101,6 +101,9 @@
       <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'chuchemons'" (click)="setTab('chuchemons')">
         <span aria-hidden="true">🐾</span> Chuchemons
       </button>
+      <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'items'" (click)="setTab('items')">
+        <span aria-hidden="true">🎁</span> Items
+      </button>
       <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'objetos'" (click)="setTab('objetos')">
         <span aria-hidden="true">🍬</span> Xuxes <span class="tab-badge tab-apilable">Apilable</span>
       </button>
@@ -250,6 +253,62 @@
       }
 
       </section> <!-- /tabpanel chuchemons -->
+    }
+
+    <!-- ── ITEMS tab ──────────────────────────────────────────────────── -->
+    @if (activeTab === 'items') {
+      <section role="tabpanel" aria-label="Items">
+        <div class="panel-header">
+          <h2>Items disponibles</h2>
+          <span class="panel-subtitle">Afegir items a la teva motxilla</span>
+        </div>
+
+        @if (itemsLoading) {
+          <div class="items-loading">Carregant items…</div>
+        }
+        @if (!itemsLoading && items.length > 0) {
+          <ul class="items-grid" role="list" aria-label="Llista d'items">
+            @for (item of items; track item.id) {
+              <li class="item-card card shadow-sm" [ngClass]="'card-' + item.type">
+                <div class="item-header">
+                  <span class="item-tag" [ngClass]="'tag-' + item.type">
+                    {{ item.type === 'apilable' ? '🔁' : '📦' }} {{ item.type === 'apilable' ? 'Apilable' : 'No apilable' }}
+                  </span>
+                </div>
+                <div class="item-content">
+                  <h3 class="item-name">{{ item.name }}</h3>
+                  <p class="item-description">{{ item.description }}</p>
+                </div>
+                <div class="item-actions">
+                  <input
+                    type="number"
+                    [(ngModel)]="addItemQtyMap[item.id]"
+                    min="1"
+                    max="500"
+                    class="qty-input"
+                    [disabled]="addingItemMap[item.id]"
+                  />
+                  <button
+                    (click)="addItems(item)"
+                    [disabled]="addingItemMap[item.id]"
+                    class="btn btn-primary"
+                  >
+                    {{ addingItemMap[item.id] ? 'Afegint…' : 'Afegir' }}
+                  </button>
+                </div>
+                @if (itemFeedbackMap[item.id]) {
+                  <div class="feedback" [ngClass]="'feedback-' + itemFeedbackMap[item.id].type">
+                    {{ itemFeedbackMap[item.id].msg }}
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        }
+        @if (!itemsLoading && items.length === 0) {
+          <div class="no-data">No hi ha items disponibles.</div>
+        }
+      </section> <!-- /tabpanel items -->
     }
 
     <!-- ── OBJETOS tab (Apilables x5) ──────────────────── -->

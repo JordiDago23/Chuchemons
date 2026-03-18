@@ -623,6 +623,21 @@
 .action-card.red    .action-icon { color: #e63946; }
 .action-card.yellow .action-icon { color: #f4a611; }
 .action-card.orange .action-icon { color: #f4722b; }
+.action-card.blue   { background: #e3f2fd; }
+.action-card.blue   .action-icon { color: #1976d2; }
+.action-card.purple { background: #f3e5f5; }
+.action-card.purple .action-icon { color: #7b1fa2; }
+
+/* action-card as link */
+.action-card {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
 
 :host { display: block; }
 
