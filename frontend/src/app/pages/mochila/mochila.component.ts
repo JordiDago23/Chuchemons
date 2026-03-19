@@ -33,6 +33,9 @@ interface InventorySlot {
   index: number;
   kind: 'xux' | 'vacuna' | 'empty';
   label: string;
+  xuxItem?: MochilaXuxItem;
+  vacunaItem?: VacunaItem;
+  slotQty?: number;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -248,17 +251,27 @@ export class MochilaComponent implements OnInit {
 
   get inventorySlots(): InventorySlot[] {
     const slots: InventorySlot[] = [];
-    const xuxSlots = Math.min(this.totalXuxSlots, this.MAX_SPACES);
-    const vacunaSlots = Math.min(this.totalVacunaSlots, this.MAX_SPACES - xuxSlots);
+    let slotIndex = 1;
 
-    for (let i = 1; i <= this.MAX_SPACES; i++) {
-      if (i <= xuxSlots) {
-        slots.push({ index: i, kind: 'xux', label: 'Xux' });
-      } else if (i <= xuxSlots + vacunaSlots) {
-        slots.push({ index: i, kind: 'vacuna', label: 'Vacuna' });
-      } else {
-        slots.push({ index: i, kind: 'empty', label: 'Lliure' });
+    // Xux slots: each item can span multiple stacked slots
+    for (const xuxItem of this.mochilaXuxes) {
+      for (const qty of this.xuxSlotBreakdownForItem(xuxItem)) {
+        if (slotIndex > this.MAX_SPACES) break;
+        slots.push({ index: slotIndex++, kind: 'xux', label: xuxItem.chuchemon.name, xuxItem, slotQty: qty });
       }
+    }
+
+    // Vacuna slots: each unit occupies 1 slot
+    for (const vacunaItem of this.vacunaItems) {
+      for (let u = 0; u < vacunaItem.quantity; u++) {
+        if (slotIndex > this.MAX_SPACES) break;
+        slots.push({ index: slotIndex++, kind: 'vacuna', label: vacunaItem.name, vacunaItem, slotQty: 1 });
+      }
+    }
+
+    // Empty slots
+    while (slotIndex <= this.MAX_SPACES) {
+      slots.push({ index: slotIndex++, kind: 'empty', label: 'Lliure' });
     }
 
     return slots;
@@ -310,6 +323,17 @@ export class MochilaComponent implements OnInit {
 
   setTab(tab: 'items' | 'objetos' | 'vacunas' | 'chuchemons') {
     this.activeTab = tab;
+  }
+
+  inventoryFilter: 'all' | 'xux' | 'vacuna' = 'all';
+
+  setInventoryFilter(f: 'all' | 'xux' | 'vacuna') {
+    this.inventoryFilter = f;
+  }
+
+  get filteredInventorySlots(): InventorySlot[] {
+    if (this.inventoryFilter === 'all') return this.inventorySlots;
+    return this.inventorySlots.filter(s => s.kind === this.inventoryFilter || s.kind === 'empty');
   }
 
   logout() {

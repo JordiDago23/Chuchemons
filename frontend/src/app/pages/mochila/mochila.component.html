@@ -98,17 +98,14 @@
 
     <!-- ── Tabs ──────────────────────────────────────────────────────────────── -->
     <div class="tabs" role="tablist" aria-label="Pestanyes d'inventari">
-      <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'chuchemons'" (click)="setTab('chuchemons')">
-        <span aria-hidden="true">🐾</span> Chuchemons
-      </button>
-      <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'items'" (click)="setTab('items')">
+      <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'all'" (click)="setInventoryFilter('all')">
         <span aria-hidden="true">🎁</span> Items
       </button>
-      <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'objetos'" (click)="setTab('objetos')">
-        <span aria-hidden="true">🍬</span> Xuxes <span class="tab-badge tab-apilable">Apilable</span>
+      <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'xux'" (click)="setInventoryFilter('xux')">
+        <span aria-hidden="true">🍬</span> Xuxes
       </button>
-      <button class="tab-btn" role="tab" [attr.aria-selected]="activeTab === 'vacunas'" (click)="setTab('vacunas')">
-        <span aria-hidden="true">💉</span> Vacunas <span class="tab-badge tab-no-apilable">No apilable</span>
+      <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'vacuna'" (click)="setInventoryFilter('vacuna')">
+        <span aria-hidden="true">💉</span> Vacunas
       </button>
     </div>
 
@@ -118,29 +115,82 @@
         <h2>Inventari Fix (4×5 — 20 slots)</h2>
         <span class="inventory-counter">{{ usedSpaces }}/{{ MAX_SPACES }} ocupats</span>
       </div>
-      <div class="inventory-grid-fixed">
-        @for (slot of inventorySlots; track slot.index) {
-          <div
-            class="inventory-slot"
-            [ngClass]="{
-              'slot-xux':    slot.kind === 'xux',
-              'slot-vacuna': slot.kind === 'vacuna',
-              'slot-empty':  slot.kind === 'empty'
-            }"
-          >
-            <span class="slot-index">#{{ slot.index }}</span>
-            @if (slot.kind !== 'empty') {
-              <span class="slot-kind">{{ slot.label }}</span>
-            } @else {
-              <span class="slot-kind">Lliure</span>
-            }
-          </div>
+
+      <div class="inventory-cards-grid">
+        @for (slot of filteredInventorySlots; track slot.index) {
+
+          <!-- ── Slot Xux ── -->
+          @if (slot.kind === 'xux' && slot.xuxItem) {
+            <div class="inv-card inv-card-xux card-apilable" [ngClass]="'card-element-' + slot.xuxItem.chuchemon.element.toLowerCase()">
+              <div class="inv-card-badges">
+                <span class="qty-badge">x{{ slot.slotQty }}</span>
+                <span class="apilable-flag apilable-yes">🔁 Apilable</span>
+                <span class="item-tag tag-mejora">Xux</span>
+              </div>
+              <div class="item-img-wrap">
+                <div class="item-img-placeholder candy-img">
+                  @if (slot.xuxItem.chuchemon.image) {
+                    <img [src]="slot.xuxItem.chuchemon.image" [alt]="slot.xuxItem.chuchemon.name" style="width:42px;height:42px;object-fit:contain;" />
+                  } @else {
+                    <span class="candy-emoji">🍬</span>
+                  }
+                </div>
+              </div>
+              <div class="item-body">
+                <h2 class="item-name">Xux de {{ slot.xuxItem.chuchemon.name }}</h2>
+                <p class="item-desc">Element {{ slot.xuxItem.chuchemon.element }}. Stack: ×{{ slot.slotQty }}.</p>
+              </div>
+              <div class="stack-info">
+                <span class="stack-label">Espai:</span>
+                <span class="slot-chip">#{{ slot.index }}</span>
+              </div>
+            </div>
+          }
+
+          <!-- ── Slot Vacuna ── -->
+          @if (slot.kind === 'vacuna' && slot.vacunaItem) {
+            <div class="inv-card inv-card-vacuna card-no-apilable">
+              <div class="inv-card-badges">
+                <span class="qty-badge">x1</span>
+                <span class="apilable-flag apilable-no">🚫 No apilable</span>
+                <span class="item-tag tag-defensa">{{ slot.vacunaItem.tag }}</span>
+              </div>
+              <div class="item-img-wrap">
+                <div class="item-img-placeholder vacuna-img">
+                  <span class="candy-emoji">
+                    @if (slot.vacunaItem.name === 'Xocolatina') { 🍫 }
+                    @else if (slot.vacunaItem.name === 'Xal de fruites') { 🍬 }
+                    @else { 💉 }
+                  </span>
+                </div>
+              </div>
+              <div class="item-body">
+                <h2 class="item-name">{{ slot.vacunaItem.name }}</h2>
+                <p class="item-desc">{{ slot.vacunaItem.description }}</p>
+              </div>
+              <div class="stack-info">
+                <span class="stack-label">Espai:</span>
+                <span class="slot-chip">#{{ slot.index }}</span>
+              </div>
+              <button class="detail-btn" [attr.aria-label]="'Veure detalls de ' + slot.vacunaItem.name">Veure Detalls</button>
+            </div>
+          }
+
+          <!-- ── Slot Buit ── -->
+          @if (slot.kind === 'empty') {
+            <div class="inv-card inv-card-empty">
+              <span class="slot-index">#{{ slot.index }}</span>
+              <span class="slot-empty-icon">＋</span>
+              <span class="inv-empty-label">Lliure</span>
+            </div>
+          }
+
         }
       </div>
     </section>
 
-    <!-- ── CHUCHEMONS tab ────────────────────────────────────────────────────── -->
-    @if (activeTab === 'chuchemons') {
+    <!-- ── CHUCHEMONS tab (admin only, hidden from tabs) ── -->
+    @if (false) {
       <section role="tabpanel" aria-label="Chuchemons capturats">
 
       <div class="space-info">
@@ -255,8 +305,7 @@
       </section> <!-- /tabpanel chuchemons -->
     }
 
-    <!-- ── ITEMS tab ──────────────────────────────────────────────────── -->
-    @if (activeTab === 'items') {
+    @if (false) {
       <section role="tabpanel" aria-label="Items">
         <div class="panel-header">
           <h2>Items disponibles</h2>
@@ -309,123 +358,6 @@
           <div class="no-data">No hi ha items disponibles.</div>
         }
       </section> <!-- /tabpanel items -->
-    }
-
-    <!-- ── OBJETOS tab (Apilables x5) ──────────────────── -->
-    @if (activeTab === 'objetos') {
-      <section role="tabpanel" aria-label="Xuxes apilables">
-
-      <div class="space-info apilable-info">
-        <span class="apilable-badge" aria-hidden="true">🔁 Apilable ×{{ MAX_STACK }}</span>
-        <span class="sr-only">Xuxes apilables, màxim {{ MAX_STACK }} per espai.</span>
-        Les Xuxes s'apilen fins a <strong>{{ MAX_STACK }}</strong> per espai.
-        Uses <strong>{{ totalXuxSlots }}</strong> espai(s).
-      </div>
-
-      @if (mochilaXuxes.length > 0) {
-        <ul class="items-grid" role="list" aria-label="Llista de Xuxes">
-          @for (item of mochilaXuxes; track item.id) {
-            <li
-              class="item-card card shadow-sm card-apilable"
-              [ngClass]="['card-element-' + item.chuchemon.element.toLowerCase()]"
-            >
-              <span class="qty-badge" aria-hidden="true">x{{ item.quantity }}</span>
-              <span class="item-tag tag-mejora" aria-hidden="true">Xux</span>
-              <span class="apilable-flag apilable-yes" aria-hidden="true">🔁 Apilable</span>
-
-              <div class="item-img-wrap" aria-hidden="true">
-                <div class="item-img-placeholder candy-img">
-                  @if (item.chuchemon.image) {
-                    <img [src]="item.chuchemon.image" [alt]="item.chuchemon.name" style="width:70px;height:70px;object-fit:contain;" />
-                  } @else {
-                    <span class="candy-emoji">🍬</span>
-                  }
-                </div>
-              </div>
-
-              <div class="item-body">
-                <h2 class="item-name">Xux de {{ item.chuchemon.name }}</h2>
-                <p class="item-desc">
-                  Element {{ item.chuchemon.element }}.
-                  Quantitat total: {{ item.quantity }}.
-                  <span class="sr-only">Estat: Apilable, màxim {{ MAX_STACK }} per slot.</span>
-                </p>
-              </div>
-
-              <!-- Apilament visual: cada pila és un slot -->
-              <div class="stack-info" aria-label="Distribució de slots: {{ xuxSlotBreakdownForItem(item).join(', ') }}">
-                <span class="stack-label">Espais:</span>
-                <div class="stack-slots">
-                  @for (slotQty of xuxSlotBreakdownForItem(item); track $index) {
-                    <span class="slot-chip">x{{ slotQty }}</span>
-                  }
-                </div>
-              </div>
-            </li>
-          }
-        </ul>
-      } @else {
-        <div class="empty-state" role="status"><span aria-hidden="true">🍬</span><p>No tens Xuxes a la motxilla.</p></div>
-      }
-
-      </section> <!-- /tabpanel xuxes -->
-    }
-
-    <!-- ── VACUNAS tab (No apilables) ─────────────────────────────────────────── -->
-    @if (activeTab === 'vacunas') {
-      <section role="tabpanel" aria-label="Vacunes no apilables">
-
-      <div class="space-info no-apilable-info">
-        <span class="no-apilable-badge" aria-hidden="true">🚫 No apilable</span>
-        <span class="sr-only">Vacunas no apilables: cada una ocupa 1 espai.</span>
-        Cada vacuna ocupa <strong>1</strong> espai. Usas <strong>{{ totalVacunaSlots }}</strong> espai(s).
-      </div>
-
-      @if (vacunaItems.length > 0) {
-        <ul class="items-grid" role="list" aria-label="Llista de vacunas">
-          @for (item of vacunaItems; track item.id) {
-            <li class="item-card card shadow-sm" [ngClass]="{ 'card-no-apilable': true }">
-              <span class="qty-badge" aria-hidden="true">x{{ item.quantity }}</span>
-              <span class="item-tag tag-defensa" aria-hidden="true">{{ item.tag }}</span>
-              <span class="apilable-flag apilable-no" aria-hidden="true">🚫 No apilable</span>
-
-              <div class="item-img-wrap" aria-hidden="true">
-                <div class="item-img-placeholder vacuna-img">
-                  <span class="candy-emoji">
-                    @if (item.name === 'Xocolatina') { 🍫 }
-                    @else if (item.name === 'Xal de fruites') { 🍬 }
-                    @else { 💉 }
-                  </span>
-                </div>
-              </div>
-
-              <div class="item-body">
-                <h2 class="item-name">{{ item.name }}</h2>
-                <p class="item-desc">
-                  {{ item.description }}
-                  <span class="sr-only">Estat: No apilable, ocupa 1 espai per unitat. Total: {{ item.quantity }} unitat(s).</span>
-                </p>
-              </div>
-
-              <div class="stack-info" aria-label="{{ item.quantity }} ranures ocupades">
-                <span class="stack-label">Espais:</span>
-                @for (idx of range(item.quantity); track idx) {
-                  <span class="slot-chip">#{{ idx + 1 }}</span>
-                }
-              </div>
-
-              <button
-                class="detail-btn"
-                [attr.aria-label]="'Veure detalls de ' + item.name"
-              >Veure Detalls</button>
-            </li>
-          }
-        </ul>
-      } @else {
-        <div class="empty-state" role="status"><span aria-hidden="true">💉</span><p>No tienes Vacunas en la mochila.</p></div>
-      }
-
-      </section> <!-- /tabpanel vacunas -->
     }
 
     } <!-- end @else -->
