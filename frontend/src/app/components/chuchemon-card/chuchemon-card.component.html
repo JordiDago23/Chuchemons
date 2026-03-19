@@ -1,0 +1,91 @@
+<article
+  class="cc-card card shadow-sm"
+  [ngClass]="{
+    'cc-locked':   locked,
+    'cc-tipo-agua':   chuchemon?.element === 'Agua',
+    'cc-tipo-tierra': chuchemon?.element === 'Tierra',
+    'cc-tipo-aire':   chuchemon?.element === 'Aire'
+  }"
+  tabindex="0"
+  (click)="onCardClick()"
+  (keydown.enter)="onCardClick()"
+  (keydown.space)="$event.preventDefault(); onCardClick()"
+  [attr.aria-label]="locked
+    ? 'Xuxemon desconegut, no capturat'
+    : (chuchemon?.name ?? 'Xuxemon') + ', tipus ' + chuchemon?.element + ', mida ' + sizeBadge"
+>
+  <!-- Badges flex: tipo · mida · quantitat -->
+  <div class="cc-badges">
+    <span
+      class="cc-badge cc-badge-tipo"
+      [ngClass]="{
+        'badge-agua':   chuchemon?.element === 'Agua',
+        'badge-tierra': chuchemon?.element === 'Tierra',
+        'badge-aire':   chuchemon?.element === 'Aire'
+      }"
+    >{{ chuchemon?.element }}</span>
+    <span class="cc-badge cc-badge-mida">Mida {{ sizeBadge }}</span>
+    <span class="cc-badge cc-badge-qty">Qtat {{ quantityLabel }}</span>
+    @if (showTeamBadge) {
+      <span class="cc-badge cc-badge-team">Equip</span>
+    }
+  </div>
+
+  <!-- Imatge -->
+  <div class="cc-img-wrap" [class.cc-blurred]="locked">
+    @if (chuchemon?.image) {
+      <img
+        [src]="'http://localhost:8000/chuchemons/' + chuchemon!.image"
+        [alt]="locked
+          ? 'Xuxemon desconegut — imatge amagada'
+          : chuchemon!.name + ' — Xuxemon de tipus ' + chuchemon!.element"
+        class="cc-img"
+        onerror="this.src='assets/placeholder.png'"
+      />
+    } @else {
+      <span class="cc-placeholder">🐾</span>
+    }
+    @if (locked) {
+      <div class="cc-lock" aria-hidden="true">🔒</div>
+      <span class="sr-only">Xuxemon bloquejat: no capturat</span>
+    }
+  </div>
+
+  <!-- Info -->
+  <div class="cc-info">
+    <div class="cc-header">
+      <h2 class="cc-name">{{ locked ? '?????' : (chuchemon?.name ?? '?') }}</h2>
+      <span class="sr-only">Estat: {{ locked ? 'No capturat' : 'Capturat' }}. Mida: {{ sizeBadge }}.</span>
+      <span class="cc-number">Nº {{ locked ? '?' : chuchemon?.id }}</span>
+    </div>
+
+    @if (!locked) {
+      <div class="cc-hp-row">
+        <span>HP</span><span class="cc-hp-val">100/100</span>
+      </div>
+      <div class="cc-hp-bar"><div class="cc-hp-fill" style="width:100%"></div></div>
+    }
+
+    @if (!locked && showCaptureBtn) {
+      <button
+        class="cc-btn cc-btn-capture"
+        (click)="onCapture($event)"
+        [attr.aria-label]="'Capturar ' + (chuchemon?.name ?? 'aquest Xuxemon')"
+      >Capturar</button>
+    }
+    @if (!locked && showDetailsBtn) {
+      <button
+        class="cc-btn cc-btn-details"
+        (click)="onDetails($event)"
+        [attr.aria-label]="'Veure detalls de ' + (chuchemon?.name ?? 'aquest Xuxemon')"
+      >Veure Detalls</button>
+    }
+    @if (!locked && showEvolveBtn) {
+      <button
+        class="cc-btn cc-btn-evolve"
+        (click)="onEvolve($event)"
+        [attr.aria-label]="'Evolucionar ' + (chuchemon?.name ?? 'aquest Xuxemon')"
+      >⬆️ Evolucionar</button>
+    }
+  </div>
+</article>
