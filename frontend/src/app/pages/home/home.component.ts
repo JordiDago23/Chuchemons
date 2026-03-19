@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 
@@ -24,7 +24,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   user: any = null;
   loading = true;
   error = '';
-  teamLoading = false;
+  teamLoading = true;
   private destroy$ = new Subject<void>();
 
   // Stats — por defecto en 0 para cuentas nuevas
@@ -89,7 +89,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadTeam(): void {
     this.teamLoading = true;
     this.chuchemonService.getTeam()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => { this.teamLoading = false; })
+      )
       .subscribe({
         next: (response) => {
           if (response.team && Array.isArray(response.team)) {
@@ -97,12 +100,10 @@ export class HomeComponent implements OnInit, OnDestroy {
           } else {
             this.team = [];
           }
-          this.teamLoading = false;
         },
         error: (error) => {
           console.error('Error loading team:', error);
           this.team = [];
-          this.teamLoading = false;
         }
       });
   }

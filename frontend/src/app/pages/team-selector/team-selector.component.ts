@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, finalize } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface ChuchemonExtended extends Chuchemon {
   count?: number;
@@ -13,7 +14,7 @@ interface ChuchemonExtended extends Chuchemon {
 @Component({
   selector: 'app-team-selector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './team-selector.component.html',
   styleUrls: ['./team-selector.component.css']
 })
@@ -27,7 +28,8 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
 
   constructor(
     private chuchemonService: ChuchemonService,
-    private router: Router
+    private router: Router,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -45,16 +47,17 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
 
     this.chuchemonService.getMyChuchemons()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => { this.isLoading = false; })
+      )
       .subscribe({
         next: (data) => {
-          this.myChuchemons = data as ChuchemonExtended[];
-          this.isLoading = false;
+          this.myChuchemons = Array.isArray(data) ? data as ChuchemonExtended[] : [];
         },
         error: (error) => {
           console.error('Error loading my Chuchemons:', error);
           this.errorMessage = 'Error al cargar tus Chuchemons';
-          this.isLoading = false;
         }
       });
   }
@@ -124,5 +127,9 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/chuchedex']);
+  }
+
+  logout(): void {
+    this.auth.logout();
   }
 }

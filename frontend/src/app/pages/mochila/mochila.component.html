@@ -130,7 +130,7 @@
               <div class="item-img-wrap">
                 <div class="item-img-placeholder candy-img">
                   @if (slot.xuxItem.chuchemon.image) {
-                    <img [src]="slot.xuxItem.chuchemon.image" [alt]="slot.xuxItem.chuchemon.name" style="width:42px;height:42px;object-fit:contain;" />
+                    <img [src]="'http://localhost:8000/chuchemons/' + slot.xuxItem.chuchemon.image" [alt]="slot.xuxItem.chuchemon.name" style="width:42px;height:42px;object-fit:contain;" />
                   } @else {
                     <span class="candy-emoji">🍬</span>
                   }
@@ -216,7 +216,7 @@
               <div class="chuchemon-add-card card shadow-sm">
                 <div class="chuchemon-img-wrap">
                   @if (c.image) {
-                    <img [src]="c.image" [alt]="c.name" class="chuchemon-img" />
+                    <img [src]="'http://localhost:8000/chuchemons/' + c.image" [alt]="c.name" class="chuchemon-img" />
                   } @else {
                     <div class="chuchemon-img-placeholder">🐾</div>
                   }
@@ -277,7 +277,7 @@
               <div class="chuchemon-view-card card shadow-sm">
                 <div class="chuchemon-img-wrap">
                   @if (c.image) {
-                    <img [src]="c.image" [alt]="c.name" class="chuchemon-img" />
+                    <img [src]="'http://localhost:8000/chuchemons/' + c.image" [alt]="c.name" class="chuchemon-img" />
                   } @else {
                     <div class="chuchemon-img-placeholder">🐾</div>
                   }

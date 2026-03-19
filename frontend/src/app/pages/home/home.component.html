@@ -117,6 +117,9 @@
     </div>
 
     <!-- TEAM -->
+    <div class="team-loading-skeleton" *ngIf="teamLoading">
+      <div class="skeleton-bar"></div>
+    </div>
     <div class="team-empty" *ngIf="team.length === 0 && !teamLoading">
       <span>🎒</span>
       <p>Aún no tienes Chuchemons en tu equipo. ¡Empieza a capturar!</p>

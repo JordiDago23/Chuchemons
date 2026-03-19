@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, timeout } from 'rxjs/operators';
 import { Chuchemon } from '../models/chuchemon.model';
 
 @Injectable({
@@ -12,10 +12,7 @@ export class ChuchemonService {
   private userApiUrl = 'http://localhost:8000/api/user';
   private chuchechomsSubject = new BehaviorSubject<Chuchemon[]>([]);
   public chuchemons$ = this.chuchechomsSubject.asObservable();
-
-  constructor(private http: HttpClient) {
-    this.loadChuchemons();
-  }
+  constructor(private http: HttpClient) {}
 
   private loadChuchemons(): void {
     console.log('🔄 Cargando Chuchemons desde:', this.apiUrl);
@@ -56,7 +53,7 @@ export class ChuchemonService {
    */
   getMyChuchemons(): Observable<Chuchemon[]> {
     return this.http.get<Chuchemon[]>(`${this.userApiUrl}/chuchemons`).pipe(
-      // Si falla, devolver array vacío
+      timeout(10000),
       catchError((error) => {
         console.warn('Error loading my chuchemons:', error);
         return of([]);
