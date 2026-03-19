@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { MochilaService, MochilaXuxItem } from '../../services/mochila.service';
-import { ItemService, Item, MochilaItem } from '../../services/item.service';
+import { ItemService, MochilaItem } from '../../services/item.service';
 import { Chuchemon } from '../../models/chuchemon.model';
 
 // ── Models ────────────────────────────────────────────────────────────────────
@@ -18,16 +18,16 @@ export interface ItemBase {
 }
 
 export interface XuxItem extends ItemBase {
-  type: 'xux';
+  type: 'apilable';
   quantity: number;
 }
 
 export interface VacunaItem extends ItemBase {
-  type: 'vacuna';
+  type: 'no_apilable';
   quantity: number;
 }
 
-export type Item = XuxItem | VacunaItem;
+export type InventoryItem = XuxItem | VacunaItem;
 
 interface InventorySlot {
   index: number;
@@ -53,7 +53,7 @@ export class MochilaComponent implements OnInit {
   readonly MAX_STACK = 5;
 
   // ── Items from backend ────────────────────────────────────────────────────
-  items: Item[] = [];
+  items: InventoryItem[] = [];
   itemsLoading = false;
   /** Per-item quantity input map { itemId → qty } */
   addItemQtyMap: { [id: number]: number } = {};
@@ -69,9 +69,9 @@ export class MochilaComponent implements OnInit {
 
   // ── Vacunes (hardcoded per ara) ────────────────────────────────────────────
   vacunaItems: VacunaItem[] = [
-    { id: 4, type: 'vacuna', name: 'Xocolatina',   description: 'En usar-ho en un Xuxemon treu "Bajón de azúcar".', imageUrl: '', tag: 'Estat',   quantity: 3 },
-    { id: 5, type: 'vacuna', name: 'Xal de fruites', description: 'En usar-ho en un Xuxemon treu "Atracón".',          imageUrl: '', tag: 'Estat',   quantity: 2 },
-    { id: 6, type: 'vacuna', name: 'Inxulina',      description: 'Cura totes les malalties del Xuxemon.',              imageUrl: '', tag: 'Cura',    quantity: 1 },
+    { id: 4, type: 'no_apilable', name: 'Xocolatina',   description: 'En usar-ho en un Xuxemon treu "Bajón de azúcar".', imageUrl: '', tag: 'Estat',   quantity: 3 },
+    { id: 5, type: 'no_apilable', name: 'Xal de fruites', description: 'En usar-ho en un Xuxemon treu "Atracón".',          imageUrl: '', tag: 'Estat',   quantity: 2 },
+    { id: 6, type: 'no_apilable', name: 'Inxulina',      description: 'Cura totes les malalties del Xuxemon.',              imageUrl: '', tag: 'Cura',    quantity: 1 },
   ];
 
   // ── Chuchemons – for the "Afegir Xuxes" panel ─────────────────────────────
@@ -121,7 +121,15 @@ export class MochilaComponent implements OnInit {
     this.itemsLoading = true;
     this.itemService.getItems().subscribe({
       next: (items) => {
-        this.items = items;
+        // Mapear items del servicio a InventoryItem
+        this.items = items.map(item => ({
+          ...item,
+          type: (item as any).type || 'apilable',
+          quantity: (item as any).quantity || 1,
+          description: item.description || '',
+          imageUrl: (item as any).imageUrl || '',
+          tag: (item as any).tag || ''
+        } as InventoryItem));
         items.forEach(item => this.addItemQtyMap[item.id] = 1);
         this.itemsLoading = false;
       },
@@ -262,7 +270,7 @@ export class MochilaComponent implements OnInit {
   }
 
   // ── Add items ──────────────────────────────────────────────────────────────
-  addItems(item: Item) {
+  addItems(item: InventoryItem) {
     const qty = this.addItemQtyMap[item.id] ?? 1;
     if (qty < 1) return;
 
@@ -300,7 +308,7 @@ export class MochilaComponent implements OnInit {
     return slot.index;
   }
 
-  setTab(tab: 'objetos' | 'vacunas' | 'chuchemons') {
+  setTab(tab: 'items' | 'objetos' | 'vacunas' | 'chuchemons') {
     this.activeTab = tab;
   }
 

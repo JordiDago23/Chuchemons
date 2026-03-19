@@ -196,7 +196,7 @@
                   <button
                     class="add-xux-btn"
                     (click)="addXuxes(c)"
-                    [disabled]="backendFreeSpaces === 0 || addingMap[c.id] || (addQtyMap[c.id] ?? 1) < 1"
+                    [disabled]="backendFreeSpaces === 0 || addingMap[c.id] || addQtyMap[c.id] < 1"
                   >
                     @if (!addingMap[c.id]) { + Afegir Xuxes }
                     @else { Afegint… }
@@ -327,7 +327,7 @@
           @for (item of mochilaXuxes; track item.id) {
             <li
               class="item-card card shadow-sm card-apilable"
-              [ngClass]="['card-element-' + (item.chuchemon.element?.toLowerCase() ?? '')]"
+              [ngClass]="['card-element-' + item.chuchemon.element.toLowerCase()]"
             >
               <span class="qty-badge" aria-hidden="true">x{{ item.quantity }}</span>
               <span class="item-tag tag-mejora" aria-hidden="true">Xux</span>
@@ -344,7 +344,7 @@
               </div>
 
               <div class="item-body">
-                <h2 class="item-name">Xux de {{ item.chuchemon.name ?? '?' }}</h2>
+                <h2 class="item-name">Xux de {{ item.chuchemon.name }}</h2>
                 <p class="item-desc">
                   Element {{ item.chuchemon.element }}.
                   Quantitat total: {{ item.quantity }}.
