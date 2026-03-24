@@ -61,6 +61,11 @@ class ChuchemonSeeder extends Seeder
         ];
 
         foreach ($chuchemons as $data) {
+            // si no hay stats predefinidos, generamos valores razonables
+            $data['attack']  = $data['attack']  ?? rand(45, 95);
+            $data['defense'] = $data['defense'] ?? rand(35, 90);
+            $data['speed']   = $data['speed']   ?? rand(30, 100);
+
             Chuchemon::updateOrCreate(['name' => $data['name']], $data);
         }
     }

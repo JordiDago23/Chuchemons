@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, interval, Subscription } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
@@ -25,21 +25,37 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
   private destroy$ = new Subject<void>();
+  private pollingSubscription?: Subscription;
 
   constructor(
     private chuchemonService: ChuchemonService,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private cdRef: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
     this.loadMyChuchemons();
     this.loadCurrentTeam();
+    this.startPolling();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.stopPolling();
+  }
+
+  private startPolling(): void {
+    // Verificar cambios cada 30 segundos
+    this.pollingSubscription = interval(30000).subscribe(() => {
+      this.loadMyChuchemons();
+      this.loadCurrentTeam();
+    });
+  }
+
+  private stopPolling(): void {
+    this.pollingSubscription?.unsubscribe();
   }
 
   loadMyChuchemons(): void {
@@ -54,6 +70,7 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.myChuchemons = Array.isArray(data) ? data as ChuchemonExtended[] : [];
+          this.cdRef.detectChanges();
         },
         error: (error) => {
           console.error('Error loading my Chuchemons:', error);
@@ -70,9 +87,11 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
           if (response.team_ids) {
             this.selectedChuchemons = [...response.team_ids];
           }
+          this.cdRef.detectChanges();
         },
         error: (error) => {
           console.error('Error loading team:', error);
+          this.cdRef.detectChanges();
         }
       });
   }

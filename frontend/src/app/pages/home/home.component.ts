@@ -1,10 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Subject, interval, Subscription } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { LevelingPanelComponent } from '../../components/leveling-panel/leveling-panel.component';
+import { InfectionsPanelComponent } from '../../components/infections-panel/infections-panel.component';
+import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewards.component';
 
 interface Chuchemon {
   id: number;
@@ -16,7 +20,13 @@ interface Chuchemon {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    LevelingPanelComponent,
+    InfectionsPanelComponent,
+    DailyRewardsComponent
+  ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -57,7 +67,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
-    private chuchemonService: ChuchemonService
+    private chuchemonService: ChuchemonService,
+    private http: HttpClient,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -66,6 +78,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.user = cached;
       this.loading = false;
       this.loadTeam();
+      this.loadStats();
       return;
     }
     this.auth.me().subscribe({
@@ -73,6 +86,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.user = data;
         this.loading = false;
         this.loadTeam();
+        this.loadStats();
       },
       error: () => {
         this.loading = false;
@@ -100,11 +114,32 @@ export class HomeComponent implements OnInit, OnDestroy {
           } else {
             this.team = [];
           }
+          this.cdRef.detectChanges();
         },
         error: (error) => {
           console.error('Error loading team:', error);
           this.team = [];
+          this.cdRef.detectChanges();
         }
+      });
+  }
+
+  loadStats(): void {
+    // Load total chuchemons and captured count
+    this.http.get<any>('http://localhost:8000/api/chuchemons')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.data && Array.isArray(response.data)) {
+            this.stats.total = response.data.length;
+            // Count captured (user's chuchemons)
+            this.stats.captured = response.data.filter((ch: any) => 
+              ch.captured_count && ch.captured_count > 0
+            ).length;
+          }
+          this.cdRef.detectChanges();
+        },
+        error: (error) => console.error('Error loading chuchemons:', error)
       });
   }
 

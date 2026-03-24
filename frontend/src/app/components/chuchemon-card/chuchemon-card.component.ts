@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './chuchemon-card.component.html',
   styleUrls: ['./chuchemon-card.component.css']
 })
-export class ChuchemonCardComponent {
+export class ChuchemonCardComponent implements OnInit {
   @Input() chuchemon: any = null;
   @Input() locked = false;
   @Input() showCaptureBtn = false;
@@ -20,6 +20,13 @@ export class ChuchemonCardComponent {
   @Output() details  = new EventEmitter<number>();
   @Output() evolve  = new EventEmitter<number>();
   @Output() cardClick = new EventEmitter<any>();
+
+  constructor(private cdRef: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    // Forzar detección de cambios para asegurar que las imágenes se muestren
+    this.cdRef.detectChanges();
+  }
 
   get sizeBadge(): string {
     const count = this.chuchemon?.count ?? 1;
@@ -39,8 +46,14 @@ export class ChuchemonCardComponent {
   }
 
   onDetails(e: Event): void {
+    console.log('onDetails called for chuchemon:', this.chuchemon?.name, 'ID:', this.chuchemon?.id);
     e.stopPropagation();
-    if (this.chuchemon?.id) this.details.emit(this.chuchemon.id);
+    if (this.chuchemon?.id) {
+      console.log('Emitting details event with ID:', this.chuchemon.id);
+      this.details.emit(this.chuchemon.id);
+    } else {
+      console.error('No chuchemon ID to emit');
+    }
   }
 
   onEvolve(e: Event): void {

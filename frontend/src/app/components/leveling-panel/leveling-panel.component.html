@@ -1,0 +1,53 @@
+<div class="leveling-panel">
+  <h2>Sistema de Nivelado</h2>
+  
+  @if (isLoading) {
+    <p>Cargando...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="error">{{ errorMessage }}</div>
+  }
+
+  <div class="chuchemons-list">
+    <h3>Tus Xuxemons</h3>
+    <div class="chuchemon-grid">
+      @for (chuchemon of chuchemons; track chuchemon.id) {
+        <div 
+          class="chuchemon-item"
+          [class.selected]="selectedChuchemon?.id === chuchemon.id"
+          (click)="selectChuchemon(chuchemon)"
+        >
+          <p class="name">{{ chuchemon.name }}</p>
+          <p class="level">Lvl. {{ chuchemon.level }}</p>
+          <div class="xp-bar-small">
+            <div class="xp-fill-small" [style.width.%]="chuchemon.experience / chuchemon.experience_for_next_level * 100"></div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (selectedChuchemon) {
+    <div class="details-section">
+      <h3>{{ selectedChuchemon.name }}</h3>
+      <div class="stat-box">
+        <p><strong>Nivel:</strong> {{ selectedChuchemon.level }}</p>
+        <p><strong>Experiencia:</strong> {{ selectedChuchemon.experience }} / {{ selectedChuchemon.experience_for_next_level }}</p>
+        
+        <div class="xp-bar-container">
+          <div class="xp-bar">
+            <div class="xp-fill" [style.width.%]="selectedChuchemon.experience / selectedChuchemon.experience_for_next_level * 100"></div>
+          </div>
+          <span class="progress-text">{{ selectedChuchemon.experience_progress }}%</span>
+        </div>
+
+        <div class="buttons">
+          <button (click)="addExperience(10)">Añadir 10 XP</button>
+          <button (click)="addExperience(50)">Añadir 50 XP</button>
+          <button (click)="addExperience(100)">Añadir 100 XP</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

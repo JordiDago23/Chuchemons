@@ -1,0 +1,71 @@
+<div class="daily-rewards">
+  <h2>Recompensas Diarias</h2>
+  
+  @if (isLoading) {
+    <p>Cargando recompensas...</p>
+  }
+
+  @if (successMessage) {
+    <div class="success">{{ successMessage }}</div>
+  }
+
+  @if (errorMessage) {
+    <div class="error">{{ errorMessage }}</div>
+  }
+
+  <div class="rewards-grid">
+    <!-- Xux Daily Reward -->
+    @if (xuxReward) {
+      <div class="reward-card xux-reward">
+        <h3>Recompensa Diaria - Xuxes</h3>
+        <div class="reward-icon">🧪</div>
+        <p class="quantity">x{{ xuxReward.quantity }} {{ xuxReward.item?.name ?? 'Xuxes' }}</p>
+        
+        <div class="availability-status">
+          @if (isRewardAvailable(xuxReward)) {
+            <span class="available">✓ Disponible ahora</span>
+          } @else {
+            <span class="unavailable">⏱ {{ getTimeUntilAvailable(xuxReward) }}</span>
+          }
+        </div>
+
+        <button 
+          class="claim-btn"
+          (click)="claimXuxReward()"
+          [disabled]="!isRewardAvailable(xuxReward)"
+        >
+          Reclamar Xuxes
+        </button>
+      </div>
+    }
+
+    <!-- Chuchemon Daily Reward -->
+    @if (chuchemonReward) {
+      <div class="reward-card chuchemon-reward">
+        <h3>Recompensa Diaria - Xuxemon</h3>
+        <div class="reward-icon">🎁</div>
+        <p class="quantity">{{ chuchemonReward.chuchemon?.name ?? 'Xuxemon Aleatorio' }}</p>
+        
+        <div class="availability-status">
+          @if (isRewardAvailable(chuchemonReward)) {
+            <span class="available">✓ Disponible ahora</span>
+          } @else {
+            <span class="unavailable">⏱ {{ getTimeUntilAvailable(chuchemonReward) }}</span>
+          }
+        </div>
+
+        <button 
+          class="claim-btn"
+          (click)="claimChuchemonReward()"
+          [disabled]="!isRewardAvailable(chuchemonReward)"
+        >
+          Reclamar Xuxemon
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="info-box">
+    <p><strong>ℹ️ Nota:</strong> Los recompensas se renuevan diariamente a las 08:00 AM</p>
+  </div>
+</div>

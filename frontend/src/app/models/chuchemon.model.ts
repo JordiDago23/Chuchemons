@@ -3,4 +3,7 @@ export interface Chuchemon {
   name: string;
   element: 'Tierra' | 'Aire' | 'Agua';
   image: string;
+  attack: number;
+  defense: number;
+  speed: number;
 }

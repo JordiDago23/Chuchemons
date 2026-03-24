@@ -14,9 +14,15 @@ class Chuchemon extends Model
         'element',
         'mida',
         'image',
+        'attack',
+        'defense',
+        'speed',
     ];
 
     protected $casts = [
+        'attack' => 'integer',
+        'defense' => 'integer',
+        'speed' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

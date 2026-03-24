@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { EvolutionService } from '../../services/evolution.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonCardComponent } from '../../components/chuchemon-card/chuchemon-card.component';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
+import { ChuchemonDetailsModalComponent } from '../../components/chuchemon-details-modal/chuchemon-details-modal.component';
 
 interface ChuchemonExtended extends Chuchemon {
   captured?: boolean;
@@ -19,7 +20,7 @@ interface ChuchemonExtended extends Chuchemon {
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ChuchemonCardComponent, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ChuchemonCardComponent, ConfirmDialogComponent, ChuchemonDetailsModalComponent],
   templateUrl: './chuchedex.component.html',
   styleUrls: ['./chuchedex.component.css']
 })
@@ -46,13 +47,18 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   evolvingChuchemonName = '';
   evolvingChuchemonNextMida = '';
 
+  // Details modal properties
+  showDetailsModal = false;
+  selectedChuchemonForDetails: ChuchemonExtended | null = null;
+
   private pageVisible = true;
   private autoRefreshSubscription: any;
 
   constructor(
     private chuchemonService: ChuchemonService,
     private evolutionService: EvolutionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdRef: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -101,6 +107,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (user) => {
           this.isAdmin = user?.is_admin ?? false;
+          console.log('User admin status:', this.isAdmin, 'User:', user);
         },
         error: (error) => {
           console.error('Error checking admin status:', error);
@@ -130,33 +137,40 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
           } else {
             this.applyFilters();
             this.isLoading = false;
+            this.cdRef.detectChanges();
           }
         },
         error: (error) => {
           console.error('Error loading Chuchemons:', error);
           this.errorMessage = 'Error al cargar los Chuchemons';
           this.isLoading = false;
+          this.cdRef.detectChanges();
         }
       });
   }
 
   loadMyChuchemons(): void {
+    console.log('Loading my chuchemons...');
     this.chuchemonService.getMyChuchemons()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
+          console.log('My chuchemons loaded:', data);
           this.myChuchemons = data as ChuchemonExtended[];
           // Update captured status in all chuchemons list
           const myIds = new Set(this.myChuchemons.map(c => c.id));
           this.chuchemons.forEach(c => c.captured = myIds.has(c.id));
+          console.log('Updated captured status. Total captured:', this.chuchemons.filter(c => c.captured).length);
           this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
           this.updateCompletionPercentage();
           this.applyFilters();
           this.isLoading = false;
+          this.cdRef.detectChanges();
         },
         error: (error) => {
           console.error('Error loading my Chuchemons:', error);
           this.isLoading = false;
+          this.cdRef.detectChanges();
         }
       });
   }
@@ -234,7 +248,9 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   isCaptured(chuchemon: ChuchemonExtended): boolean {
-    return chuchemon.captured ?? false;
+    const captured = chuchemon.captured ?? false;
+    console.log('isCaptured for', chuchemon.name, ':', captured);
+    return captured;
   }
 
   isBlockedForDisplay(chuchemon: ChuchemonExtended): boolean {
@@ -323,6 +339,33 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   cancelEvolution(): void {
     this.showEvolutionDialog = false;
     this.evolvingChuchemonId = null;
+  }
+
+  openDetailsModal(chuchemonId: number): void {
+    console.log('Opening details modal for chuchemon ID:', chuchemonId);
+
+    // Buscar en todos los arrays posibles
+    let chuchemon = this.chuchemons.find(c => c.id === chuchemonId);
+    if (!chuchemon) {
+      chuchemon = this.myChuchemons.find(c => c.id === chuchemonId);
+    }
+    if (!chuchemon) {
+      chuchemon = this.filteredChuchemons.find(c => c.id === chuchemonId);
+    }
+
+    if (chuchemon) {
+      console.log('Found chuchemon:', chuchemon);
+      this.selectedChuchemonForDetails = chuchemon;
+      this.showDetailsModal = true;
+      console.log('Modal should be visible now');
+    } else {
+      console.error('Chuchemon not found with ID:', chuchemonId);
+    }
+  }
+
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedChuchemonForDetails = null;
   }
 
   logout(): void {

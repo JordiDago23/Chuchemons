@@ -1,0 +1,235 @@
+.infections-panel {
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffe0e0, #fff5f5);
+}
+
+.infections-panel h2 {
+  margin: 0 0 20px 0;
+  color: #c62828;
+  font-size: 1.8rem;
+}
+
+.infections-panel h3 {
+  margin: 0 0 15px 0;
+  color: #d32f2f;
+  font-size: 1.2rem;
+}
+
+.infections-section,
+.vaccines-section {
+  margin-bottom: 30px;
+}
+
+.infections-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.infection-card {
+  background: #fff;
+  border-left: 4px solid #d32f2f;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.infection-card h4 {
+  margin: 0 0 10px 0;
+  color: #1a1a2e;
+}
+
+.infection-card p {
+  margin: 6px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.infection-bar {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 12px 0 6px 0;
+}
+
+.infection-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b6b, #d32f2f);
+}
+
+.infection-val {
+  font-weight: 600;
+  color: #c62828;
+  margin-top: 8px;
+}
+
+.cure-options {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.cure-options button {
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cure-options button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(76,175,80,.3);
+}
+
+.no-infections {
+  padding: 20px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  color: #2e7d32;
+  text-align: center;
+  font-weight: 600;
+}
+
+.vaccines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.vaccine-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.vaccine-card h4 {
+  margin: 0 0 8px 0;
+  color: #1a1a2e;
+  font-size: 1rem;
+}
+
+.vaccine-card p {
+  margin: 6px 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.cures {
+  color: #2e7d32;
+  font-weight: 600;
+  background: #e8f5e9;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+/* Todo Section Styles */
+.todos-section {
+  margin-bottom: 30px;
+}
+
+.todos-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 15px;
+}
+
+.todo-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  border-left: 4px solid #2196f3;
+  transition: all 0.3s ease;
+}
+
+.todo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+.todo-card.priority-high {
+  border-left-color: #f44336;
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+}
+
+.todo-card.priority-medium {
+  border-left-color: #ff9800;
+  background: linear-gradient(135deg, #fff3e0, #ffcc02);
+}
+
+.todo-card.priority-low {
+  border-left-color: #4caf50;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+}
+
+.todo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.todo-header h4 {
+  margin: 0;
+  color: #1a1a2e;
+  font-size: 1rem;
+}
+
+.priority-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.priority-badge.priority-high {
+  background: #f44336;
+  color: #fff;
+}
+
+.priority-badge.priority-medium {
+  background: #ff9800;
+  color: #fff;
+}
+
+.priority-badge.priority-low {
+  background: #4caf50;
+  color: #fff;
+}
+
+.todo-description {
+  margin: 8px 0;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.todo-action {
+  margin: 8px 0 0 0;
+  color: #2196f3;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e3f2fd;
+  padding: 6px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}

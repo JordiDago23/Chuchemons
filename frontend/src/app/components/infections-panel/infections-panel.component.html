@@ -1,0 +1,73 @@
+<div class="infections-panel">
+  <h2>Sistema de Malalalties y Vacunas</h2>
+
+  @if (infections.length > 0) {
+    <div class="infections-section">
+      <h3>Infecciones Activas</h3>
+      <div class="infections-list">
+        @for (infection of infections; track infection.id) {
+          <div class="infection-card">
+            <h4>{{ infection.chuchemon?.name }}</h4>
+            <p><strong>Malaltia:</strong> {{ infection.malaltia?.name }}</p>
+            <p><strong>Severidad:</strong> {{ infection.malaltia?.severity }}/10</p>
+            <div class="infection-bar">
+              <div class="infection-fill" [style.width.%]="infection.infection_percentage"></div>
+            </div>
+            <p class="infection-val">{{ infection.infection_percentage }}% infectado</p>
+
+            <div class="cure-options">
+              @for (vaccine of vaccines; track vaccine.id) {
+                @if (vaccine.malaltia_id === infection.malaltia_id) {
+                  <button (click)="cureInfection(infection.id, vaccine.id)">
+                    Usar {{ vaccine.name }}
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <p class="no-infections">¡Todos tus Xuxemons están sanos!</p>
+  }
+
+  @if (todos.length > 0) {
+    <div class="todos-section">
+      <h3>Tareas Pendientes</h3>
+      <div class="todos-list">
+        @for (todo of todos; track todo.id) {
+          <div class="todo-card" [class]="'priority-' + todo.priority">
+            <div class="todo-header">
+              <h4>{{ todo.title }}</h4>
+              <span class="priority-badge" [class]="'priority-' + todo.priority">
+                {{ todo.priority === 'high' ? 'Alta' : todo.priority === 'medium' ? 'Media' : 'Baja' }}
+              </span>
+            </div>
+            <p class="todo-description">{{ todo.description }}</p>
+            <p class="todo-action">{{ todo.action }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="vaccines-section">
+    <h3>Disponibles</h3>
+    <div class="vaccines-grid">
+      @for (vaccine of vaccines; track vaccine.id) {
+        <div class="vaccine-card">
+          <h4>{{ vaccine.name }}</h4>
+          <p class="description">{{ vaccine.description }}</p>
+          @if (vaccine.malaltia) {
+            <p class="cures"><strong>Cura:</strong> {{ vaccine.malaltia.name }}</p>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error">{{ errorMessage }}</div>
+  }
+</div>

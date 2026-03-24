@@ -76,7 +76,7 @@
     @if (!locked && showDetailsBtn) {
       <button
         class="cc-btn cc-btn-details"
-        (click)="onDetails($event)"
+        (click)="onDetails($event); console.log('Details button clicked')"
         [attr.aria-label]="'Veure detalls de ' + (chuchemon?.name ?? 'aquest Xuxemon')"
       >Veure Detalls</button>
     }

@@ -53,9 +53,10 @@ export class ChuchemonService {
    */
   getMyChuchemons(): Observable<Chuchemon[]> {
     return this.http.get<Chuchemon[]>(`${this.userApiUrl}/chuchemons`).pipe(
-      timeout(10000),
+      timeout(15000), // Aumentar timeout a 15 segundos
       catchError((error) => {
         console.warn('Error loading my chuchemons:', error);
+        // Retornar array vacío en caso de error para que la UI siga funcionando
         return of([]);
       })
     );

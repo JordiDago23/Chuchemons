@@ -1,0 +1,85 @@
+@if (isVisible && chuchemon) {
+  {{ console.log('Rendering modal for chuchemon:', chuchemon.name) }}
+  <div class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <button class="modal-close" (click)="onClose()" aria-label="Tancar modal">&times;</button>
+
+      <div class="modal-header">
+        <h2 id="modal-title">{{ chuchemon.name }}</h2>
+        <span class="modal-element" [style.background-color]="getElementColor(chuchemon.element)">
+          {{ chuchemon.element }}
+        </span>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-image-section">
+          @if (chuchemon.image) {
+            <img
+              [src]="'http://localhost:8000/chuchemons/' + chuchemon.image"
+              [alt]="chuchemon.name"
+              class="modal-image"
+            />
+          } @else {
+            <div class="modal-placeholder">🐾</div>
+          }
+        </div>
+
+        <div class="modal-stats-section">
+          <h3>Estadístiques</h3>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-bar">
+                <div class="stat-fill" [style.width.%]="(chuchemon.attack / 255) * 100"></div>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Atac</span>
+                <span class="stat-value">{{ chuchemon.attack }}</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-bar">
+                <div class="stat-fill" [style.width.%]="(chuchemon.defense / 255) * 100"></div>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Defensa</span>
+                <span class="stat-value">{{ chuchemon.defense }}</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-bar">
+                <div class="stat-fill" [style.width.%]="(chuchemon.speed / 255) * 100"></div>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Velocitat</span>
+                <span class="stat-value">{{ chuchemon.speed }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-hp-section">
+            <div class="hp-row">
+              <span>Punts de vida</span>
+              <span class="hp-val">100/100</span>
+            </div>
+            <div class="hp-bar">
+              <div class="hp-fill" style="width: 100%"></div>
+            </div>
+          </div>
+
+          <div class="modal-xp-section">
+            <div class="xp-row">
+              <span>Experiència</span>
+              <span class="xp-val">750/1000 XP</span>
+            </div>
+            <div class="xp-bar">
+              <div class="xp-fill" style="width: 75%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

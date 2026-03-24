@@ -1,0 +1,151 @@
+.leveling-panel {
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f5f7fa, #e0e7ff);
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+
+.leveling-panel h2 {
+  margin: 0 0 20px 0;
+  color: #1a1a2e;
+  font-size: 1.8rem;
+}
+
+.leveling-panel h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.chuchemons-list {
+  margin-bottom: 30px;
+}
+
+.chuchemon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.chuchemon-item {
+  background: #fff;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.chuchemon-item:hover {
+  border-color: #4caf50;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(76,175,80,.2);
+}
+
+.chuchemon-item.selected {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  box-shadow: 0 4px 12px rgba(76,175,80,.3);
+}
+
+.chuchemon-item .name {
+  margin: 0 0 4px 0;
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.9rem;
+}
+
+.chuchemon-item .level {
+  margin: 0;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.xp-bar-small {
+  height: 3px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.xp-fill-small {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #45a049);
+  transition: width 0.3s ease;
+}
+
+.details-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.stat-box {
+  margin-top: 15px;
+}
+
+.stat-box p {
+  margin: 8px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.xp-bar-container {
+  margin: 20px 0;
+  position: relative;
+}
+
+.xp-bar {
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #45a049);
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.buttons button {
+  padding: 12px 15px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.buttons button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(76,175,80,.3);
+}
+
+.error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}

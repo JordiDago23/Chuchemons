@@ -132,10 +132,11 @@
             [chuchemon]="chuchemon"
             [locked]="isBlockedForDisplay(chuchemon)"
             [showCaptureBtn]="!isCaptured(chuchemon) && !isAdmin && selectedTab === 'todos'"
-            [showDetailsBtn]="(isCaptured(chuchemon) || isAdmin)"
+            [showDetailsBtn]="true"
             [showEvolveBtn]="isCaptured(chuchemon) && selectedTab === 'mis'"
             [showTeamBadge]="isInTeam(chuchemon.id)"
             (capture)="captureChuchemon($event)"
+            (details)="openDetailsModal($event)"
             (evolve)="openEvolutionDialog($event, chuchemon.name)"
           ></app-chuchemon-card>
         }
@@ -157,5 +158,12 @@
       (confirm)="confirmEvolution()"
       (cancel)="cancelEvolution()"
     ></app-confirm-dialog>
+
+    <!-- Details modal -->
+    <app-chuchemon-details-modal
+      [chuchemon]="selectedChuchemonForDetails"
+      [isVisible]="showDetailsModal"
+      (close)="closeDetailsModal()"
+    ></app-chuchemon-details-modal>
   </main>
 </div>

@@ -42,7 +42,7 @@ class User extends Authenticatable implements JWTSubject
     public function capturedChuchemons()
     {
         return $this->belongsToMany(Chuchemon::class, 'user_chuchemons')
-                    ->withPivot('count')
+                    ->withPivot('count', 'level', 'experience', 'experience_for_next_level')
                     ->withTimestamps();
     }
 
@@ -50,7 +50,7 @@ class User extends Authenticatable implements JWTSubject
     public function capturedChuchemsWithEvolution()
     {
         return $this->belongsToMany(Chuchemon::class, 'user_chuchemons')
-                    ->withPivot('count', 'current_mida', 'evolution_count')
+                    ->withPivot('count', 'current_mida', 'evolution_count', 'level', 'experience', 'experience_for_next_level')
                     ->withTimestamps();
     }
 
@@ -62,5 +62,15 @@ class User extends Authenticatable implements JWTSubject
     public function items()
     {
         return $this->hasMany(MochilaXux::class);
+    }
+
+    public function infections()
+    {
+        return $this->hasMany(UserInfection::class);
+    }
+
+    public function dailyRewards()
+    {
+        return $this->hasMany(DailyReward::class);
     }
 }

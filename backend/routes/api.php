@@ -7,6 +7,9 @@ use App\Http\Controllers\ChuchemonController;
 use App\Http\Controllers\MochilaController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\InfectionController;
+use App\Http\Controllers\LevelingController;
+use App\Http\Controllers\DailyRewardController;
 
 // ─── RUTAS PÚBLICAS ──────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register']);
@@ -46,6 +49,23 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/mochila/add-item',    [MochilaController::class, 'addItem']);
     Route::put('/mochila/{id}',         [MochilaController::class, 'update']);
     Route::delete('/mochila/{id}',      [MochilaController::class, 'destroy']);
+
+    // ─── LEVELING ──────────────────────────────────────────
+    Route::get('/level/chuchemons',     [LevelingController::class, 'getAllChuchemonsWithLevels']);
+    Route::get('/level/chuchemon/{id}', [LevelingController::class, 'getChuchemonLevel']);
+    Route::post('/level/chuchemon/{id}/add-experience/{amount}', [LevelingController::class, 'addExperience']);
+
+    // ─── INFECTIONS & MALALTIES ─────────────────────────────
+    Route::get('/infections',           [InfectionController::class, 'getActiveInfections']);
+    Route::post('/infections/infect/{chuchemonId}/{malaltiaId}', [InfectionController::class, 'infectChuchemon']);
+    Route::post('/infections/cure/{infectionId}/{vaccineId}',    [InfectionController::class, 'cureInfection']);
+    Route::get('/malalties',            [InfectionController::class, 'getMalalties']);
+    Route::get('/vaccines',             [InfectionController::class, 'getVaccines']);
+
+    // ─── DAILY REWARDS ──────────────────────────────────────
+    Route::get('/daily-rewards',        [DailyRewardController::class, 'getDailyRewards']);
+    Route::post('/daily-rewards/xux',   [DailyRewardController::class, 'claimXuxReward']);
+    Route::post('/daily-rewards/chuchemon', [DailyRewardController::class, 'claimChuchemonReward']);
 
     // ─── ADMIN ────────────────────────────────────────────────────────
     Route::prefix('admin')->group(function () {

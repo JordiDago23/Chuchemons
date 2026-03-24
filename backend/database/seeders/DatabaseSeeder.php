@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             ChuchemonSeeder::class,
+            MalaltiaSeeder::class,
+            VaccineSeeder::class,
         ]);
     }
 }

@@ -59,6 +59,9 @@ class ChuchemonController extends Controller
                 'element' => $chuchemon->element,
                 'mida' => $chuchemon->mida,
                 'image' => $chuchemon->image,
+                'attack' => $chuchemon->attack ?? 50,
+                'defense' => $chuchemon->defense ?? 50,
+                'speed' => $chuchemon->speed ?? 50,
                 'captured' => $captured,
                 'count' => $count,
                 'created_at' => $chuchemon->created_at,
@@ -135,6 +138,9 @@ class ChuchemonController extends Controller
                         'element' => $chuchemon->element,
                         'mida' => $chuchemon->mida,
                         'image' => $chuchemon->image,
+                        'attack' => $chuchemon->attack ?? 50,
+                        'defense' => $chuchemon->defense ?? 50,
+                        'speed' => $chuchemon->speed ?? 50,
                         'count' => $chuchemon->count ?? 1,
                         'captured' => true,
                         'created_at' => $chuchemon->created_at,
@@ -293,13 +299,16 @@ class ChuchemonController extends Controller
             'element' => 'required|in:Tierra,Aire,Agua',
             'mida'    => 'required|in:Petit,Mitjà,Gran',
             'image'   => 'nullable|string|max:255',
+            'attack'  => 'nullable|integer|min:0|max:255',
+            'defense' => 'nullable|integer|min:0|max:255',
+            'speed'   => 'nullable|integer|min:0|max:255',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $chuchemon = Chuchemon::create($request->only(['name', 'element', 'mida', 'image']));
+        $chuchemon = Chuchemon::create($request->only(['name', 'element', 'mida', 'image', 'attack', 'defense', 'speed']));
 
         return response()->json($chuchemon, 201);
     }
@@ -320,13 +329,16 @@ class ChuchemonController extends Controller
             'element' => 'sometimes|in:Tierra,Aire,Agua',
             'mida'    => 'sometimes|in:Petit,Mitjà,Gran',
             'image'   => 'nullable|string|max:255',
+            'attack'  => 'sometimes|integer|min:0|max:255',
+            'defense' => 'sometimes|integer|min:0|max:255',
+            'speed'   => 'sometimes|integer|min:0|max:255',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $chuchemon->update($request->only(['name', 'element', 'mida', 'image']));
+        $chuchemon->update($request->only(['name', 'element', 'mida', 'image', 'attack', 'defense', 'speed']));
 
         return response()->json($chuchemon);
     }
