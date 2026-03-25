@@ -15,6 +15,14 @@ interface Chuchemon {
   name: string;
   element: string;
   image: string;
+  current_hp?: number;
+  max_hp?: number;
+  hp_percent?: number;
+  level?: number;
+  current_mida?: string;
+  experience?: number;
+  experience_for_next_level?: number;
+  xp_percent?: number;
 }
 
 @Component({
@@ -60,9 +68,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   team: Chuchemon[] = []; // Se cargará desde la API
 
   typeColors: Record<string, string> = {
-    Tierra: '#b8860b',
+    Terra:  '#b8860b',
     Aire:   '#48cae4',
-    Agua:   '#457b9d',
+    Aigua:  '#457b9d',
   };
 
   constructor(

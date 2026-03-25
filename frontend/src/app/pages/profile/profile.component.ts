@@ -28,9 +28,9 @@ export class ProfileComponent implements OnInit {
   stats = { level: 0, xp: 0, xpMax: 100, wins: 0, losses: 0, streak: 0, captured: 0 };
 
   typeStats = [
-    { type: 'Tipo agua',   count: 0, color: '#457b9d' },
-    { type: 'Tipo Tierra', count: 0, color: '#b8860b' },
-    { type: 'Tipo airel',  count: 0, color: '#48cae4' },
+    { type: 'Tipus Aigua', count: 0, color: '#457b9d' },
+    { type: 'Tipus Terra',  count: 0, color: '#b8860b' },
+    { type: 'Tipus Aire',   count: 0, color: '#48cae4' },
   ];
 
   logros = [

@@ -29,9 +29,9 @@ export class ChuchemonDetailsModalComponent {
 
   getElementColor(element: string): string {
     switch(element) {
-      case 'Tierra': return '#d4a574';
+      case 'Terra': return '#d4a574';
       case 'Aire': return '#87ceeb';
-      case 'Agua': return '#3b5bdb';
+      case 'Aigua': return '#3b5bdb';
       default: return '#808080';
     }
   }

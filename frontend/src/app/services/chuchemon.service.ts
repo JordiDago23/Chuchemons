@@ -40,7 +40,7 @@ export class ChuchemonService {
     return this.http.get<Chuchemon>(`${this.apiUrl}/${id}`);
   }
 
-  getChuchemonsByElement(element: 'Tierra' | 'Aire' | 'Agua'): Observable<Chuchemon[]> {
+  getChuchemonsByElement(element: 'Terra' | 'Aire' | 'Aigua'): Observable<Chuchemon[]> {
     return this.http.get<Chuchemon[]>(`${this.apiUrl}/element/${element}`);
   }
 

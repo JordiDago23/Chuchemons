@@ -9,26 +9,26 @@ class ItemSeeder extends Seeder
 {
     public function run(): void
     {
-        // Items apilables (Xuxes)
+        // Items apilables (Xuxes — 3 tipus de llaminadures apilables)
         Item::create([
-            'name' => 'Poció de Salut',
-            'description' => 'Recupera 20 punts de salut',
+            'name' => 'Xux de Maduixa',
+            'description' => 'Llaminadura de maduixa. Recupera 20 punts de salut',
             'type' => 'apilable',
-            'image' => 'pocion-salud.png',
+            'image' => 'xux-maduixa.png',
         ]);
 
         Item::create([
-            'name' => 'Poció de Força',
-            'description' => 'Augmenta l\'atac temporalment',
+            'name' => 'Xux de Llimona',
+            'description' => 'Llaminadura de llimona. Augmenta l\'atac temporalment',
             'type' => 'apilable',
-            'image' => 'pocion-fuerza.png',
+            'image' => 'xux-llimona.png',
         ]);
 
         Item::create([
-            'name' => 'Poció de Defensa',
-            'description' => 'Augmenta la defensa temporalment',
+            'name' => 'Xux de Cola',
+            'description' => 'Llaminadura de cola. Augmenta la defensa temporalment',
             'type' => 'apilable',
-            'image' => 'pocion-defensa.png',
+            'image' => 'xux-cola.png',
         ]);
 
         // Items no apilables (Vacunes)

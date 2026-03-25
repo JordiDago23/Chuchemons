@@ -28,7 +28,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   chuchemons: ChuchemonExtended[] = [];
   myChuchemons: ChuchemonExtended[] = [];
   filteredChuchemons: ChuchemonExtended[] = [];
-  selectedElement: 'Todos' | 'Tierra' | 'Aire' | 'Agua' = 'Todos';
+  selectedElement: 'Todos' | 'Terra' | 'Aire' | 'Aigua' = 'Todos';
   selectedSize: 'Todas' | 'Petit' | 'Mitjà' | 'Gran' = 'Todas';
   selectedTab: 'todos' | 'mis' = 'todos';
   searchQuery: string = '';
@@ -236,9 +236,9 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
 
   getElementColor(element: string): string {
     switch(element) {
-      case 'Tierra': return '#d4a574';
+      case 'Terra': return '#d4a574';
       case 'Aire': return '#87ceeb';
-      case 'Agua': return '#3b5bdb';
+      case 'Aigua': return '#3b5bdb';
       default: return '#808080';
     }
   }
@@ -264,10 +264,10 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     return chuchemon.count ?? 1;
   }
 
-  getSizeBadge(chuchemon: ChuchemonExtended): 'Petit' | 'Mitja' | 'Gran' {
+  getSizeBadge(chuchemon: ChuchemonExtended): 'Petit' | 'Mitjà' | 'Gran' {
     const quantity = this.getMultiplier(chuchemon);
     if (quantity >= 5) return 'Gran';
-    if (quantity >= 3) return 'Mitja';
+    if (quantity >= 3) return 'Mitjà';
     return 'Petit';
   }
 

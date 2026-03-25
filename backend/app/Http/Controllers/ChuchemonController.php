@@ -29,7 +29,9 @@ class ChuchemonController extends Controller
             $user = null;
         }
 
-        $allChuchemons = Chuchemon::all();
+        $allChuchemons = Chuchemon::when($request->query('element'), fn($q, $v) => $q->where('element', $v))
+                                   ->when($request->query('mida'),    fn($q, $v) => $q->where('mida', $v))
+                                   ->get();
         
         // Get all captured chuchemons for this user (if authenticated)
         $capturedIds = [];
@@ -182,8 +184,13 @@ class ChuchemonController extends Controller
                 // Incrementar el contador
                 $existing->pivot->increment('count');
             } else {
-                // Agregar nuevo
-                $user->capturedChuchemons()->attach($id, ['count' => 1]);
+                // Agregar nuevo — inicialitzar HP basat en stats base + nivell 1
+                $maxHp = LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit');
+                $user->capturedChuchemons()->attach($id, [
+                    'count'      => 1,
+                    'max_hp'     => $maxHp,
+                    'current_hp' => $maxHp,
+                ]);
             }
 
             return response()->json([
@@ -216,17 +223,41 @@ class ChuchemonController extends Controller
                 ], 200);
             }
 
-            // Obtener los datos de los chuchemons
+            // Obtener los datos de los chuchemons con HP per-user
             $teamData = [];
-            
-            if ($team->chuchemon_1_id) {
-                $teamData[] = Chuchemon::find($team->chuchemon_1_id);
-            }
-            if ($team->chuchemon_2_id) {
-                $teamData[] = Chuchemon::find($team->chuchemon_2_id);
-            }
-            if ($team->chuchemon_3_id) {
-                $teamData[] = Chuchemon::find($team->chuchemon_3_id);
+            $slots = ['chuchemon_1_id', 'chuchemon_2_id', 'chuchemon_3_id'];
+            foreach ($slots as $slot) {
+                if ($team->$slot) {
+                    $c = Chuchemon::find($team->$slot);
+                    if ($c) {
+                        $uc = DB::table('user_chuchemons')
+                            ->where('user_id', $user->id)
+                            ->where('chuchemon_id', $c->id)
+                            ->first();
+                        $maxHp  = $uc->max_hp    ?? LevelingController::computeMaxHp($c->defense ?? 50, $uc->level ?? 1, $uc->current_mida ?? 'Petit');
+                        $currHp = $uc->current_hp ?? $maxHp;
+                        $xpForNext = $uc->experience_for_next_level ?? 150;
+                        $xp        = $uc->experience ?? 0;
+                        $teamData[] = [
+                            'id'                        => $c->id,
+                            'name'                      => $c->name,
+                            'element'                   => $c->element,
+                            'mida'                      => $c->mida,
+                            'image'                     => $c->image,
+                            'attack'                    => $c->attack ?? 50,
+                            'defense'                   => $c->defense ?? 50,
+                            'speed'                     => $c->speed ?? 50,
+                            'current_mida'              => $uc->current_mida ?? 'Petit',
+                            'level'                     => $uc->level ?? 1,
+                            'current_hp'                => $currHp,
+                            'max_hp'                    => $maxHp,
+                            'hp_percent'                => $maxHp > 0 ? round(($currHp / $maxHp) * 100, 1) : 100,
+                            'experience'                => $xp,
+                            'experience_for_next_level' => $xpForNext,
+                            'xp_percent'                => $xpForNext > 0 ? round(($xp / $xpForNext) * 100, 1) : 0,
+                        ];
+                    }
+                }
             }
 
             return response()->json([
@@ -296,7 +327,7 @@ class ChuchemonController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'    => 'required|string|max:100|unique:chuchemons,name',
-            'element' => 'required|in:Tierra,Aire,Agua',
+            'element' => 'required|in:Terra,Aire,Aigua',
             'mida'    => 'required|in:Petit,Mitjà,Gran',
             'image'   => 'nullable|string|max:255',
             'attack'  => 'nullable|integer|min:0|max:255',
@@ -326,7 +357,7 @@ class ChuchemonController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'    => 'sometimes|string|max:100|unique:chuchemons,name,' . $id,
-            'element' => 'sometimes|in:Tierra,Aire,Agua',
+            'element' => 'sometimes|in:Terra,Aire,Aigua',
             'mida'    => 'sometimes|in:Petit,Mitjà,Gran',
             'image'   => 'nullable|string|max:255',
             'attack'  => 'sometimes|integer|min:0|max:255',
@@ -403,13 +434,34 @@ class ChuchemonController extends Controller
                 return response()->json(['message' => 'Tu Xuxemon ya está en su máxima evolución'], 400);
             }
 
-            // Update the pivot table
+            // Update the pivot table with new mida
             DB::table('user_chuchemons')
                 ->where('user_id', $user->id)
                 ->where('chuchemon_id', $chuchemonId)
                 ->update([
-                    'current_mida' => $nextMida,
+                    'current_mida'   => $nextMida,
                     'evolution_count' => DB::raw('evolution_count + 1'),
+                ]);
+
+            // Recalculate max_hp and scale current_hp on evolution
+            $ucRow      = DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->where('chuchemon_id', $chuchemonId)
+                ->first();
+            $baseDefense = $userChuchemon->defense ?? 50;
+            $newMaxHp    = LevelingController::computeMaxHp($baseDefense, $ucRow->level ?? 1, $nextMida);
+            $oldMaxHp    = $ucRow->max_hp ?? 105;
+            $oldCurrHp   = $ucRow->current_hp ?? $oldMaxHp;
+            // Keep HP ratio proportional after evolution
+            $newCurrHp   = (int) round(($oldCurrHp / max($oldMaxHp, 1)) * $newMaxHp);
+            $newCurrHp   = max(1, min($newCurrHp, $newMaxHp));
+
+            DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->where('chuchemon_id', $chuchemonId)
+                ->update([
+                    'max_hp'     => $newMaxHp,
+                    'current_hp' => $newCurrHp,
                 ]);
 
             // Get updated data

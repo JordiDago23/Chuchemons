@@ -149,11 +149,14 @@ class AdminController extends Controller
                 ->where('chuchemon_id', $chuchemon->id)
                 ->increment('count');
         } else {
-            // Insert new captured chuchemon
+            // Insert new captured chuchemon — initialize HP
+            $maxHp = LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit');
             DB::table('user_chuchemons')->insert([
                 'user_id'      => $targetUser->id,
                 'chuchemon_id' => $chuchemon->id,
                 'count'        => 1,
+                'max_hp'       => $maxHp,
+                'current_hp'   => $maxHp,
                 'created_at'   => now(),
                 'updated_at'   => now(),
             ]);

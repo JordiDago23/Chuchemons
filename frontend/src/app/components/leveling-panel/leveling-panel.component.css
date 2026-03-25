@@ -118,6 +118,159 @@
   font-weight: 600;
 }
 
+/* ── HP bar ───────────────────────────────────────── */
+.stat-block {
+  margin-bottom: 18px;
+}
+
+.stat-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.stat-val {
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.hp-track {
+  height: 14px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.hp-fill {
+  height: 100%;
+  transition: width 0.5s ease, background 0.3s ease;
+  border-radius: 8px;
+}
+
+.hp-bar-mini {
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.hp-fill-mini {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+/* ── Action rows (heal / use-xux) ─────────────────── */
+.action-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.action-label {
+  font-size: 0.85rem;
+  color: #555;
+  white-space: nowrap;
+}
+
+.qty-input {
+  width: 64px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.btn-heal {
+  padding: 6px 14px;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.btn-heal:hover:not(:disabled) { background: #c62828; }
+.btn-heal:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-xux {
+  padding: 6px 14px;
+  background: #7b1fa2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.btn-xux:hover:not(:disabled) { background: #6a1b9a; }
+.btn-xux:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.xux-stock {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.mida-note {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: 6px;
+}
+
+/* ── Feedback message ─────────────────────────────── */
+.action-msg {
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #2e7d32;
+  margin-bottom: 16px;
+}
+
+.error {
+  background: #ffebee;
+  border-left: 4px solid #e53935;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #b71c1c;
+  margin-bottom: 16px;
+}
+
+/* ── Buttons (XP direct) ──────────────────────────── */
+.buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.buttons button {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.buttons button:hover {
+  background: linear-gradient(135deg, #45a049, #388e3c);
+  transform: translateY(-2px);
+}
+
 .buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

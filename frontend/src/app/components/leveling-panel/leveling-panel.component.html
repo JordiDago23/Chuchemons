@@ -1,27 +1,32 @@
 <div class="leveling-panel">
-  <h2>Sistema de Nivelado</h2>
-  
-  @if (isLoading) {
-    <p>Cargando...</p>
-  }
+  <h2>Sistema de Nivelat</h2>
 
-  @if (errorMessage) {
-    <div class="error">{{ errorMessage }}</div>
-  }
+  @if (isLoading) { <p>Carregant...</p> }
+  @if (errorMessage) { <div class="error">{{ errorMessage }}</div> }
+  @if (actionMessage) { <div class="action-msg">{{ actionMessage }}</div> }
 
   <div class="chuchemons-list">
-    <h3>Tus Xuxemons</h3>
+    <h3>Els teus Xuxemons</h3>
     <div class="chuchemon-grid">
-      @for (chuchemon of chuchemons; track chuchemon.id) {
-        <div 
+      @for (c of chuchemons; track c.id) {
+        <div
           class="chuchemon-item"
-          [class.selected]="selectedChuchemon?.id === chuchemon.id"
-          (click)="selectChuchemon(chuchemon)"
+          [class.selected]="selectedChuchemon?.id === c.id"
+          (click)="selectChuchemon(c)"
         >
-          <p class="name">{{ chuchemon.name }}</p>
-          <p class="level">Lvl. {{ chuchemon.level }}</p>
+          <p class="name">{{ c.name }}</p>
+          <p class="level">Niv. {{ c.level }} · {{ c.current_mida }}</p>
+          <!-- Mini barra HP -->
+          <div class="hp-bar-mini" [attr.aria-label]="'PS: ' + c.current_hp + '/' + c.max_hp">
+            <div class="hp-fill-mini"
+              [style.width.%]="c.max_hp > 0 ? (c.current_hp / c.max_hp * 100) : 100"
+              [style.background]="c.max_hp > 0 && (c.current_hp / c.max_hp) <= 0.25 ? '#f44336' :
+                                   c.max_hp > 0 && (c.current_hp / c.max_hp) <= 0.6  ? '#ff9800' : '#4caf50'">
+            </div>
+          </div>
+          <!-- Mini barra XP -->
           <div class="xp-bar-small">
-            <div class="xp-fill-small" [style.width.%]="chuchemon.experience / chuchemon.experience_for_next_level * 100"></div>
+            <div class="xp-fill-small" [style.width.%]="c.experience / c.experience_for_next_level * 100"></div>
           </div>
         </div>
       }
@@ -31,21 +36,81 @@
   @if (selectedChuchemon) {
     <div class="details-section">
       <h3>{{ selectedChuchemon.name }}</h3>
-      <div class="stat-box">
-        <p><strong>Nivel:</strong> {{ selectedChuchemon.level }}</p>
-        <p><strong>Experiencia:</strong> {{ selectedChuchemon.experience }} / {{ selectedChuchemon.experience_for_next_level }}</p>
-        
+
+      <!-- ── BARRA DE VIDA ───────────────────────────────── -->
+      <div class="stat-block">
+        <div class="stat-label-row">
+          <span>❤️ Punts de Salut (PS)</span>
+          <span class="stat-val">{{ selectedChuchemon.current_hp }} / {{ selectedChuchemon.max_hp }}</span>
+        </div>
+        <div class="hp-track" role="progressbar"
+          [attr.aria-valuenow]="selectedChuchemon.current_hp"
+          [attr.aria-valuemax]="selectedChuchemon.max_hp"
+          [attr.aria-label]="'PS del Xuxemon'">
+          <div class="hp-fill"
+            [style.width.%]="hpPercent"
+            [style.background]="hpColor">
+          </div>
+        </div>
+        <!-- Curar amb Xuxes -->
+        <div class="action-row">
+          <label class="action-label">Curar amb Xuxes:</label>
+          <input type="number" [(ngModel)]="healQty" min="1" max="99" class="qty-input"
+            [attr.aria-label]="'Quantitat de Xuxes per curar'" />
+          <button class="btn-heal" (click)="healWithXux()"
+            [disabled]="selectedChuchemon.current_hp >= selectedChuchemon.max_hp || selectedChuchemon.xuxes_qty < 1">
+            ❤️ Curar <small>(+{{ healQty * 20 }}PS)</small>
+          </button>
+          <span class="xux-stock">Xuxes disponibles: <strong>{{ selectedChuchemon.xuxes_qty ?? 0 }}</strong></span>
+        </div>
+      </div>
+
+      <!-- ── STATS ──────────────────────────────────────── -->
+      <div class="stat-block">
+        <p><strong>Nivell:</strong> {{ selectedChuchemon.level }} &nbsp;|&nbsp;
+           <strong>Mida:</strong> {{ selectedChuchemon.current_mida }}</p>
+        <p>
+          ⚔️ Atac efectiu: <strong>{{ selectedChuchemon.effective_attack ?? selectedChuchemon.attack }}</strong>
+          &nbsp;🛡️ Def. efectiva: <strong>{{ selectedChuchemon.effective_defense ?? selectedChuchemon.defense }}</strong>
+          <em class="mida-note">
+            @if (selectedChuchemon.current_mida === 'Mitjà') { (+2% per evolució) }
+            @if (selectedChuchemon.current_mida === 'Gran')  { (+7.1% per evolució) }
+          </em>
+        </p>
+      </div>
+
+      <!-- ── BARRA XP ────────────────────────────────────── -->
+      <div class="stat-block">
+        <div class="stat-label-row">
+          <span>⭐ Experiència</span>
+          <span class="stat-val">{{ selectedChuchemon.experience }} / {{ selectedChuchemon.experience_for_next_level }}</span>
+        </div>
         <div class="xp-bar-container">
           <div class="xp-bar">
-            <div class="xp-fill" [style.width.%]="selectedChuchemon.experience / selectedChuchemon.experience_for_next_level * 100"></div>
+            <div class="xp-fill"
+              [style.width.%]="selectedChuchemon.experience / selectedChuchemon.experience_for_next_level * 100">
+            </div>
           </div>
           <span class="progress-text">{{ selectedChuchemon.experience_progress }}%</span>
         </div>
 
+        <!-- Botons Afegir XP directe -->
         <div class="buttons">
-          <button (click)="addExperience(10)">Añadir 10 XP</button>
-          <button (click)="addExperience(50)">Añadir 50 XP</button>
-          <button (click)="addExperience(100)">Añadir 100 XP</button>
+          <button (click)="addExperience(10)">+10 XP</button>
+          <button (click)="addExperience(50)">+50 XP</button>
+          <button (click)="addExperience(100)">+100 XP</button>
+        </div>
+
+        <!-- Gastar Xuxes per XP -->
+        <div class="action-row">
+          <label class="action-label">Gastar Xuxes per XP:</label>
+          <input type="number" [(ngModel)]="xuxQtyToUse" min="1" max="99" class="qty-input"
+            [attr.aria-label]="'Quantitat de Xuxes per gastar'" />
+          <button class="btn-xux" (click)="useXuxForXp()"
+            [disabled]="selectedChuchemon.xuxes_qty < 1">
+            🍬 Gastar <small>(+{{ xuxQtyToUse * 20 }}XP)</small>
+          </button>
+          <span class="xux-stock">Xuxes: <strong>{{ selectedChuchemon.xuxes_qty ?? 0 }}</strong></span>
         </div>
       </div>
     </div>

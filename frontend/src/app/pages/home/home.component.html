@@ -37,20 +37,22 @@
       <a class="nav-item" routerLink="/profile">
         <span class="nav-icon">👤</span> Perfil
       </a>
-      <a *ngIf="user?.is_admin" class="nav-item" routerLink="/admin">
-        <span class="nav-icon">🛡</span> Admin
-      </a>
+      @if (user?.is_admin) {
+        <a class="nav-item" routerLink="/admin">
+          <span class="nav-icon">🛡</span> Admin
+        </a>
+      }
     </nav>
 
     <div class="sidebar-footer">
-      <ng-container *ngIf="user">
+      @if (user) {
         <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
         <div class="footer-info">
           <span class="footer-name">{{ user.player_id }}</span>
           <span class="footer-sub">{{ user.email }}</span>
         </div>
         <button class="footer-dots" (click)="logout()" title="Salir">⋯</button>
-      </ng-container>
+      }
       <button class="salir-btn" (click)="logout()">
         <span>↪</span> Salir
       </button>
@@ -58,7 +60,8 @@
   </aside>
 
   <!-- MAIN -->
-  <main class="main" *ngIf="!loading">
+  @if (!loading) {
+  <main class="main">
 
     <!-- BANNER -->
     <div class="banner">
@@ -134,48 +137,68 @@
     </div>
 
     <!-- TEAM -->
-    <div class="team-loading-skeleton" *ngIf="teamLoading">
-      <div class="skeleton-bar"></div>
-    </div>
-    <div class="team-empty" *ngIf="team.length === 0 && !teamLoading">
-      <span>🎒</span>
-      <p>Aún no tienes Chuchemons en tu equipo. ¡Empieza a capturar!</p>
-      <a routerLink="/team-selector" class="team-action-btn">Selecciona tu Equipo</a>
-    </div>
-    <div class="team-grid" *ngIf="team.length > 0 && !teamLoading">
-      <div class="team-header">
-        <h2>Tu Equipo</h2>
-        <a routerLink="/team-selector" class="edit-team-btn">Editar</a>
+    @if (teamLoading) {
+      <div class="team-loading-skeleton">
+        <div class="skeleton-bar"></div>
       </div>
-      <div class="team-cards-container">
-        <div class="mon-card" *ngFor="let mon of team">
-          <div class="mon-tags">
-            <span class="tag tipo" [style.color]="typeColors[mon.element]" [style.border-color]="typeColors[mon.element]">
-              Tipo {{ mon.element }}
-            </span>
-            <span class="tag equipo">En el Equipo</span>
-          </div>
-          <div class="mon-image">
-            <img 
-              [src]="'http://localhost:8000/chuchemons/' + mon.image" 
-              [alt]="mon.name"
-              onerror="this.src='assets/placeholder.png'"
-            >
-          </div>
-          <div class="mon-info">
-            <span class="mon-name">{{ mon.name }}</span>
-            <span class="mon-id">Nº. {{ mon.id }}</span>
-          </div>
-          <div class="mon-hp-row">
-            <span>HP ♥</span>
-            <span>100/100</span>
-          </div>
-          <div class="hp-track">
-            <div class="hp-fill" [style.width.%]="100"></div>
-          </div>
+    }
+    @if (team.length === 0 && !teamLoading) {
+      <div class="team-empty">
+        <span>🎒</span>
+        <p>Aún no tienes Chuchemons en tu equipo. ¡Empieza a capturar!</p>
+        <a routerLink="/team-selector" class="team-action-btn">Selecciona tu Equipo</a>
+      </div>
+    }
+    @if (team.length > 0 && !teamLoading) {
+      <div class="team-grid">
+        <div class="team-header">
+          <h2>Tu Equipo</h2>
+          <a routerLink="/team-selector" class="edit-team-btn">Editar</a>
+        </div>
+        <div class="team-cards-container">
+          @for (mon of team; track mon.id) {
+            <div class="mon-card">
+              <div class="mon-tags">
+                <span class="tag tipo" [style.color]="typeColors[mon.element]" [style.border-color]="typeColors[mon.element]">
+                  Tipo {{ mon.element }}
+                </span>
+                <span class="tag equipo">En el Equipo</span>
+              </div>
+              <div class="mon-image">
+                <img
+                  [src]="'http://localhost:8000/chuchemons/' + mon.image"
+                  [alt]="mon.name"
+                  onerror="this.src='assets/placeholder.png'"
+                >
+              </div>
+              <div class="mon-info">
+                <span class="mon-name">{{ mon.name }}</span>
+                <span class="mon-id">Niv. {{ mon.level ?? 1 }} · {{ mon.current_mida ?? 'Petit' }}</span>
+              </div>
+              <!-- PS -->
+              <div class="mon-hp-row">
+                <span>❤️ PS</span>
+                <span>{{ mon.current_hp ?? '—' }}/{{ mon.max_hp ?? '—' }}</span>
+              </div>
+              <div class="hp-track">
+                <div class="hp-fill"
+                  [style.width.%]="mon.hp_percent ?? 100"
+                  [style.background]="(mon.hp_percent ?? 100) > 60 ? '#4caf50' : (mon.hp_percent ?? 100) > 25 ? '#ff9800' : '#f44336'">
+                </div>
+              </div>
+              <!-- XP -->
+              <div class="mon-xp-row">
+                <span>⭐ XP</span>
+                <span>{{ mon.experience ?? 0 }}/{{ mon.experience_for_next_level ?? 150 }}</span>
+              </div>
+              <div class="xp-track">
+                <div class="xp-fill-team" [style.width.%]="mon.xp_percent ?? 0"></div>
+              </div>
+            </div>
+          }
         </div>
       </div>
-    </div>
+    }
 
     <!-- ACTIONS -->
     <div class="actions-grid">
@@ -197,7 +220,10 @@
     </div>
 
   </main>
+  }
 
-  <div class="loading-overlay" *ngIf="loading">Cargando...</div>
+  @if (loading) {
+    <div class="loading-overlay">Cargando...</div>
+  }
 
 </div>

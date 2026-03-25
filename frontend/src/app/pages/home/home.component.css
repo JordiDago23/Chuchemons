@@ -373,6 +373,29 @@
   height: 100%;
   background: #e63946;
   border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.mon-xp-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.xp-track {
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.xp-fill-team {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #45a049);
+  border-radius: 99px;
+  transition: width 0.4s ease;
 }
 
 .mon-stats {

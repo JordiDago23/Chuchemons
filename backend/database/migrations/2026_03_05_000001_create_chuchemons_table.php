@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('chuchemons', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->enum('element', ['Tierra', 'Aire', 'Agua']);
+            $table->enum('element', ['Terra', 'Aire', 'Aigua']);
             $table->string('image')->nullable();
             $table->timestamps();
         });
