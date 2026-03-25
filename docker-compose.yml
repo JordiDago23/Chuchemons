@@ -10,7 +10,7 @@ services:
       - ./frontend:/app
     ports:
       - "4200:4200"
-    command: sh -c "npm install && npm start -- --host 0.0.0.0 --poll 2000"
+    command: sh -c "npm install && npm start"
     networks:
       - app-network
     depends_on:

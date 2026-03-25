@@ -1,5 +1,4 @@
 @if (isVisible && chuchemon) {
-  {{ console.log('Rendering modal for chuchemon:', chuchemon.name) }}
   <div class="modal-backdrop" (click)="onBackdropClick($event)">
     <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
       <button class="modal-close" (click)="onClose()" aria-label="Tancar modal">&times;</button>
