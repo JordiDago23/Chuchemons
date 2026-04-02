@@ -73,12 +73,62 @@ export class HomeComponent implements OnInit, OnDestroy {
     Aigua:  '#457b9d',
   };
 
+  protected get experienceProgress(): number {
+    if (typeof document === 'undefined') {
+      return 0;
+    }
+
+    const pageRoot = document.querySelector('app-home') ?? document.body;
+    const xpText = Array.from(pageRoot.querySelectorAll('span, p, div'))
+      .map((element) => element.textContent?.trim() ?? '')
+      .find((text) => /\d+\s*\/\s*\d+\s*XP/i.test(text));
+
+    const match = xpText?.match(/(\d+)\s*\/\s*(\d+)\s*XP/i);
+    if (!match) {
+      return 0;
+    }
+
+    const currentXp = Number(match[1]);
+    const totalXp = Number(match[2]);
+
+    if (!Number.isFinite(currentXp) || !Number.isFinite(totalXp) || totalXp <= 0) {
+      return 0;
+    }
+
+    return Math.min(1, Math.max(0, currentXp / totalXp));
+  }
+
   constructor(
     private auth: AuthService,
     private chuchemonService: ChuchemonService,
     private http: HttpClient,
     private cdRef: ChangeDetectorRef
   ) {}
+
+  protected get experienceProgress(): number {
+    if (typeof document === 'undefined') {
+      return 0;
+    }
+
+    const pageRoot = document.querySelector('app-home') ?? document.body;
+    const xpText = Array.from(pageRoot.querySelectorAll('span, p, div'))
+      .map((element) => element.textContent?.trim() ?? '')
+      .find((text) => /\d+\s*\/\s*\d+\s*XP/i.test(text));
+
+    const match = xpText?.match(/(\d+)\s*\/\s*(\d+)\s*XP/i);
+    if (!match) {
+      return 0;
+    }
+
+    const currentXp = Number(match[1]);
+    const totalXp = Number(match[2]);
+
+    if (!Number.isFinite(currentXp) || !Number.isFinite(totalXp) || totalXp <= 0) {
+      return 0;
+    }
+
+    return Math.min(1, Math.max(0, currentXp / totalXp));
+  }
 
   ngOnInit() {
     const cached = this.auth.currentUser;

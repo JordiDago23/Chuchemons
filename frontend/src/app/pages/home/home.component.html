@@ -73,7 +73,7 @@
           <span class="xp-val">{{ stats.xp }}/{{ stats.xpMax }} XP</span>
         </div>
         <div class="xp-track">
-          <div class="xp-fill" [style.width.%]="xpPercent"></div>
+          <div class="xp-fill" [style.width.%]="experienceProgress * 100" [style.width.%]="xpPercent"></div>
         </div>
       </div>
       <div class="banner-level">
