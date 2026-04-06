@@ -39,7 +39,7 @@ export class LevelingPanelComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Error carregant els Xuxemons';
+        this.errorMessage = 'Error cargando los Xuxemons';
         this.isLoading = false;
       }
     });
@@ -54,10 +54,10 @@ export class LevelingPanelComponent implements OnInit {
     if (!this.selectedChuchemon) return;
     this.http.post(`${this.api}/level/chuchemon/${this.selectedChuchemon.id}/add-experience/${amount}`, {}).subscribe({
       next: (res: any) => {
-        this.actionMessage = res.level_up ? '⬆️ Xuxemon ha pujat de nivell!' : `+${amount} XP afegits`;
+        this.actionMessage = res.level_up ? '⬆️ ¡El Xuxemon ha subido de nivel!' : `+${amount} XP añadidos`;
         this.loadChuchemons();
       },
-      error: () => { this.errorMessage = 'Error afegint experiència'; }
+      error: () => { this.errorMessage = 'Error añadiendo experiencia'; }
     });
   }
 
@@ -71,7 +71,7 @@ export class LevelingPanelComponent implements OnInit {
         this.loadChuchemons();
       },
       error: (err) => {
-        this.actionMessage = err.error?.message ?? 'No tens prou Xuxes';
+        this.actionMessage = err.error?.message ?? 'No tienes suficientes Xuxes';
       }
     });
   }
@@ -84,9 +84,18 @@ export class LevelingPanelComponent implements OnInit {
         this.loadChuchemons();
       },
       error: (err) => {
-        this.actionMessage = err.error?.message ?? 'No es pot curar ara';
+        this.actionMessage = err.error?.message ?? 'No se puede curar ahora';
       }
     });
+  }
+
+  getSizeLabel(size?: string): string {
+    switch (size) {
+      case 'Petit': return 'Pequeño';
+      case 'Mitjà': return 'Mediano';
+      case 'Gran': return 'Grande';
+      default: return size ?? 'Pequeño';
+    }
   }
 
   get hpPercent(): number {

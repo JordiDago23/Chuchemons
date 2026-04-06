@@ -243,6 +243,15 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     }
   }
 
+  getSizeLabel(size: string): string {
+    switch (size) {
+      case 'Petit': return 'Pequeño';
+      case 'Mitjà': return 'Mediano';
+      case 'Gran': return 'Grande';
+      default: return size;
+    }
+  }
+
   isInTeam(chuchemonId: number): boolean {
     return this.teamChuchemons.has(chuchemonId);
   }

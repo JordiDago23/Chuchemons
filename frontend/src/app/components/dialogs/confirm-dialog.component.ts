@@ -10,9 +10,9 @@ import { CommonModule } from '@angular/common';
 })
 export class ConfirmDialogComponent {
   @Input() isVisible = false;
-  @Input() title = 'Confirmació';
-  @Input() message = 'Estàs segur?';
-  @Input() cancelLabel = 'Cancel·lar';
+  @Input() title = 'Confirmación';
+  @Input() message = '¿Estás seguro?';
+  @Input() cancelLabel = 'Cancelar';
   @Input() confirmLabel = 'Confirmar';
   
   @Output() confirm = new EventEmitter<void>();

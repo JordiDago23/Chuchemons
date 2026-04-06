@@ -49,7 +49,7 @@
       [attr.aria-valuenow]="completionPercentage"
       aria-valuemin="0"
       aria-valuemax="100"
-      [attr.aria-label]="'Progrés de captura: ' + completionPercentage + '%'"
+      [attr.aria-label]="'Progreso de captura: ' + completionPercentage + '%'"
     >
       <div class="progress-info">
         <span class="progress-label">Captura completada</span>
@@ -61,7 +61,7 @@
     </div>
 
     <!-- Filtros -->
-    <div class="filters-section" role="search" aria-label="Filtres de la col·lecció">
+    <div class="filters-section" role="search" aria-label="Filtros de la colección">
       <div class="search-box-wrapper">
         <input
           type="text"
@@ -76,19 +76,19 @@
       <div class="filter-select">
         <select [(ngModel)]="selectedElement" (change)="onElementChange()" class="element-dropdown">
           <option value="Todos">Todos los tipos</option>
-          <option value="Terra">🌍 Terra</option>
+          <option value="Terra">🌍 Tierra</option>
           <option value="Aire">💨 Aire</option>
-          <option value="Aigua">💧 Aigua</option>
+          <option value="Aigua">💧 Agua</option>
         </select>
       </div>
 
       <!-- Filtre per mida (Petit/Mitjà/Gran) -->
       <div class="filter-select">
         <select [(ngModel)]="selectedSize" (change)="onSizeChange()" class="element-dropdown">
-          <option value="Todas">Todas las midas</option>
-          <option value="Petit">Petit (x1–x2)</option>
-          <option value="Mitjà">Mitjà (x3–x4)</option>
-          <option value="Gran">Gran (x5+)</option>
+          <option value="Todas">Todos los tamaños</option>
+          <option value="Petit">Pequeño (x1–x2)</option>
+          <option value="Mitjà">Mediano (x3–x4)</option>
+          <option value="Gran">Grande (x5+)</option>
         </select>
       </div>
 
@@ -116,9 +116,9 @@
         class="chuchemons-collection"
         aria-labelledby="col-heading"
         aria-live="polite"
-        [attr.aria-label]="'Col·lecció de Xuxemons: ' + filteredChuchemons.length + ' resultats'"
+        [attr.aria-label]="'Colección de Xuxemons: ' + filteredChuchemons.length + ' resultados'"
       >
-        <h2 id="col-heading" class="sr-only">Col·lecció de Xuxemons</h2>
+        <h2 id="col-heading" class="sr-only">Colección de Xuxemons</h2>
       <div
         class="chuchemons-grid"
         [ngClass]="{
@@ -152,7 +152,7 @@
     <app-confirm-dialog
       [isVisible]="showEvolutionDialog"
       [title]="'Evolucionar ' + evolvingChuchemonName"
-      [message]="'¿Estás seguro que quieres evolucionar a ' + evolvingChuchemonNextMida + '?'"
+      [message]="'¿Estás seguro de que quieres evolucionar a ' + getSizeLabel(evolvingChuchemonNextMida) + '?'"
       [confirmLabel]="'Evolucionar'"
       [cancelLabel]="'Cancelar'"
       (confirm)="confirmEvolution()"

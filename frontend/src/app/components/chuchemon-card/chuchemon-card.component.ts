@@ -30,9 +30,18 @@ export class ChuchemonCardComponent implements OnInit {
 
   get sizeBadge(): string {
     const count = this.chuchemon?.count ?? 1;
-    if (count >= 5) return 'Gran';
-    if (count >= 3) return 'Mitjà';
-    return 'Petit';
+    if (count >= 5) return 'Grande';
+    if (count >= 3) return 'Mediano';
+    return 'Pequeño';
+  }
+
+  getElementLabel(element?: string | null): string {
+    switch (element) {
+      case 'Aigua': return 'Agua';
+      case 'Terra': return 'Tierra';
+      case 'Aire': return 'Aire';
+      default: return element ?? 'Desconocido';
+    }
   }
 
   get quantityLabel(): string {

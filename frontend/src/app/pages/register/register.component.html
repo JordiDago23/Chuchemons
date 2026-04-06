@@ -18,20 +18,20 @@
       <p class="subtitle">Comienza tu nueva aventura</p>
 
       <!-- Tabs de navegació -->
-      <nav class="tabs" aria-label="Autenticació">
-        <a class="tab" routerLink="/login">Iniciar Sesión</a>
+      <nav class="tabs" aria-label="Autenticación">
+        <a class="tab" routerLink="/login">Iniciar sesión</a>
         <button class="tab active" type="button" aria-current="page">Regístrate</button>
       </nav>
     </header>
 
     <!-- Confirmació de registre -->
     @if (registeredId) {
-      <section class="id-confirm" aria-live="polite" aria-label="Compte creat correctament">
+      <section class="id-confirm" aria-live="polite" aria-label="Cuenta creada correctamente">
         <div class="id-confirm-icon" aria-hidden="true">✔️</div>
-        <p class="id-confirm-title">Compte creat!</p>
-        <p class="id-confirm-sub">El teu ID és:</p>
+        <p class="id-confirm-title">¡Cuenta creada!</p>
+        <p class="id-confirm-sub">Tu ID es:</p>
         <div class="id-confirm-id">{{ registeredId }}</div>
-        <p class="id-confirm-hint"><span aria-hidden="true">📌</span> Guarda'l! L'hauràs d'usar per iniciar sessió.</p>
+        <p class="id-confirm-hint"><span aria-hidden="true">📌</span> ¡Guárdalo! Tendrás que usarlo para iniciar sesión.</p>
         <button class="btn btn-danger w-100 submit-btn" (click)="router.navigate(['/home'])">
           Continuar <span aria-hidden="true">➡</span>
         </button>
@@ -46,7 +46,7 @@
     </div>
 
     @if (!registeredId) {
-    <section aria-label="Formulari de registre">
+    <section aria-label="Formulario de registro">
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
         <div class="mb-3">

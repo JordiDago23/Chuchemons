@@ -1,5 +1,5 @@
 <div class="infections-panel">
-  <h2>Sistema de Malalalties y Vacunas</h2>
+  <h2>Sistema de enfermedades y vacunas</h2>
 
   @if (infections.length > 0) {
     <div class="infections-section">
@@ -8,7 +8,7 @@
         @for (infection of infections; track infection.id) {
           <div class="infection-card">
             <h4>{{ infection.chuchemon?.name }}</h4>
-            <p><strong>Malaltia:</strong> {{ infection.malaltia?.name }}</p>
+            <p><strong>Enfermedad:</strong> {{ infection.malaltia?.name }}</p>
             <p><strong>Severidad:</strong> {{ infection.malaltia?.severity }}/10</p>
             <div class="infection-bar">
               <div class="infection-fill" [style.width.%]="infection.infection_percentage"></div>

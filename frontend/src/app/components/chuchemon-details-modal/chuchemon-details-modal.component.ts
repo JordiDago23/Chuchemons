@@ -35,4 +35,13 @@ export class ChuchemonDetailsModalComponent {
       default: return '#808080';
     }
   }
+
+  getElementLabel(element: string): string {
+    switch (element) {
+      case 'Terra': return 'Tierra';
+      case 'Aire': return 'Aire';
+      case 'Aigua': return 'Agua';
+      default: return element;
+    }
+  }
 }

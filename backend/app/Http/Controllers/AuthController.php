@@ -40,12 +40,13 @@ class AuthController extends Controller
             $isAdmin = User::count() === 0;
 
             $user = User::create([
-                'nombre'    => $request->nombre,
-                'apellidos' => $request->apellidos,
-                'email'     => $request->email,
-                'password'  => Hash::make($request->password),  //Encriptar contraseña 
-                'player_id' => $playerId,
-                'is_admin'  => $isAdmin,
+                'nombre'       => $request->nombre,
+                'apellidos'    => $request->apellidos,
+                'email'        => $request->email,
+                'password'     => Hash::make($request->password),  //Encriptar contraseña 
+                'player_id'    => $playerId,
+                'is_admin'     => $isAdmin,
+                'last_seen_at' => now(),
             ]);
 
             $token = JWTAuth::fromUser($user);
@@ -90,6 +91,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Contraseña incorrecta'], 401);
         }
 
+        $user->forceFill(['last_seen_at' => now()])->save();
+
         $token = JWTAuth::fromUser($user);
         
         Log::info('Login exitoso:', ['player_id' => $user->player_id, 'id' => $user->id]);
@@ -104,7 +107,10 @@ class AuthController extends Controller
     // ─── DATOS DEL USUARIO AUTENTICADO ───────────────────
     public function me()
     {
-        return response()->json(JWTAuth::parseToken()->authenticate());
+        $user = JWTAuth::parseToken()->authenticate();
+        $user->forceFill(['last_seen_at' => now()])->save();
+
+        return response()->json($user->fresh());
     }
 
     // ─── LOGOUT ──────────────────────────────────────────

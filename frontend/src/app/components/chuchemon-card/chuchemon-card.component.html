@@ -11,10 +11,10 @@
   (keydown.enter)="onCardClick()"
   (keydown.space)="$event.preventDefault(); onCardClick()"
   [attr.aria-label]="locked
-    ? 'Xuxemon desconegut, no capturat'
-    : (chuchemon?.name ?? 'Xuxemon') + ', tipus ' + chuchemon?.element + ', mida ' + sizeBadge"
+    ? 'Xuxemon desconocido, no capturado'
+    : (chuchemon?.name ?? 'Xuxemon') + ', tipo ' + getElementLabel(chuchemon?.element) + ', tamaño ' + sizeBadge"
 >
-  <!-- Badges flex: tipo · mida · quantitat -->
+  <!-- Badges flex: tipo · tamaño · cantidad -->
   <div class="cc-badges">
     <span
       class="cc-badge cc-badge-tipo"
@@ -23,11 +23,11 @@
         'badge-tierra': chuchemon?.element === 'Terra',
         'badge-aire':   chuchemon?.element === 'Aire'
       }"
-    >{{ chuchemon?.element }}</span>
-    <span class="cc-badge cc-badge-mida">Mida {{ sizeBadge }}</span>
-    <span class="cc-badge cc-badge-qty">Qtat {{ quantityLabel }}</span>
+    >{{ getElementLabel(chuchemon?.element) }}</span>
+    <span class="cc-badge cc-badge-mida">Tamaño {{ sizeBadge }}</span>
+    <span class="cc-badge cc-badge-qty">Cant. {{ quantityLabel }}</span>
     @if (showTeamBadge) {
-      <span class="cc-badge cc-badge-team">Equip</span>
+      <span class="cc-badge cc-badge-team">Equipo</span>
     }
   </div>
 
@@ -37,8 +37,8 @@
       <img
         [src]="'http://localhost:8000/chuchemons/' + chuchemon!.image"
         [alt]="locked
-          ? 'Xuxemon desconegut — imatge amagada'
-          : chuchemon!.name + ' — Xuxemon de tipus ' + chuchemon!.element"
+          ? 'Xuxemon desconocido — imagen oculta'
+          : chuchemon!.name + ' — Xuxemon de tipo ' + getElementLabel(chuchemon!.element)"
         class="cc-img"
         onerror="this.src='assets/placeholder.png'"
       />
@@ -47,7 +47,7 @@
     }
     @if (locked) {
       <div class="cc-lock" aria-hidden="true">🔒</div>
-      <span class="sr-only">Xuxemon bloquejat: no capturat</span>
+      <span class="sr-only">Xuxemon bloqueado: no capturado</span>
     }
   </div>
 
@@ -55,7 +55,7 @@
   <div class="cc-info">
     <div class="cc-header">
       <h2 class="cc-name">{{ locked ? '?????' : (chuchemon?.name ?? '?') }}</h2>
-      <span class="sr-only">Estat: {{ locked ? 'No capturat' : 'Capturat' }}. Mida: {{ sizeBadge }}.</span>
+      <span class="sr-only">Estado: {{ locked ? 'No capturado' : 'Capturado' }}. Tamaño: {{ sizeBadge }}.</span>
       <span class="cc-number">Nº {{ locked ? '?' : chuchemon?.id }}</span>
     </div>
 
@@ -77,8 +77,8 @@
       <button
         class="cc-btn cc-btn-details"
         (click)="onDetails($event)"
-        [attr.aria-label]="'Veure detalls de ' + (chuchemon?.name ?? 'aquest Xuxemon')"
-      >Veure Detalls</button>
+        [attr.aria-label]="'Ver detalles de ' + (chuchemon?.name ?? 'este Xuxemon')"
+      >Ver detalles</button>
     }
     @if (!locked && showEvolveBtn) {
       <button

@@ -105,31 +105,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     private cdRef: ChangeDetectorRef
   ) {}
 
-  protected get experienceProgress(): number {
-    if (typeof document === 'undefined') {
-      return 0;
-    }
-
-    const pageRoot = document.querySelector('app-home') ?? document.body;
-    const xpText = Array.from(pageRoot.querySelectorAll('span, p, div'))
-      .map((element) => element.textContent?.trim() ?? '')
-      .find((text) => /\d+\s*\/\s*\d+\s*XP/i.test(text));
-
-    const match = xpText?.match(/(\d+)\s*\/\s*(\d+)\s*XP/i);
-    if (!match) {
-      return 0;
-    }
-
-    const currentXp = Number(match[1]);
-    const totalXp = Number(match[2]);
-
-    if (!Number.isFinite(currentXp) || !Number.isFinite(totalXp) || totalXp <= 0) {
-      return 0;
-    }
-
-    return Math.min(1, Math.max(0, currentXp / totalXp));
-  }
-
   ngOnInit() {
     const cached = this.auth.currentUser;
     if (cached) {
@@ -180,6 +155,24 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.cdRef.detectChanges();
         }
       });
+  }
+
+  getElementLabel(element?: string): string {
+    switch (element) {
+      case 'Aigua': return 'Agua';
+      case 'Terra': return 'Tierra';
+      case 'Aire': return 'Aire';
+      default: return element ?? '';
+    }
+  }
+
+  getSizeLabel(size?: string): string {
+    switch (size) {
+      case 'Petit': return 'Pequeño';
+      case 'Mitjà': return 'Mediano';
+      case 'Gran': return 'Grande';
+      default: return size ?? 'Pequeño';
+    }
   }
 
   loadStats(): void {

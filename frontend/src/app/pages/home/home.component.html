@@ -160,9 +160,9 @@
             <div class="mon-card">
               <div class="mon-tags">
                 <span class="tag tipo" [style.color]="typeColors[mon.element]" [style.border-color]="typeColors[mon.element]">
-                  Tipo {{ mon.element }}
+                  Tipo {{ getElementLabel(mon.element) }}
                 </span>
-                <span class="tag equipo">En el Equipo</span>
+                <span class="tag equipo">En el equipo</span>
               </div>
               <div class="mon-image">
                 <img
@@ -173,7 +173,7 @@
               </div>
               <div class="mon-info">
                 <span class="mon-name">{{ mon.name }}</span>
-                <span class="mon-id">Niv. {{ mon.level ?? 1 }} · {{ mon.current_mida ?? 'Petit' }}</span>
+                <span class="mon-id">Niv. {{ mon.level ?? 1 }} · {{ getSizeLabel(mon.current_mida) }}</span>
               </div>
               <!-- PS -->
               <div class="mon-hp-row">

@@ -138,10 +138,10 @@
               </div>
               <div class="item-body">
                 <h2 class="item-name">Xux de {{ slot.xuxItem.chuchemon.name }}</h2>
-                <p class="item-desc">Element {{ slot.xuxItem.chuchemon.element }}. Stack: ×{{ slot.slotQty }}.</p>
+                <p class="item-desc">Elemento {{ getElementLabel(slot.xuxItem.chuchemon.element) }}. Stack: ×{{ slot.slotQty }}.</p>
               </div>
               <div class="stack-info">
-                <span class="stack-label">Espai:</span>
+                <span class="stack-label">Espacio:</span>
                 <span class="slot-chip">#{{ slot.index }}</span>
               </div>
             </div>
@@ -169,10 +169,10 @@
                 <p class="item-desc">{{ slot.vacunaItem.description }}</p>
               </div>
               <div class="stack-info">
-                <span class="stack-label">Espai:</span>
+                <span class="stack-label">Espacio:</span>
                 <span class="slot-chip">#{{ slot.index }}</span>
               </div>
-              <button class="detail-btn" [attr.aria-label]="'Veure detalls de ' + slot.vacunaItem.name">Veure Detalls</button>
+              <button class="detail-btn" [attr.aria-label]="'Ver detalles de ' + slot.vacunaItem.name">Ver detalles</button>
             </div>
           }
 
@@ -181,7 +181,7 @@
             <div class="inv-card inv-card-empty">
               <span class="slot-index">#{{ slot.index }}</span>
               <span class="slot-empty-icon">＋</span>
-              <span class="inv-empty-label">Lliure</span>
+              <span class="inv-empty-label">Libre</span>
             </div>
           }
 
@@ -191,13 +191,13 @@
 
     <!-- ── CHUCHEMONS tab (admin only, hidden from tabs) ── -->
     @if (false) {
-      <section role="tabpanel" aria-label="Chuchemons capturats">
+      <section role="tabpanel" aria-label="Chuchemons capturados">
 
       <div class="space-info">
         <span class="space-label">
-          🗂️ Espai lliure a la motxilla: <strong>{{ backendFreeSpaces }}</strong> / {{ MAX_SPACES }} espais.
+          🗂️ Espacio libre en la mochila: <strong>{{ backendFreeSpaces }}</strong> / {{ MAX_SPACES }} espacios.
           @if (backendFreeSpaces === 0) {
-            <span class="full-badge">MOTXILLA PLENA</span>
+            <span class="full-badge">MOCHILA LLENA</span>
           }
         </span>
       </div>
@@ -205,11 +205,11 @@
       @if (user?.is_admin) {
         <div class="admin-banner">
           <span class="admin-icon">🛠️</span>
-          Mode administrador — pots afegir Xuxes a la motxilla des de la llista de Chuchemons.
+          Modo administrador — puedes añadir Xuxes a la mochila desde la lista de Chuchemons.
         </div>
 
         @if (chucemonsLoading) {
-          <div class="chuchemons-loading">Carregant Chuchemons…</div>
+          <div class="chuchemons-loading">Cargando Chuchemons…</div>
         } @else if (chuchemons.length > 0) {
           <div class="chuchemons-grid">
             @for (c of chuchemons; track c.id) {
@@ -233,7 +233,7 @@
                   >{{ c.element }}</span>
                 </div>
                 <div class="chuchemon-current-qty">
-                  Xuxes actuals: <strong>{{ getMochilaItem(c.id)?.quantity ?? 0 }}</strong>
+                  Xuxes actuales: <strong>{{ getMochilaItem(c.id)?.quantity ?? 0 }}</strong>
                 </div>
                 <div class="add-xux-form" [ngClass]="{ 'disabled': backendFreeSpaces === 0 }">
                   <input
@@ -248,8 +248,8 @@
                     (click)="addXuxes(c)"
                     [disabled]="backendFreeSpaces === 0 || addingMap[c.id] || addQtyMap[c.id] < 1"
                   >
-                    @if (!addingMap[c.id]) { + Afegir Xuxes }
-                    @else { Afegint… }
+                    @if (!addingMap[c.id]) { + Añadir Xuxes }
+                    @else { Añadiendo… }
                   </button>
                 </div>
                 @if (feedbackMap[c.id]) {
@@ -266,11 +266,11 @@
             }
           </div>
         } @else {
-          <div class="empty-state"><span>🐾</span><p>No hi ha Chuchemons a la base de dades.</p></div>
+          <div class="empty-state"><span>🐾</span><p>No hay Chuchemons en la base de datos.</p></div>
         }
       } @else {
         @if (chucemonsLoading) {
-          <div class="chuchemons-loading">Carregant Chuchemons…</div>
+          <div class="chuchemons-loading">Cargando Chuchemons…</div>
         } @else if (chuchemons.length > 0) {
           <div class="chuchemons-grid">
             @for (c of chuchemons; track c.id) {
@@ -306,17 +306,17 @@
     }
 
     @if (false) {
-      <section role="tabpanel" aria-label="Items">
+      <section role="tabpanel" aria-label="Objetos">
         <div class="panel-header">
-          <h2>Items disponibles</h2>
-          <span class="panel-subtitle">Afegir items a la teva motxilla</span>
+          <h2>Objetos disponibles</h2>
+          <span class="panel-subtitle">Añadir objetos a tu mochila</span>
         </div>
 
         @if (itemsLoading) {
-          <div class="items-loading">Carregant items…</div>
+          <div class="items-loading">Cargando objetos…</div>
         }
         @if (!itemsLoading && items.length > 0) {
-          <ul class="items-grid" role="list" aria-label="Llista d'items">
+          <ul class="items-grid" role="list" aria-label="Lista de objetos">
             @for (item of items; track item.id) {
               <li class="item-card card shadow-sm" [ngClass]="'card-' + item.type">
                 <div class="item-header">
@@ -342,7 +342,7 @@
                     [disabled]="addingItemMap[item.id]"
                     class="btn btn-primary"
                   >
-                    {{ addingItemMap[item.id] ? 'Afegint…' : 'Afegir' }}
+                    {{ addingItemMap[item.id] ? 'Añadiendo…' : 'Añadir' }}
                   </button>
                 </div>
                 @if (itemFeedbackMap[item.id]) {
@@ -355,7 +355,7 @@
           </ul>
         }
         @if (!itemsLoading && items.length === 0) {
-          <div class="no-data">No hi ha items disponibles.</div>
+          <div class="no-data">No hay objetos disponibles.</div>
         }
       </section> <!-- /tabpanel items -->
     }

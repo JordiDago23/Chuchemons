@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use Notifiable;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'nombre',
@@ -18,6 +19,7 @@ class User extends Authenticatable implements JWTSubject
         'player_id',
         'is_admin',
         'bio',
+        'last_seen_at',
     ];
 
     protected $hidden = [
@@ -26,6 +28,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $casts = [
         'is_admin' => 'boolean',  //Rol de administrador
+        'last_seen_at' => 'datetime',
     ];
 
     public function getJWTIdentifier()
@@ -72,5 +75,15 @@ class User extends Authenticatable implements JWTSubject
     public function dailyRewards()
     {
         return $this->hasMany(DailyReward::class);
+    }
+
+    public function sentFriendships()
+    {
+        return $this->hasMany(Friendship::class, 'sender_id');
+    }
+
+    public function receivedFriendships()
+    {
+        return $this->hasMany(Friendship::class, 'receiver_id');
     }
 }

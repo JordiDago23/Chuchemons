@@ -1,12 +1,12 @@
 @if (isVisible && chuchemon) {
   <div class="modal-backdrop" (click)="onBackdropClick($event)">
     <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
-      <button class="modal-close" (click)="onClose()" aria-label="Tancar modal">&times;</button>
+      <button class="modal-close" (click)="onClose()" aria-label="Cerrar modal">&times;</button>
 
       <div class="modal-header">
         <h2 id="modal-title">{{ chuchemon.name }}</h2>
         <span class="modal-element" [style.background-color]="getElementColor(chuchemon.element)">
-          {{ chuchemon.element }}
+          {{ getElementLabel(chuchemon.element) }}
         </span>
       </div>
 
@@ -24,7 +24,7 @@
         </div>
 
         <div class="modal-stats-section">
-          <h3>Estadístiques</h3>
+          <h3>Estadísticas</h3>
 
           <div class="stats-grid">
             <div class="stat-item">
@@ -52,7 +52,7 @@
                 <div class="stat-fill" [style.width.%]="(chuchemon.speed / 255) * 100"></div>
               </div>
               <div class="stat-info">
-                <span class="stat-label">Velocitat</span>
+                <span class="stat-label">Velocidad</span>
                 <span class="stat-value">{{ chuchemon.speed }}</span>
               </div>
             </div>
@@ -60,7 +60,7 @@
 
           <div class="modal-hp-section">
             <div class="hp-row">
-              <span>Punts de vida</span>
+              <span>Puntos de vida</span>
               <span class="hp-val">100/100</span>
             </div>
             <div class="hp-bar">
@@ -70,7 +70,7 @@
 
           <div class="modal-xp-section">
             <div class="xp-row">
-              <span>Experiència</span>
+              <span>Experiencia</span>
               <span class="xp-val">750/1000 XP</span>
             </div>
             <div class="xp-bar">

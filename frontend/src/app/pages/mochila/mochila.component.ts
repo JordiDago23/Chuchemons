@@ -72,9 +72,9 @@ export class MochilaComponent implements OnInit {
 
   // ── Vacunes (hardcoded per ara) ────────────────────────────────────────────
   vacunaItems: VacunaItem[] = [
-    { id: 4, type: 'no_apilable', name: 'Xocolatina',   description: 'En usar-ho en un Xuxemon treu "Bajón de azúcar".', imageUrl: '', tag: 'Estat',   quantity: 3 },
-    { id: 5, type: 'no_apilable', name: 'Xal de fruites', description: 'En usar-ho en un Xuxemon treu "Atracón".',          imageUrl: '', tag: 'Estat',   quantity: 2 },
-    { id: 6, type: 'no_apilable', name: 'Inxulina',      description: 'Cura totes les malalties del Xuxemon.',              imageUrl: '', tag: 'Cura',    quantity: 1 },
+    { id: 4, type: 'no_apilable', name: 'Xocolatina',   description: 'Al usarla en un Xuxemon elimina "Bajón de azúcar".', imageUrl: '', tag: 'Estado',   quantity: 3 },
+    { id: 5, type: 'no_apilable', name: 'Xal de fruites', description: 'Al usarla en un Xuxemon elimina "Atracón".',          imageUrl: '', tag: 'Estado',   quantity: 2 },
+    { id: 6, type: 'no_apilable', name: 'Inxulina',      description: 'Cura todas las enfermedades del Xuxemon.',              imageUrl: '', tag: 'Cura',    quantity: 1 },
   ];
 
   // ── Chuchemons – for the "Afegir Xuxes" panel ─────────────────────────────
@@ -191,7 +191,7 @@ export class MochilaComponent implements OnInit {
         this.addingMap[chuchemon.id] = false;
       },
       error: (err) => {
-        const msg = err?.error?.message ?? 'Error en afegir Xuxes.';
+        const msg = err?.error?.message ?? 'Error al añadir Xuxes.';
         this.feedbackMap[chuchemon.id] = { type: 'error', msg };
         this.addingMap[chuchemon.id] = false;
       }
@@ -271,7 +271,7 @@ export class MochilaComponent implements OnInit {
 
     // Empty slots
     while (slotIndex <= this.MAX_SPACES) {
-      slots.push({ index: slotIndex++, kind: 'empty', label: 'Lliure' });
+      slots.push({ index: slotIndex++, kind: 'empty', label: 'Libre' });
     }
 
     return slots;
@@ -280,6 +280,15 @@ export class MochilaComponent implements OnInit {
   // ── Helpers ────────────────────────────────────────────────────────────────
   get spriteUrl(): string {
     return 'assets/pokemon-sprites/';
+  }
+
+  getElementLabel(element?: string): string {
+    switch (element) {
+      case 'Aigua': return 'Agua';
+      case 'Terra': return 'Tierra';
+      case 'Aire': return 'Aire';
+      default: return element ?? '';
+    }
   }
 
   // ── Add items ──────────────────────────────────────────────────────────────
@@ -301,7 +310,7 @@ export class MochilaComponent implements OnInit {
         this.addingItemMap[item.id] = false;
       },
       error: (err) => {
-        const msg = err?.error?.message ?? 'Error en afegir items.';
+        const msg = err?.error?.message ?? 'Error al añadir objetos.';
         this.itemFeedbackMap[item.id] = { type: 'error', msg };
         this.addingItemMap[item.id] = false;
       }

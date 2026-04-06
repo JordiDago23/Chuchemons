@@ -98,7 +98,7 @@
     @if (activeTab === 'info') {
       <div class="tab-content">
         <div class="info-card">
-          <h2>Informacion personal</h2>
+          <h2>Información personal</h2>
           <p class="section-sub">Actualiza tus datos personales</p>
 
           @if (!editMode) {
@@ -107,15 +107,15 @@
               <div class="info-value">{{ user?.nombre }} {{ user?.apellidos }}</div>
             </div>
             <div class="info-field">
-              <label>Correo electronica</label>
+              <label>Correo electrónico</label>
               <div class="info-value email-val">✉ {{ user?.email }}</div>
             </div>
             <div class="info-field">
-              <label>Biografia</label>
+              <label>Biografía</label>
               <div class="info-value">{{ bioCtrl.value || 'Sin biografía' }}</div>
             </div>
             <div class="info-field">
-              <label>Data de registro</label>
+              <label>Fecha de registro</label>
               <div class="info-value">{{ memberSince }}</div>
             </div>
           }
@@ -183,7 +183,7 @@
                 </div>
               </div>
               <div class="info-field">
-                <label for="profile-bio" class="info-label">Biografia</label>
+                <label for="profile-bio" class="info-label">Biografía</label>
                 <textarea
                   id="profile-bio"
                   formControlName="bio"

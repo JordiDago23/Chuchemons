@@ -41,6 +41,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'amics',
+    redirectTo: 'amigos',
+    pathMatch: 'full'
+  },
+  {
+    path: 'amigos',
+    loadComponent: () => import('./pages/amigos/amigos.component').then(m => m.AmigosComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
     canActivate: [authGuard, adminGuard]

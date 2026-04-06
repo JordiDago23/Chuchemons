@@ -10,6 +10,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\InfectionController;
 use App\Http\Controllers\LevelingController;
 use App\Http\Controllers\DailyRewardController;
+use App\Http\Controllers\FriendshipController;
 
 // ─── RUTAS PÚBLICAS ──────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register']);
@@ -32,6 +33,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout',     [AuthController::class, 'logout']);
     Route::put('/user/update', [UserController::class, 'update']);
     Route::delete('/user',     [UserController::class, 'delete']);
+
+    // ─── AMIGOS ─────────────────────────────────────────────
+    Route::get('/friends', [FriendshipController::class, 'index']);
+    Route::get('/friends/search', [FriendshipController::class, 'search']);
+    Route::post('/friends/request', [FriendshipController::class, 'sendRequest']);
+    Route::post('/friends/requests/{friendship}/accept', [FriendshipController::class, 'acceptRequest']);
+    Route::delete('/friends/requests/{friendship}', [FriendshipController::class, 'destroyRequest']);
+    Route::delete('/friends/{friend}', [FriendshipController::class, 'removeFriend']);
 
     // ─── USUARIO - CHUCHEMONS ──────────────────────────────
     Route::get('/user/chuchemons',          [ChuchemonController::class, 'getMyChuchemons']);
