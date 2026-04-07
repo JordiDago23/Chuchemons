@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface FriendUser {
   id: number;
@@ -31,11 +31,31 @@ export interface FriendsOverviewResponse {
 @Injectable({ providedIn: 'root' })
 export class FriendsService {
   private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly overviewSubject = new BehaviorSubject<FriendsOverviewResponse>({
+    friends: [],
+    pending_received: [],
+    pending_sent: [],
+    stats: {
+      total: 0,
+      online: 0,
+      offline: 0,
+    },
+  });
+
+  readonly overview$ = this.overviewSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
   getOverview(): Observable<FriendsOverviewResponse> {
     return this.http.get<FriendsOverviewResponse>(`${this.apiUrl}/friends`);
+  }
+
+  updateOverview(overview: FriendsOverviewResponse): void {
+    this.overviewSubject.next(overview);
+  }
+
+  get snapshot(): FriendsOverviewResponse {
+    return this.overviewSubject.getValue();
   }
 
   searchUsers(query: string): Observable<{ results: FriendUser[]; message?: string | null }> {

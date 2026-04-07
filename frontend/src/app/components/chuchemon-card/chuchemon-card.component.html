@@ -26,6 +26,9 @@
     >{{ getElementLabel(chuchemon?.element) }}</span>
     <span class="cc-badge cc-badge-mida">Tamaño {{ sizeBadge }}</span>
     <span class="cc-badge cc-badge-qty">Cant. {{ quantityLabel }}</span>
+    @if (hasActiveInfections) {
+      <span class="cc-badge cc-badge-infection">🦠 {{ primaryInfectionLabel }}</span>
+    }
     @if (showTeamBadge) {
       <span class="cc-badge cc-badge-team">Equipo</span>
     }
@@ -60,6 +63,9 @@
     </div>
 
     @if (!locked) {
+      @if (hasActiveInfections) {
+        <p class="cc-status">Afectado por malaltia activa</p>
+      }
       <div class="cc-hp-row">
         <span>HP</span><span class="cc-hp-val">100/100</span>
       </div>

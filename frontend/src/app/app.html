@@ -1,1 +1,10 @@
 <router-outlet />
+
+@if (isGlobalLoading()) {
+	<div class="global-loading-overlay" role="status" aria-live="polite" aria-label="Procesando acción">
+		<div class="global-loading-card">
+			<span class="global-loading-spinner" aria-hidden="true"></span>
+			<p>Procesando...</p>
+		</div>
+	</div>
+}

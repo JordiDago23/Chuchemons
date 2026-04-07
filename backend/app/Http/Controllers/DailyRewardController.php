@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DailyReward;
 use App\Models\Chuchemon;
+use App\Models\GameSetting;
 use App\Models\Item;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,19 @@ use Carbon\Carbon;
 
 class DailyRewardController extends Controller
 {
+    private function nextAvailableAt(string $settingKey, string $defaultHour): Carbon
+    {
+        $hourValue = (string) GameSetting::getValue($settingKey, $defaultHour);
+        [$hour, $minute] = array_pad(explode(':', $hourValue), 2, '00');
+
+        $nextAvailable = now()->copy()->setHour((int) $hour)->setMinute((int) $minute)->setSecond(0);
+        if (now()->gte($nextAvailable)) {
+            $nextAvailable->addDay();
+        }
+
+        return $nextAvailable;
+    }
+
     /**
      * Obtiene los daily rewards disponibles para el usuario
      */
@@ -94,7 +108,7 @@ class DailyRewardController extends Controller
             // Actualizar el reward
             $reward->update([
                 'claimed_at' => now(),
-                'next_available_at' => now()->addHours(24)->setHour(8)->setMinute(0)->setSecond(0),
+                'next_available_at' => $this->nextAvailableAt('daily_xux_hour', '06:00'),
             ]);
 
             return response()->json([
@@ -150,7 +164,7 @@ class DailyRewardController extends Controller
             // Actualizar el reward
             $reward->update([
                 'claimed_at' => now(),
-                'next_available_at' => now()->addHours(24)->setHour(8)->setMinute(0)->setSecond(0),
+                'next_available_at' => $this->nextAvailableAt('daily_chuchemon_hour', '08:00'),
             ]);
 
             return response()->json([
@@ -174,16 +188,13 @@ class DailyRewardController extends Controller
             $item = Item::first(); // Fallback al primer item
         }
 
-        $nextAvailable = now()->addHours(24)->setHour(8)->setMinute(0)->setSecond(0);
-        if (now()->hour >= 8) {
-            $nextAvailable = $nextAvailable->addDay();
-        }
+        $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '06:00');
 
         return DailyReward::create([
             'user_id' => $userId,
             'reward_type' => 'xux',
             'item_id' => $item->id,
-            'quantity' => 10,
+            'quantity' => GameSetting::getInt('daily_xux_quantity', 10),
             'next_available_at' => $nextAvailable,
         ]);
     }
@@ -196,10 +207,7 @@ class DailyRewardController extends Controller
         // Obtener un chuchemon aleatorio
         $chuchemon = Chuchemon::inRandomOrder()->first();
 
-        $nextAvailable = now()->addHours(24)->setHour(8)->setMinute(0)->setSecond(0);
-        if (now()->hour >= 8) {
-            $nextAvailable = $nextAvailable->addDay();
-        }
+        $nextAvailable = $this->nextAvailableAt('daily_chuchemon_hour', '08:00');
 
         return DailyReward::create([
             'user_id' => $userId,

@@ -47,6 +47,11 @@
 
     @if (!registeredId) {
     <section aria-label="Formulario de registro">
+      <div class="id-preview" aria-live="polite">
+        <div>Vista previa de tu ID de jugador: <strong>{{ previewPlayerId }}</strong></div>
+        <div class="preview-note">El backend generará el sufijo final automáticamente.</div>
+      </div>
+
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
         <div class="mb-3">

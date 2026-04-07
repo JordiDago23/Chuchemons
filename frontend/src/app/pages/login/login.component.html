@@ -27,7 +27,7 @@
     <!-- Error general (aria-live per actualitzacions dinàmiques) -->
     <div aria-live="polite" aria-atomic="true">
       @if (error) {
-        <div class="error-msg" role="alert">
+        <div class="alert alert-danger error-msg fade-in" role="alert">
           <span class="error-icon" aria-hidden="true">⚠</span>
           {{ error }}
         </div>

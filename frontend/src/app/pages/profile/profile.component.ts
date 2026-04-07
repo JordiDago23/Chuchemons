@@ -1,9 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
+
+function optionalPasswordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const password = group.get('password')?.value;
+  const confirmation = group.get('password_confirmation')?.value;
+
+  if (!password && !confirmation) {
+    return null;
+  }
+
+  return password === confirmation ? null : { passwordMatch: true };
+}
 
 @Component({
   selector: 'app-profile',
@@ -72,7 +83,7 @@ export class ProfileComponent implements OnInit {
       bio:                   [''],
       password:              ['', [Validators.minLength(6)]],
       password_confirmation: ['']
-    });
+    }, { validators: optionalPasswordMatchValidator });
   }
 
   private fillForm(u: any) {

@@ -79,6 +79,10 @@
   font-weight: 700;
 }
 
+.nav-badge {
+  margin-left: auto;
+}
+
 .nav-icon {
   width: 18px;
   text-align: center;

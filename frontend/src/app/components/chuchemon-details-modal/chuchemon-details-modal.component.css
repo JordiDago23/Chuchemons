@@ -98,6 +98,37 @@
   font-size: 1.2rem;
 }
 
+.modal-infections {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff6e5;
+  border: 1px solid #f6c26b;
+}
+
+.modal-infections-title {
+  margin: 0 0 8px;
+  color: #8d3b00;
+  font-weight: 700;
+}
+
+.modal-infection-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal-infection-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffd9a8;
+  color: #7c2d12;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .stats-grid {
   display: flex;
   flex-direction: column;

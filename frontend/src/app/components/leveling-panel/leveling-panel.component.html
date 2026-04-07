@@ -16,6 +16,9 @@
         >
           <p class="name">{{ c.name }}</p>
           <p class="level">Niv. {{ c.level }} · {{ getSizeLabel(c.current_mida) }}</p>
+          @if (c.has_active_infections) {
+            <p class="infection-summary">🦠 {{ c.active_infections[0]?.name }}@if ((c.active_infections?.length ?? 0) > 1) { +{{ (c.active_infections?.length ?? 0) - 1 }} }</p>
+          }
           <!-- Mini barra HP -->
           <div class="hp-bar-mini" [attr.aria-label]="'PS: ' + c.current_hp + '/' + c.max_hp">
             <div class="hp-fill-mini"
@@ -36,6 +39,22 @@
   @if (selectedChuchemon) {
     <div class="details-section">
       <h3>{{ selectedChuchemon.name }}</h3>
+
+      @if (hasSelectedInfections) {
+        <div class="infection-panel">
+          <p class="infection-title">Malalties actives</p>
+          <div class="infection-tags">
+            @for (infection of selectedInfections; track trackInfection($index, infection)) {
+              <span class="infection-tag">
+                🦠 {{ infection.name }} · {{ infection.infection_percentage }}%
+              </span>
+            }
+          </div>
+          @if (selectedChuchemon.cannot_eat) {
+            <p class="infection-warning">{{ selectedChuchemon.cannot_eat_reason }}</p>
+          }
+        </div>
+      }
 
       <!-- ── BARRA DE VIDA ───────────────────────────────── -->
       <div class="stat-block">
@@ -59,10 +78,11 @@
             [attr.aria-label]="'Cantidad de Xuxes para curar'" />
           <button class="btn-heal" (click)="healWithXux()"
             [disabled]="selectedChuchemon.current_hp >= selectedChuchemon.max_hp || selectedChuchemon.xuxes_qty < 1">
-            ❤️ Curar <small>(+{{ healQty * 20 }} PS)</small>
+            ❤️ Curar <small>(+{{ healPreview }} PS)</small>
           </button>
           <span class="xux-stock">Xuxes disponibles: <strong>{{ selectedChuchemon.xuxes_qty ?? 0 }}</strong></span>
         </div>
+        <p class="preview-note">Preview: gastar {{ healQty }} Xuxes para recuperar hasta {{ healPreview }} PS.</p>
       </div>
 
       <!-- ── STATS ──────────────────────────────────────── -->
@@ -107,12 +127,26 @@
           <input type="number" [(ngModel)]="xuxQtyToUse" min="1" max="99" class="qty-input"
             [attr.aria-label]="'Cantidad de Xuxes a gastar'" />
           <button class="btn-xux" (click)="useXuxForXp()"
-            [disabled]="selectedChuchemon.xuxes_qty < 1">
-            🍬 Gastar <small>(+{{ xuxQtyToUse * 20 }}XP)</small>
+            [disabled]="selectedChuchemon.xuxes_qty < 1 || selectedChuchemon.cannot_eat">
+            🍬 Gastar <small>(+{{ xpPreview }}XP)</small>
           </button>
           <span class="xux-stock">Xuxes: <strong>{{ selectedChuchemon.xuxes_qty ?? 0 }}</strong></span>
         </div>
+        <p class="preview-note">Preview: gastar {{ xuxQtyToUse }} Xuxes para ganar {{ xpPreview }} XP.</p>
+        @if (selectedChuchemon.cannot_eat) {
+          <p class="blocked-note">Este Xuxemon no puede alimentarse mientras tenga Atracón activo.</p>
+        }
       </div>
     </div>
   }
+
+  <app-confirm-dialog
+    [isVisible]="showActionConfirm"
+    [title]="confirmTitle"
+    [message]="confirmMessage"
+    confirmLabel="Confirmar"
+    cancelLabel="Cancelar"
+    (confirm)="onConfirmAction()"
+    (cancel)="onCancelAction()"
+  ></app-confirm-dialog>
 </div>

@@ -219,7 +219,14 @@
                   formControlName="password_confirmation"
                   class="input"
                   autocomplete="new-password"
+                  [attr.aria-invalid]="editForm.errors?.['passwordMatch'] && editForm.get('password_confirmation')?.touched ? 'true' : null"
+                  aria-describedby="profile-password-confirm-error"
                 />
+                <div id="profile-password-confirm-error" aria-live="polite" aria-atomic="true">
+                  @if (editForm.errors?.['passwordMatch'] && editForm.get('password_confirmation')?.touched) {
+                    <span class="field-error"><span aria-hidden="true">✗</span> Las contraseñas no coinciden</span>
+                  }
+                </div>
               </div>
               <div class="form-actions">
                 <button type="button" class="btn-cancel" (click)="editMode = false">Cancelar</button>

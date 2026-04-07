@@ -61,23 +61,44 @@ export class AdminComponent implements OnInit {
   saveConfig() {
     this.cfgLoading = true;
     this.cfgFeedback = '';
-    setTimeout(() => {
-      this.stats.xuemons = this.stats.xuemons; // placeholder — no backend endpoint yet
-      this.cfgFeedback = 'Configuración guardada correctamente.';
-      this.cfgFeedbackType = 'success';
-      this.cfgLoading = false;
-    }, 600);
+    this.http.put<any>(`${this.apiUrl}/admin/settings/config`, {
+      xux_petit_mitja: this.cfg.xuxPetitMitja,
+      xux_mitja_gran: this.cfg.xuxMitjaGran,
+    }).subscribe({
+      next: (res) => {
+        this.cfg.xuxPetitMitja = res.settings.xux_petit_mitja;
+        this.cfg.xuxMitjaGran = res.settings.xux_mitja_gran;
+        this.cfgFeedback = res.message;
+        this.cfgFeedbackType = 'success';
+        this.cfgLoading = false;
+      },
+      error: (err) => {
+        this.cfgFeedback = err.error?.message || 'Error guardando configuración.';
+        this.cfgFeedbackType = 'error';
+        this.cfgLoading = false;
+      }
+    });
   }
 
   saveTaxa() {
     this.taxaLoading = true;
     this.taxaFeedback = '';
-    setTimeout(() => {
-      this.stats.taxaInfeccio = this.taxaInfeccioEdit;
-      this.taxaFeedback = `Tasa de infección actualizada al ${this.taxaInfeccioEdit}%.`;
-      this.taxaFeedbackType = 'success';
-      this.taxaLoading = false;
-    }, 600);
+    this.http.put<any>(`${this.apiUrl}/admin/settings/infection-rate`, {
+      taxa_infeccio: this.taxaInfeccioEdit,
+    }).subscribe({
+      next: (res) => {
+        this.stats.taxaInfeccio = res.settings.taxa_infeccio;
+        this.taxaInfeccioEdit = res.settings.taxa_infeccio;
+        this.taxaFeedback = res.message;
+        this.taxaFeedbackType = 'success';
+        this.taxaLoading = false;
+      },
+      error: (err) => {
+        this.taxaFeedback = err.error?.message || 'Error actualizando la tasa de infección.';
+        this.taxaFeedbackType = 'error';
+        this.taxaLoading = false;
+      }
+    });
   }
 
   // ── Horaris ────────────────────────────────────────────────────────────────
@@ -93,21 +114,43 @@ export class AdminComponent implements OnInit {
   saveHorariXuxes() {
     this.horariXuxesLoading = true;
     this.horariXuxesFeedback = '';
-    setTimeout(() => {
-      this.horariXuxesFeedback = `Horario de Xuxes guardado: ${this.horariXuxes.hora} · ${this.horariXuxes.quantitat} Xuxes/día.`;
-      this.horariXuxesFeedbackType = 'success';
-      this.horariXuxesLoading = false;
-    }, 600);
+    this.http.put<any>(`${this.apiUrl}/admin/settings/schedules/xux`, {
+      hour: this.horariXuxes.hora,
+      quantity: this.horariXuxes.quantitat,
+    }).subscribe({
+      next: (res) => {
+        this.horariXuxes.hora = res.settings.daily_xux_hour;
+        this.horariXuxes.quantitat = res.settings.daily_xux_quantity;
+        this.horariXuxesFeedback = res.message;
+        this.horariXuxesFeedbackType = 'success';
+        this.horariXuxesLoading = false;
+      },
+      error: (err) => {
+        this.horariXuxesFeedback = err.error?.message || 'Error guardando horario de Xuxes.';
+        this.horariXuxesFeedbackType = 'error';
+        this.horariXuxesLoading = false;
+      }
+    });
   }
 
   saveHorariXuxemon() {
     this.horariXuxemoLoading = true;
     this.horariXuxemoFeedback = '';
-    setTimeout(() => {
-      this.horariXuxemoFeedback = `Horario de Xuxemon guardado: ${this.horariXuxemon.hora} cada día.`;
-      this.horariXuxemoFeedbackType = 'success';
-      this.horariXuxemoLoading = false;
-    }, 600);
+    this.http.put<any>(`${this.apiUrl}/admin/settings/schedules/chuchemon`, {
+      hour: this.horariXuxemon.hora,
+    }).subscribe({
+      next: (res) => {
+        this.horariXuxemon.hora = res.settings.daily_chuchemon_hour;
+        this.horariXuxemoFeedback = res.message;
+        this.horariXuxemoFeedbackType = 'success';
+        this.horariXuxemoLoading = false;
+      },
+      error: (err) => {
+        this.horariXuxemoFeedback = err.error?.message || 'Error guardando horario de Xuxemon.';
+        this.horariXuxemoFeedbackType = 'error';
+        this.horariXuxemoLoading = false;
+      }
+    });
   }
 
   constructor(private auth: AuthService, private router: Router, private http: HttpClient) {}
@@ -118,6 +161,7 @@ export class AdminComponent implements OnInit {
       this.user = cached;
       if (!this.user.is_admin) { this.router.navigate(['/home']); return; }
       this.loadStats();
+      this.loadSettings();
       this.loadUsers();
       return;
     }
@@ -126,6 +170,7 @@ export class AdminComponent implements OnInit {
         this.user = data;
         if (!this.user.is_admin) { this.router.navigate(['/home']); return; }
         this.loadStats();
+        this.loadSettings();
         this.loadUsers();
       },
       error: () => this.router.navigate(['/login'])
@@ -139,6 +184,19 @@ export class AdminComponent implements OnInit {
         this.stats.totalUsuaris  = data.total_usuaris;
         this.stats.xuemons       = data.xuemons;
         this.stats.taxaInfeccio  = data.taxa_infeccio;
+      }
+    });
+  }
+
+  loadSettings() {
+    this.http.get<any>(`${this.apiUrl}/admin/settings`).subscribe({
+      next: (data) => {
+        this.cfg.xuxPetitMitja = data.config.xux_petit_mitja;
+        this.cfg.xuxMitjaGran = data.config.xux_mitja_gran;
+        this.taxaInfeccioEdit = data.infection.taxa_infeccio;
+        this.horariXuxes.hora = data.schedules.daily_xux_hour;
+        this.horariXuxes.quantitat = data.schedules.daily_xux_quantity;
+        this.horariXuxemon.hora = data.schedules.daily_chuchemon_hour;
       }
     });
   }

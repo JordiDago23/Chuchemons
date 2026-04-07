@@ -1,0 +1,40 @@
+.global-loading-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 12000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(15, 23, 42, 0.28);
+	backdrop-filter: blur(3px);
+}
+
+.global-loading-card {
+	min-width: 180px;
+	padding: 18px 22px;
+	border-radius: 16px;
+	background: rgba(255, 250, 240, 0.96);
+	box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	color: #7c2d12;
+	font-weight: 700;
+}
+
+.global-loading-card p {
+	margin: 0;
+}
+
+.global-loading-spinner {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border: 3px solid rgba(124, 45, 18, 0.2);
+	border-top-color: #ea580c;
+	animation: global-spin 0.7s linear infinite;
+}
+
+@keyframes global-spin {
+	to { transform: rotate(360deg); }
+}

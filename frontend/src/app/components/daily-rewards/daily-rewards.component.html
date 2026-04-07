@@ -1,5 +1,22 @@
 <div class="daily-rewards">
   <h2>Recompensas Diarias</h2>
+
+  <div class="simulation-panel">
+    <div>
+      <p class="simulation-title">Modo prueba cliente</p>
+      <p class="simulation-copy">Referencia actual: {{ simulationReference }}</p>
+    </div>
+    <div class="simulation-actions">
+      <button class="sim-btn ghost" (click)="toggleSimulation()">
+        {{ simulationEnabled ? 'Desactivar simulación' : 'Activar simulación' }}
+      </button>
+      @if (simulationEnabled) {
+        <button class="sim-btn" (click)="shiftSimulation(6)">+6h</button>
+        <button class="sim-btn" (click)="shiftSimulation(24)">+24h</button>
+        <button class="sim-btn ghost" (click)="resetSimulation()">Ahora</button>
+      }
+    </div>
+  </div>
   
   @if (isLoading) {
     <p>Cargando recompensas...</p>
@@ -34,7 +51,7 @@
           (click)="claimXuxReward()"
           [disabled]="!isRewardAvailable(xuxReward)"
         >
-          Reclamar Xuxes
+          {{ simulationEnabled ? 'Simular reclamo de Xuxes' : 'Reclamar Xuxes' }}
         </button>
       </div>
     }
@@ -59,7 +76,7 @@
           (click)="claimChuchemonReward()"
           [disabled]="!isRewardAvailable(chuchemonReward)"
         >
-          Reclamar Xuxemon
+          {{ simulationEnabled ? 'Simular reclamo de Xuxemon' : 'Reclamar Xuxemon' }}
         </button>
       </div>
     }
@@ -68,4 +85,10 @@
   <div class="info-box">
     <p><strong>ℹ️ Nota:</strong> Las recompensas se renuevan diariamente a las 08:00 AM</p>
   </div>
+
+  @if (simulationEnabled) {
+    <div class="simulation-note">
+      <p><strong>Modo prueba activo:</strong> los botones actualizan el estado sólo en el navegador para probar cooldowns y disponibilidad.</p>
+    </div>
+  }
 </div>

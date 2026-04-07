@@ -59,4 +59,8 @@ export class ChuchemonDetailsModalComponent {
       default: return element;
     }
   }
+
+  get activeInfections(): Array<{ name: string; infection_percentage: number }> {
+    return this.chuchemon?.active_infections ?? [];
+  }
 }

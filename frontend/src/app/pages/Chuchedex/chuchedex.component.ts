@@ -48,6 +48,10 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   evolvingChuchemonId: number | null = null;
   evolvingChuchemonName = '';
   evolvingChuchemonNextMida = '';
+  showEvolutionCelebration = false;
+  evolutionCelebrationName = '';
+  evolutionCelebrationSize = '';
+  private evolutionCelebrationTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Details modal properties
   showDetailsModal = false;
@@ -84,6 +88,9 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
     if (this.autoRefreshSubscription) {
       this.autoRefreshSubscription.unsubscribe();
+    }
+    if (this.evolutionCelebrationTimer) {
+      clearTimeout(this.evolutionCelebrationTimer);
     }
   }
 
@@ -157,9 +164,17 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.myChuchemons = data as ChuchemonExtended[];
-          // Update captured status in all chuchemons list
-          const myIds = new Set(this.myChuchemons.map(c => c.id));
-          this.chuchemons.forEach(c => c.captured = myIds.has(c.id));
+          // Update captured state and per-user disease summary in all chuchemons list
+          const myMap = new Map(this.myChuchemons.map(c => [c.id, c]));
+          this.chuchemons.forEach(c => {
+            const owned = myMap.get(c.id);
+            c.captured = !!owned;
+            c.count = owned?.count ?? c.count;
+            c.active_infections = owned?.active_infections ?? [];
+            c.has_active_infections = owned?.has_active_infections ?? false;
+            c.cannot_eat = owned?.cannot_eat ?? false;
+            c.cannot_eat_reason = owned?.cannot_eat_reason ?? null;
+          });
           this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
           this.updateCompletionPercentage();
           this.applyFilters();
@@ -343,7 +358,10 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          alert(response.message);
+          this.triggerEvolutionCelebration(
+            response.chuchemon?.name ?? this.evolvingChuchemonName,
+            response.chuchemon?.current_mida ?? this.evolvingChuchemonNextMida
+          );
           this.showEvolutionDialog = false;
           this.evolvingChuchemonId = null;
           // Recargar datos
@@ -383,6 +401,23 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   closeDetailsModal(): void {
     this.showDetailsModal = false;
     this.selectedChuchemonForDetails = null;
+  }
+
+  private triggerEvolutionCelebration(name: string, nextMida: string): void {
+    this.evolutionCelebrationName = name;
+    this.evolutionCelebrationSize = this.getSizeLabel(nextMida);
+    this.showEvolutionCelebration = true;
+
+    if (this.evolutionCelebrationTimer) {
+      clearTimeout(this.evolutionCelebrationTimer);
+    }
+
+    this.evolutionCelebrationTimer = setTimeout(() => {
+      this.showEvolutionCelebration = false;
+      this.evolutionCelebrationName = '';
+      this.evolutionCelebrationSize = '';
+      this.evolutionCelebrationTimer = null;
+    }, 1800);
   }
 
   logout(): void {

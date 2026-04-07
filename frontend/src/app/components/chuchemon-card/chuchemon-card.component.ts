@@ -68,6 +68,20 @@ export class ChuchemonCardComponent {
     return `x${this.chuchemon?.count ?? 1}`;
   }
 
+  get hasActiveInfections(): boolean {
+    return !this.locked && (this.chuchemon?.has_active_infections || (this.chuchemon?.active_infections?.length ?? 0) > 0);
+  }
+
+  get primaryInfectionLabel(): string {
+    const infections = this.chuchemon?.active_infections ?? [];
+    if (!infections.length) {
+      return '';
+    }
+
+    const firstName = infections[0]?.name ?? 'Malaltia';
+    return infections.length > 1 ? `${firstName} +${infections.length - 1}` : firstName;
+  }
+
   onCapture(e: Event): void {
     e.stopPropagation();
     if (this.chuchemon?.id) this.capture.emit(this.chuchemon.id);

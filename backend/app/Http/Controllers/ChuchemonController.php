@@ -14,6 +14,15 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ChuchemonController extends Controller
 {
+    private static function normalizeMalaltiaName(?string $name): string
+    {
+        return str_replace(
+            ['á', 'à', 'é', 'è', 'í', 'ì', 'ó', 'ò', 'ú', 'ù'],
+            ['a', 'a', 'e', 'e', 'i', 'i', 'o', 'o', 'u', 'u'],
+            mb_strtolower((string) $name)
+        );
+    }
+
     /**
      * Obtiene todos los Chuchemons
      * Si el usuario está autenticado, incluye información de qué ha capturado
@@ -132,8 +141,40 @@ class ChuchemonController extends Controller
                 ->join('chuchemons', 'user_chuchemons.chuchemon_id', '=', 'chuchemons.id')
                 ->where('user_chuchemons.user_id', $user->id)
                 ->select('chuchemons.*', 'user_chuchemons.count')
+                ->get();
+
+            $infectionMap = DB::table('user_infections')
+                ->join('malalties', 'user_infections.malaltia_id', '=', 'malalties.id')
+                ->where('user_infections.user_id', $user->id)
+                ->where('user_infections.is_active', true)
+                ->whereIn('user_infections.chuchemon_id', $userChuchemons->pluck('id')->all())
+                ->select(
+                    'user_infections.chuchemon_id',
+                    'user_infections.infection_percentage',
+                    'malalties.id as malaltia_id',
+                    'malalties.name',
+                    'malalties.type',
+                    'malalties.severity'
+                )
                 ->get()
-                ->map(function ($chuchemon) {
+                ->groupBy('chuchemon_id');
+
+            $userChuchemons = $userChuchemons->map(function ($chuchemon) use ($infectionMap) {
+                    $activeInfections = collect($infectionMap->get($chuchemon->id, []))
+                        ->map(function ($infection) {
+                            return [
+                                'id' => $infection->malaltia_id,
+                                'name' => $infection->name,
+                                'type' => $infection->type,
+                                'severity' => $infection->severity,
+                                'infection_percentage' => $infection->infection_percentage,
+                            ];
+                        })->values();
+
+                    $cannotEat = $activeInfections->contains(function ($infection) {
+                        return self::normalizeMalaltiaName($infection['name'] ?? null) === 'atracon';
+                    });
+
                     return [
                         'id' => $chuchemon->id,
                         'name' => $chuchemon->name,
@@ -145,6 +186,10 @@ class ChuchemonController extends Controller
                         'speed' => $chuchemon->speed ?? 50,
                         'count' => $chuchemon->count ?? 1,
                         'captured' => true,
+                        'active_infections' => $activeInfections->all(),
+                        'has_active_infections' => $activeInfections->isNotEmpty(),
+                        'cannot_eat' => $cannotEat,
+                        'cannot_eat_reason' => $cannotEat ? 'Atracón activo: este Xuxemon no puede comer más Xuxes por ahora.' : null,
                         'created_at' => $chuchemon->created_at,
                         'updated_at' => $chuchemon->updated_at,
                     ];
@@ -394,7 +439,7 @@ class ChuchemonController extends Controller
      * Evoluciona un Xuxemon capturado del usuario
      * Petit -> Mitjà -> Gran
      */
-    public function evolve(Request $request): JsonResponse
+    public function evolve(int $chuchemonId): JsonResponse
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
@@ -402,16 +447,6 @@ class ChuchemonController extends Controller
             if (!$user) {
                 return response()->json(['message' => 'Usuario no autenticado'], 401);
             }
-
-            $validator = Validator::make($request->all(), [
-                'chuchemon_id' => 'required|exists:chuchemons,id',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-            }
-
-            $chuchemonId = $request->chuchemon_id;
 
             // Get the user's captured Chuchemon
             $userChuchemon = $user->capturedChuchemsWithEvolution()

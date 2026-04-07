@@ -42,6 +42,20 @@ export class RegisterComponent {
   get password()             { return this.form.get('password')!; }
   get passwordConfirmation() { return this.form.get('password_confirmation')!; }
 
+  get previewPlayerId(): string {
+    const rawName = (this.nombre.value ?? '').toString().trim();
+    if (!rawName) {
+      return '#Nom0000';
+    }
+
+    const safeName = rawName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '');
+
+    return `#${safeName || 'Nom'}0000`;
+  }
+
   onSubmit() {
     this.error = '';
     if (this.form.invalid) {

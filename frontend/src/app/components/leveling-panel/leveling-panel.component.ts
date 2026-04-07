@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-leveling-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
   templateUrl: './leveling-panel.component.html',
   styleUrls: ['./leveling-panel.component.css']
 })
@@ -18,6 +19,10 @@ export class LevelingPanelComponent implements OnInit {
   actionMessage: string | null = null;
   xuxQtyToUse = 1;
   healQty = 1;
+  showActionConfirm = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  private confirmAction: (() => void) | null = null;
 
   private readonly api = 'http://localhost:8000/api';
 
@@ -63,6 +68,23 @@ export class LevelingPanelComponent implements OnInit {
 
   useXuxForXp(): void {
     if (!this.selectedChuchemon || this.xuxQtyToUse < 1) return;
+    if (this.selectedChuchemon.cannot_eat) {
+      this.actionMessage = this.selectedChuchemon.cannot_eat_reason ?? 'Este Xuxemon no puede comer más Xuxes ahora mismo.';
+      return;
+    }
+    if ((this.selectedChuchemon.xuxes_qty ?? 0) < this.xuxQtyToUse) {
+      this.actionMessage = 'No tienes suficientes Xuxes para esa cantidad.';
+      return;
+    }
+
+    this.openConfirmDialog(
+      'Confirmar alimentación',
+      `Vas a gastar ${this.xuxQtyToUse} Xuxes para dar ${this.xuxQtyToUse * 20} XP a ${this.selectedChuchemon.name}.`,
+      () => this.executeUseXuxForXp()
+    );
+  }
+
+  private executeUseXuxForXp(): void {
     this.http.post(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/use-xux`, { quantity: this.xuxQtyToUse }).subscribe({
       next: (res: any) => {
         this.actionMessage = res.level_up
@@ -78,6 +100,19 @@ export class LevelingPanelComponent implements OnInit {
 
   healWithXux(): void {
     if (!this.selectedChuchemon || this.healQty < 1) return;
+    if ((this.selectedChuchemon.xuxes_qty ?? 0) < this.healQty) {
+      this.actionMessage = 'No tienes suficientes Xuxes para curar esa cantidad.';
+      return;
+    }
+
+    this.openConfirmDialog(
+      'Confirmar curación',
+      `Vas a gastar hasta ${this.healQty} Xuxes para curar a ${this.selectedChuchemon.name} y recuperar hasta ${this.healQty * 20} PS.`,
+      () => this.executeHealWithXux()
+    );
+  }
+
+  private executeHealWithXux(): void {
     this.http.post(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/heal`, { quantity: this.healQty }).subscribe({
       next: (res: any) => {
         this.actionMessage = `❤️ Curat +${res.healed} PS (${res.current_hp}/${res.max_hp})`;
@@ -109,5 +144,49 @@ export class LevelingPanelComponent implements OnInit {
     if (p > 60) return '#4caf50';
     if (p > 25) return '#ff9800';
     return '#f44336';
+  }
+
+  get xpPreview(): number {
+    return this.xuxQtyToUse * 20;
+  }
+
+  get healPreview(): number {
+    return this.healQty * 20;
+  }
+
+  get selectedInfections(): any[] {
+    return this.selectedChuchemon?.active_infections ?? [];
+  }
+
+  get hasSelectedInfections(): boolean {
+    return this.selectedInfections.length > 0;
+  }
+
+  trackInfection(_: number, infection: any): string {
+    return `${infection.id}-${infection.name}`;
+  }
+
+  onConfirmAction(): void {
+    const action = this.confirmAction;
+    this.closeConfirmDialog();
+    action?.();
+  }
+
+  onCancelAction(): void {
+    this.closeConfirmDialog();
+  }
+
+  private openConfirmDialog(title: string, message: string, action: () => void): void {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmAction = action;
+    this.showActionConfirm = true;
+  }
+
+  private closeConfirmDialog(): void {
+    this.showActionConfirm = false;
+    this.confirmTitle = '';
+    this.confirmMessage = '';
+    this.confirmAction = null;
   }
 }

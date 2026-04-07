@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Chuchemon;
+use App\Models\GameSetting;
 use App\Models\MochilaXux;
 use App\Models\Item;
 use Illuminate\Http\JsonResponse;
@@ -17,32 +18,124 @@ class AdminController extends Controller
     private const MAX_SPACES = 20;
     private const STACK_SIZE = 5;
 
-    private function checkAdmin(): ?JsonResponse  //Admin check en caso de que sea administrador le deje avanzar sino le devuelva un error
+    private function settingsPayload(): array
     {
-        if (!JWTAuth::parseToken()->authenticate()?->is_admin) {
-            return response()->json(['message' => 'No autoritzat'], 403);
-        }
-        return null;
+        return [
+            'config' => [
+                'xux_petit_mitja' => GameSetting::getInt('xux_petit_mitja', 3),
+                'xux_mitja_gran' => GameSetting::getInt('xux_mitja_gran', 5),
+            ],
+            'infection' => [
+                'taxa_infeccio' => GameSetting::getInt('taxa_infeccio', 12),
+            ],
+            'schedules' => [
+                'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
+                'daily_xux_quantity' => GameSetting::getInt('daily_xux_quantity', 10),
+                'daily_chuchemon_hour' => GameSetting::getValue('daily_chuchemon_hour', '08:00'),
+            ],
+        ];
     }
 
     // ── GET /api/admin/stats ──────────────────────────────────────────────────
     public function stats(): JsonResponse
     {
-        if ($err = $this->checkAdmin()) return $err;
-
         return response()->json([
             'jugadors'      => User::where('is_admin', false)->count(),
             'total_usuaris' => User::count(),
             'xuemons'       => Chuchemon::count(),
-            'taxa_infeccio' => 12,
+            'taxa_infeccio' => GameSetting::getInt('taxa_infeccio', 12),
+        ]);
+    }
+
+    public function settings(): JsonResponse
+    {
+        return response()->json($this->settingsPayload());
+    }
+
+    public function updateEvolutionConfig(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'xux_petit_mitja' => 'required|integer|min:1|max:99',
+            'xux_mitja_gran' => 'required|integer|min:1|max:99',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        GameSetting::setValue('xux_petit_mitja', (int) $request->xux_petit_mitja);
+        GameSetting::setValue('xux_mitja_gran', (int) $request->xux_mitja_gran);
+
+        return response()->json([
+            'message' => 'Configuración de evolución guardada correctamente.',
+            'settings' => $this->settingsPayload()['config'],
+        ]);
+    }
+
+    public function updateInfectionRate(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'taxa_infeccio' => 'required|integer|min:0|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        GameSetting::setValue('taxa_infeccio', (int) $request->taxa_infeccio);
+
+        return response()->json([
+            'message' => 'Tasa de infección actualizada correctamente.',
+            'settings' => $this->settingsPayload()['infection'],
+        ]);
+    }
+
+    public function updateDailyXuxSchedule(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'hour' => ['required', 'date_format:H:i'],
+            'quantity' => 'required|integer|min:1|max:99',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        GameSetting::setValue('daily_xux_hour', $request->hour);
+        GameSetting::setValue('daily_xux_quantity', (int) $request->quantity);
+
+        return response()->json([
+            'message' => 'Horario de Xuxes actualizado correctamente.',
+            'settings' => [
+                'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
+                'daily_xux_quantity' => GameSetting::getInt('daily_xux_quantity', 10),
+            ],
+        ]);
+    }
+
+    public function updateDailyChuchemonSchedule(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'hour' => ['required', 'date_format:H:i'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        GameSetting::setValue('daily_chuchemon_hour', $request->hour);
+
+        return response()->json([
+            'message' => 'Horario de Xuxemon actualizado correctamente.',
+            'settings' => [
+                'daily_chuchemon_hour' => GameSetting::getValue('daily_chuchemon_hour', '08:00'),
+            ],
         ]);
     }
 
     // ── GET /api/admin/users ──────────────────────────────────────────────────
     public function listUsers(): JsonResponse
     {
-        if ($err = $this->checkAdmin()) return $err;
-
         $users = User::all()->map(function ($user) {
             $xuxCount = MochilaXux::where('user_id', $user->id)->sum('quantity');
             return [
@@ -63,8 +156,6 @@ class AdminController extends Controller
     // ── POST /api/admin/users/{id}/add-xux ───────────────────────────────────
     public function addXuxToUser(Request $request, int $id): JsonResponse
     {
-        if ($err = $this->checkAdmin()) return $err;
-
         $validator = Validator::make($request->all(), [
             'quantity' => 'required|integer|min:1|max:500',
         ]);
@@ -124,8 +215,6 @@ class AdminController extends Controller
     // ── POST /api/admin/users/{id}/add-random-chuchemon ──────────────────────
     public function addRandomChuchemon(int $id): JsonResponse
     {
-        if ($err = $this->checkAdmin()) return $err;
-
         $targetUser = User::find($id);
         if (!$targetUser) {
             return response()->json(['message' => 'Jugador no trobat.'], 404);
@@ -171,8 +260,6 @@ class AdminController extends Controller
     // ── POST /api/admin/users/{id}/add-item ───────────────────────────────────
     public function addItemToUser(Request $request, int $id): JsonResponse
     {
-        if ($err = $this->checkAdmin()) return $err;
-
         $validator = Validator::make($request->all(), [
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:1|max:500',

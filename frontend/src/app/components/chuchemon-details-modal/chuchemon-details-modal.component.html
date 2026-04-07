@@ -26,6 +26,17 @@
         <div class="modal-stats-section">
           <h3>Estadísticas</h3>
 
+          @if (activeInfections.length) {
+            <div class="modal-infections">
+              <p class="modal-infections-title">Malalties actives</p>
+              <div class="modal-infection-list">
+                @for (infection of activeInfections; track infection.name) {
+                  <span class="modal-infection-tag">🦠 {{ infection.name }} · {{ infection.infection_percentage }}%</span>
+                }
+              </div>
+            </div>
+          }
+
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-bar">

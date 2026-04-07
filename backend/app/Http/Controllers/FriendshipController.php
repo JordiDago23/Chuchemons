@@ -68,7 +68,7 @@ class FriendshipController extends Controller
         $user = JWTAuth::parseToken()->authenticate();
 
         $validator = Validator::make($request->all(), [
-            'query' => 'required|string|min:1|max:50',
+            'query' => 'required|string|min:3|max:50',
         ]);
 
         if ($validator->fails()) {

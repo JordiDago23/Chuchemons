@@ -106,7 +106,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Selecciona Jugador</label>
-            <select [(ngModel)]="xuxPlayerId">
+            <select class="form-select" [(ngModel)]="xuxPlayerId">
               <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
               @for (u of nonAdminUsers; track u.id) {
                 <option [ngValue]="u.id">{{ u.player_id }} · Nv. {{ u.level }}</option>
@@ -115,7 +115,7 @@
           </div>
           <div class="form-group">
             <label>Cantidad de Xuxes</label>
-            <input type="number" [(ngModel)]="xuxQty" min="1" max="500" />
+            <input class="form-control" type="number" [(ngModel)]="xuxQty" min="1" max="500" />
           </div>
         </div>
         <div class="alert-warn">
@@ -142,7 +142,7 @@
         <div class="form-row">
           <div class="form-group" style="flex:1">
             <label>Selecciona Jugador</label>
-            <select [(ngModel)]="aleatorioPlayerId">
+            <select class="form-select" [(ngModel)]="aleatorioPlayerId">
               <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
               @for (u of nonAdminUsers; track u.id) {
                 <option [ngValue]="u.id">{{ u.player_id }} · Nv. {{ u.level }}</option>
@@ -174,7 +174,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Selecciona Jugador</label>
-            <select [(ngModel)]="vacunaPlayerId">
+            <select class="form-select" [(ngModel)]="vacunaPlayerId">
               <option [ngValue]="null" disabled>-- Selecciona un jugador --</option>
               @for (u of nonAdminUsers; track u.id) {
                 <option [ngValue]="u.id">{{ u.player_id }} · Nv. {{ u.level }}</option>
@@ -183,7 +183,7 @@
           </div>
           <div class="form-group">
             <label>Tipo de Vacuna</label>
-            <select [(ngModel)]="vacunaType">
+            <select class="form-select" [(ngModel)]="vacunaType">
               @for (v of vacunaTypes; track v) {
                 <option [value]="v">{{ v }}</option>
               }
@@ -327,12 +327,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>Pequeño → Mediano (Xuxes necesarias)</label>
-            <input type="number" [(ngModel)]="cfg.xuxPetitMitja" min="1" max="100" />
+            <input class="form-control" type="number" [(ngModel)]="cfg.xuxPetitMitja" min="1" max="100" />
             <span class="input-hint">Valor por defecto: 3 Xuxes</span>
           </div>
           <div class="form-group">
             <label>Mediano → Grande (Xuxes necesarias)</label>
-            <input type="number" [(ngModel)]="cfg.xuxMitjaGran" min="1" max="100" />
+            <input class="form-control" type="number" [(ngModel)]="cfg.xuxMitjaGran" min="1" max="100" />
             <span class="input-hint">Valor por defecto: 5 Xuxes</span>
           </div>
         </div>
@@ -354,7 +354,7 @@
         <div class="form-group">
           <label>Porcentaje de Infección (%)</label>
           <div class="input-with-badge">
-            <input type="number" [(ngModel)]="taxaInfeccioEdit" min="0" max="100" />
+            <input class="form-control" type="number" [(ngModel)]="taxaInfeccioEdit" min="0" max="100" />
             <span class="pct-pill">{{ taxaInfeccioEdit }}%</span>
           </div>
           <span class="input-hint">Por cada Xuxa con la que se alimente un Xuxemon, existe este % de probabilidad de infección aleatoria de una enfermedad. Valor por defecto: 15%</span>
@@ -387,12 +387,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>Hora de Recepción</label>
-            <input type="time" [(ngModel)]="horariXuxes.hora" />
+            <input class="form-control" type="time" [(ngModel)]="horariXuxes.hora" />
             <span class="input-hint">Valor por defecto: 06:00 AM</span>
           </div>
           <div class="form-group">
             <label>Cantidad Diaria</label>
-            <input type="number" [(ngModel)]="horariXuxes.quantitat" min="1" max="999" />
+            <input class="form-control" type="number" [(ngModel)]="horariXuxes.quantitat" min="1" max="999" />
             <span class="input-hint">Valor por defecto: 10 Xuxes aleatorias</span>
           </div>
         </div>
@@ -420,7 +420,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Hora de Recepción</label>
-            <input type="time" [(ngModel)]="horariXuxemon.hora" />
+            <input class="form-control" type="time" [(ngModel)]="horariXuxemon.hora" />
             <span class="input-hint">Valor por defecto: 08:00 AM</span>
           </div>
         </div>

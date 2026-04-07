@@ -1,18 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { FriendUser, FriendsOverviewResponse, FriendsService } from '../../core/services/friends.service';
+import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-amigos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmDialogComponent],
   templateUrl: './amigos.component.html',
   styleUrls: ['./amigos.component.css']
 })
-export class AmigosComponent implements OnInit {
+export class AmigosComponent implements OnInit, OnDestroy {
   user: any = null;
 
   friends: FriendUser[] = [];
@@ -25,11 +28,16 @@ export class AmigosComponent implements OnInit {
   loading = true;
   searching = false;
   showSearchPanel = false;
-  searchQuery = '';
+  searchControl = new FormControl('', { nonNullable: true });
   searchMessage = '';
   success = '';
   error = '';
   activeAction = '';
+  showConfirmDialog = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  private confirmAction: (() => void) | null = null;
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private auth: AuthService,
@@ -48,7 +56,24 @@ export class AmigosComponent implements OnInit {
       });
     }
 
+    this.friendsService.overview$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response) => this.applyOverview(response));
+
+    this.searchControl.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((value) => this.handleSearchTerm(value, false));
+
     this.loadOverview();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadOverview(silent = false): void {
@@ -58,10 +83,7 @@ export class AmigosComponent implements OnInit {
 
     this.friendsService.getOverview().subscribe({
       next: (response: FriendsOverviewResponse) => {
-        this.friends = response.friends ?? [];
-        this.pendingReceived = response.pending_received ?? [];
-        this.pendingSent = response.pending_sent ?? [];
-        this.stats = response.stats ?? { total: 0, online: 0, offline: 0 };
+        this.friendsService.updateOverview(response);
         this.loading = false;
       },
       error: (err) => {
@@ -75,21 +97,34 @@ export class AmigosComponent implements OnInit {
     this.showSearchPanel = !this.showSearchPanel;
 
     if (!this.showSearchPanel) {
-      this.searchQuery = '';
+      this.searchControl.setValue('', { emitEvent: false });
       this.searchResults = [];
       this.searchMessage = '';
     }
   }
 
   onSearch(): void {
-    const term = this.searchQuery.trim();
+    this.handleSearchTerm(this.searchControl.value, true);
+  }
+
+  private handleSearchTerm(rawValue: string, force: boolean): void {
+    const term = rawValue.trim();
     this.searchResults = [];
     this.searchMessage = '';
     this.success = '';
     this.error = '';
 
+    if (!this.showSearchPanel && !force) {
+      return;
+    }
+
     if (!term) {
       this.searchMessage = 'Introduce el ID o nombre del usuario que buscas.';
+      return;
+    }
+
+    if (term.length < 3) {
+      this.searchMessage = 'Escribe al menos 3 caracteres para buscar usuarios.';
       return;
     }
 
@@ -163,6 +198,18 @@ export class AmigosComponent implements OnInit {
       return;
     }
 
+    this.openConfirmDialog(
+      'Eliminar solicitud',
+      `¿Seguro que quieres eliminar la solicitud de ${request.player_id}?`,
+      () => this.executeDeleteRequest(request)
+    );
+  }
+
+  private executeDeleteRequest(request: FriendUser): void {
+    if (!request.friendship_id) {
+      return;
+    }
+
     this.activeAction = `delete-${request.friendship_id}`;
     this.success = '';
     this.error = '';
@@ -182,10 +229,14 @@ export class AmigosComponent implements OnInit {
   }
 
   removeFriend(friend: FriendUser): void {
-    const confirmed = window.confirm(`¿Seguro que quieres eliminar a ${friend.player_id} de tu lista de amigos?`);
-    if (!confirmed) {
-      return;
-    }
+    this.openConfirmDialog(
+      'Eliminar amigo',
+      `¿Seguro que quieres eliminar a ${friend.player_id} de tu lista de amigos?`,
+      () => this.executeRemoveFriend(friend)
+    );
+  }
+
+  private executeRemoveFriend(friend: FriendUser): void {
 
     this.activeAction = `remove-${friend.id}`;
     this.success = '';
@@ -215,6 +266,41 @@ export class AmigosComponent implements OnInit {
 
   logout(): void {
     this.auth.logout();
+  }
+
+  onConfirmDialog(): void {
+    const action = this.confirmAction;
+    this.closeConfirmDialog();
+    action?.();
+  }
+
+  onCancelDialog(): void {
+    this.closeConfirmDialog();
+  }
+
+  get pendingRequestsCount(): number {
+    return this.pendingReceived.length;
+  }
+
+  private applyOverview(response: FriendsOverviewResponse): void {
+    this.friends = response.friends ?? [];
+    this.pendingReceived = response.pending_received ?? [];
+    this.pendingSent = response.pending_sent ?? [];
+    this.stats = response.stats ?? { total: 0, online: 0, offline: 0 };
+  }
+
+  private openConfirmDialog(title: string, message: string, action: () => void): void {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmAction = action;
+    this.showConfirmDialog = true;
+  }
+
+  private closeConfirmDialog(): void {
+    this.showConfirmDialog = false;
+    this.confirmTitle = '';
+    this.confirmMessage = '';
+    this.confirmAction = null;
   }
 
   private refreshSearchResultStatus(

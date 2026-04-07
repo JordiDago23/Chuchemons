@@ -15,6 +15,8 @@ export class DailyRewardsComponent implements OnInit {
   isLoading = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  simulationEnabled = false;
+  simulationOffsetHours = 0;
 
   constructor(private http: HttpClient) {}
 
@@ -24,6 +26,7 @@ export class DailyRewardsComponent implements OnInit {
 
   loadDailyRewards(): void {
     this.isLoading = true;
+    this.errorMessage = null;
     this.http.get<any>('http://localhost:8000/api/daily-rewards').subscribe({
       next: (data) => {
         this.xuxReward = data.xux;
@@ -39,6 +42,11 @@ export class DailyRewardsComponent implements OnInit {
   }
 
   claimXuxReward(): void {
+    if (this.simulationEnabled) {
+      this.simulateClaim('xux');
+      return;
+    }
+
     this.http.post('http://localhost:8000/api/daily-rewards/xux', {}).subscribe({
       next: (response: any) => {
         this.successMessage = response.message;
@@ -53,6 +61,11 @@ export class DailyRewardsComponent implements OnInit {
   }
 
   claimChuchemonReward(): void {
+    if (this.simulationEnabled) {
+      this.simulateClaim('chuchemon');
+      return;
+    }
+
     this.http.post('http://localhost:8000/api/daily-rewards/chuchemon', {}).subscribe({
       next: (response: any) => {
         this.successMessage = response.message;
@@ -68,12 +81,12 @@ export class DailyRewardsComponent implements OnInit {
 
   isRewardAvailable(reward: any): boolean {
     if (!reward) return false;
-    return new Date(reward.next_available_at) <= new Date();
+    return new Date(reward.next_available_at) <= this.getEffectiveNow();
   }
 
   getTimeUntilAvailable(reward: any): string {
     if (!reward) return '';
-    const now = new Date();
+    const now = this.getEffectiveNow();
     const available = new Date(reward.next_available_at);
     const diff = available.getTime() - now.getTime();
     
@@ -84,4 +97,55 @@ export class DailyRewardsComponent implements OnInit {
     
     return `En ${hours}h ${minutes}m`;
   }
+
+      toggleSimulation(): void {
+        this.simulationEnabled = !this.simulationEnabled;
+        if (!this.simulationEnabled) {
+          this.simulationOffsetHours = 0;
+        }
+        this.successMessage = null;
+        this.errorMessage = null;
+      }
+
+      shiftSimulation(hours: number): void {
+        this.simulationOffsetHours += hours;
+      }
+
+      resetSimulation(): void {
+        this.simulationOffsetHours = 0;
+        this.successMessage = 'Simulación restablecida a la hora actual.';
+        setTimeout(() => this.successMessage = null, 2500);
+      }
+
+      get simulationReference(): string {
+        return this.getEffectiveNow().toLocaleString('es-ES');
+      }
+
+      private getEffectiveNow(): Date {
+        const now = new Date();
+        now.setHours(now.getHours() + this.simulationOffsetHours);
+        return now;
+      }
+
+      private simulateClaim(type: 'xux' | 'chuchemon'): void {
+        const reward = type === 'xux' ? this.xuxReward : this.chuchemonReward;
+
+        if (!reward) {
+          return;
+        }
+
+        if (!this.isRewardAvailable(reward)) {
+          this.errorMessage = 'La recompensa simulada todavía no está disponible.';
+          return;
+        }
+
+        const nextAvailable = new Date(this.getEffectiveNow().getTime() + 24 * 60 * 60 * 1000);
+        reward.next_available_at = nextAvailable.toISOString();
+        reward.claimed_at = this.getEffectiveNow().toISOString();
+        this.errorMessage = null;
+        this.successMessage = type === 'xux'
+          ? 'Simulación: recompensa diaria de Xuxes reclamada.'
+          : 'Simulación: recompensa diaria de Xuxemon reclamada.';
+        setTimeout(() => this.successMessage = null, 2500);
+      }
 }

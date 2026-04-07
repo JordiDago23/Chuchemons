@@ -17,7 +17,12 @@
       <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
       <a class="nav-item" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
       <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
-      <a class="nav-item active" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
+      <a class="nav-item active" routerLink="/amigos">
+        <span class="nav-icon">👥</span> Amigos
+        @if (pendingRequestsCount > 0) {
+          <span class="badge rounded-pill text-bg-warning nav-badge">{{ pendingRequestsCount }}</span>
+        }
+      </a>
       <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
       <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
       <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
@@ -88,14 +93,15 @@
 
     @if (showSearchPanel) {
       <section class="panel search-panel">
-        <div class="search-row">
+        <div class="search-row input-group">
           <input
+            class="form-control"
             type="text"
-            [(ngModel)]="searchQuery"
+            [formControl]="searchControl"
             (keyup.enter)="onSearch()"
             placeholder="Escribe el ID o el nombre del jugador..."
           />
-          <button class="search-btn" (click)="onSearch()" [disabled]="searching">
+          <button class="btn btn-danger search-btn" (click)="onSearch()" [disabled]="searching">
             {{ searching ? 'Buscando...' : 'Buscar' }}
           </button>
         </div>
@@ -107,7 +113,7 @@
         @if (searchResults.length > 0) {
           <div class="search-results">
             @for (result of searchResults; track result.id) {
-              <article class="result-card">
+              <article class="result-card card shadow-sm">
                 <div class="avatar-wrap">
                   <div class="avatar">{{ avatarText(result) }}</div>
                   <span class="status-dot" [class.online]="result.is_online"></span>
@@ -163,12 +169,12 @@
       <section class="panel">
         <div class="section-title-row">
           <h2>Solicitudes pendientes</h2>
-          <span class="pill">{{ pendingReceived.length }}</span>
+          <span class="badge rounded-pill text-bg-warning">{{ pendingReceived.length }}</span>
         </div>
 
         <div class="requests-grid">
           @for (request of pendingReceived; track request.id) {
-            <article class="request-card">
+            <article class="request-card card shadow-sm">
               <div>
                 <strong>{{ request.display_name || request.player_id }}</strong>
                 <p>{{ request.player_id }}</p>
@@ -191,12 +197,12 @@
       <section class="panel">
         <div class="section-title-row">
           <h2>Solicitudes enviadas</h2>
-          <span class="pill neutral">{{ pendingSent.length }}</span>
+          <span class="badge rounded-pill text-bg-secondary">{{ pendingSent.length }}</span>
         </div>
 
         <div class="requests-grid">
           @for (request of pendingSent; track request.id) {
-            <article class="request-card compact">
+            <article class="request-card compact card shadow-sm">
               <div>
                 <strong>{{ request.display_name || request.player_id }}</strong>
                 <p>{{ request.player_id }}</p>
@@ -213,7 +219,7 @@
     <section class="panel">
       <div class="section-title-row">
         <h2>Tu lista de amigos</h2>
-        <span class="pill online">{{ stats.online }} online</span>
+        <span class="badge rounded-pill text-bg-success">{{ stats.online }} online</span>
       </div>
 
       @if (!loading && friends.length === 0) {
@@ -226,7 +232,7 @@
       @if (friends.length > 0) {
         <div class="friends-grid">
           @for (friend of friends; track friend.id) {
-            <article class="friend-card">
+            <article class="friend-card card shadow-sm">
               <div class="friend-top">
                 <div class="avatar-wrap">
                   <div class="avatar large">{{ avatarText(friend) }}</div>
@@ -256,3 +262,13 @@
     </section>
   </main>
 </div>
+
+<app-confirm-dialog
+  [isVisible]="showConfirmDialog"
+  [title]="confirmTitle"
+  [message]="confirmMessage"
+  confirmLabel="Confirmar"
+  cancelLabel="Cancelar"
+  (confirm)="onConfirmDialog()"
+  (cancel)="onCancelDialog()"
+></app-confirm-dialog>

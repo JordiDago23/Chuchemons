@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap, catchError, timeout } from 'rxjs/operators';
-import { throwError, BehaviorSubject } from 'rxjs';
+import { throwError, BehaviorSubject, firstValueFrom, of } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -39,12 +39,37 @@ export class AuthService {
   me() {
     // Si ya tenemos el usuario en caché, no hace falta pedir al servidor
     if (this._user.value) {
-      return new BehaviorSubject(this._user.value).asObservable();
+      return of(this._user.value);
     }
     return this.http.get(`${this.apiUrl}/me`).pipe(
       timeout(8000),
       tap((u: any) => this._user.next(u)),
       catchError(this.handleError)
+    );
+  }
+
+  async initializeSession(): Promise<void> {
+    const token = this.getToken();
+
+    if (!token) {
+      this.clearSession();
+      return;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.clearSession();
+      return;
+    }
+
+    await firstValueFrom(
+      this.http.get(`${this.apiUrl}/me`).pipe(
+        timeout(8000),
+        tap((user: any) => this._user.next(user)),
+        catchError(() => {
+          this.clearSession();
+          return of(null);
+        })
+      )
     );
   }
 
@@ -65,15 +90,21 @@ export class AuthService {
   }
 
   logout() {
-    // JWT es stateless: basta limpiar el token local.
-    // Enviamos logout al servidor en background sin bloquear.
     const token = this.getToken();
+    this.clearSession();
+
     if (token) {
-      this.http.post(`${this.apiUrl}/logout`, {}).subscribe();
+      this.http.post(`${this.apiUrl}/logout`, {}).pipe(
+        catchError(() => of(null))
+      ).subscribe();
     }
+
+    this.router.navigate(['/login']);
+  }
+
+  clearSession() {
     this._user.next(null);
     localStorage.removeItem('token');
-    this.router.navigate(['/login']);
   }
 
   saveToken(token: string) {
@@ -85,7 +116,21 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    return !!token && !this.isTokenExpired(token);
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) {
+        return false;
+      }
+
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
   }
 
   private handleError(error: HttpErrorResponse) {

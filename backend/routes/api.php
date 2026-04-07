@@ -81,9 +81,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/daily-rewards/chuchemon', [DailyRewardController::class, 'claimChuchemonReward']);
 
     // ─── ADMIN ────────────────────────────────────────────────────────
-    Route::prefix('admin')->group(function () {
+    Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/stats',                        [AdminController::class, 'stats']);
         Route::get('/users',                        [AdminController::class, 'listUsers']);
+        Route::get('/settings',                     [AdminController::class, 'settings']);
+        Route::put('/settings/config',              [AdminController::class, 'updateEvolutionConfig']);
+        Route::put('/settings/infection-rate',      [AdminController::class, 'updateInfectionRate']);
+        Route::put('/settings/schedules/xux',       [AdminController::class, 'updateDailyXuxSchedule']);
+        Route::put('/settings/schedules/chuchemon', [AdminController::class, 'updateDailyChuchemonSchedule']);
         Route::post('/users/{id}/add-xux',          [AdminController::class, 'addXuxToUser']);
         Route::post('/users/{id}/add-item',         [AdminController::class, 'addItemToUser']);
         Route::post('/users/{id}/add-chuchemon',    [AdminController::class, 'addRandomChuchemon']);
