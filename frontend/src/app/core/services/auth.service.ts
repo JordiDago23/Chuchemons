@@ -7,6 +7,7 @@ import { throwError, BehaviorSubject, firstValueFrom, of } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = 'http://localhost:8000/api';
+  private readonly userStorageKey = 'currentUser';
 
   // Usuario cacheado — evita llamadas extra a /api/me
   private _user = new BehaviorSubject<any>(null);
@@ -16,11 +17,36 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
+  private setCurrentUser(user: any): void {
+    this._user.next(user);
+
+    if (user) {
+      localStorage.setItem(this.userStorageKey, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(this.userStorageKey);
+    }
+  }
+
+  private getStoredUser(): any | null {
+    const rawUser = localStorage.getItem(this.userStorageKey);
+
+    if (!rawUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(rawUser);
+    } catch {
+      localStorage.removeItem(this.userStorageKey);
+      return null;
+    }
+  }
+
   register(data: any) {
     return this.http.post(`${this.apiUrl}/register`, data).pipe(
       tap((res: any) => {
         this.saveToken(res.token);
-        this._user.next(res.user);
+        this.setCurrentUser(res.user);
       }),
       catchError(this.handleError)
     );
@@ -30,7 +56,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/login`, data).pipe(
       tap((res: any) => {
         this.saveToken(res.token);
-        this._user.next(res.user);
+        this.setCurrentUser(res.user);
       }),
       catchError(this.handleError)
     );
@@ -43,7 +69,7 @@ export class AuthService {
     }
     return this.http.get(`${this.apiUrl}/me`).pipe(
       timeout(8000),
-      tap((u: any) => this._user.next(u)),
+      tap((u: any) => this.setCurrentUser(u)),
       catchError(this.handleError)
     );
   }
@@ -61,10 +87,26 @@ export class AuthService {
       return;
     }
 
+    const storedUser = this.getStoredUser();
+    if (storedUser) {
+      this.setCurrentUser(storedUser);
+
+      this.http.get(`${this.apiUrl}/me`).pipe(
+        timeout(5000),
+        tap((user: any) => this.setCurrentUser(user)),
+        catchError(() => {
+          this.clearSession();
+          return of(null);
+        })
+      ).subscribe();
+
+      return;
+    }
+
     await firstValueFrom(
       this.http.get(`${this.apiUrl}/me`).pipe(
         timeout(8000),
-        tap((user: any) => this._user.next(user)),
+        tap((user: any) => this.setCurrentUser(user)),
         catchError(() => {
           this.clearSession();
           return of(null);
@@ -76,7 +118,7 @@ export class AuthService {
   updateProfile(data: any) {
     return this.http.put(`${this.apiUrl}/user/update`, data).pipe(
       tap((res: any) => {
-        if (res.user) this._user.next(res.user);
+        if (res.user) this.setCurrentUser(res.user);
       }),
       catchError(this.handleError)
     );
@@ -103,7 +145,7 @@ export class AuthService {
   }
 
   clearSession() {
-    this._user.next(null);
+    this.setCurrentUser(null);
     localStorage.removeItem('token');
   }
 

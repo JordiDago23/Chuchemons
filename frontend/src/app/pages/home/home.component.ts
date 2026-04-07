@@ -1,8 +1,7 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { Subject, interval, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
@@ -100,9 +99,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
-    private chuchemonService: ChuchemonService,
-    private http: HttpClient,
-    private cdRef: ChangeDetectorRef
+    private chuchemonService: ChuchemonService
   ) {}
 
   ngOnInit() {
@@ -147,12 +144,10 @@ export class HomeComponent implements OnInit, OnDestroy {
           } else {
             this.team = [];
           }
-          this.cdRef.detectChanges();
         },
         error: (error) => {
           console.error('Error loading team:', error);
           this.team = [];
-          this.cdRef.detectChanges();
         }
       });
   }
@@ -176,19 +171,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   loadStats(): void {
-    // Load total chuchemons and captured count
-    this.http.get<any>('http://localhost:8000/api/chuchemons')
+    this.chuchemonService.getAllChuchemons()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response.data && Array.isArray(response.data)) {
-            this.stats.total = response.data.length;
-            // Count captured (user's chuchemons)
-            this.stats.captured = response.data.filter((ch: any) => 
-              ch.captured_count && ch.captured_count > 0
-            ).length;
-          }
-          this.cdRef.detectChanges();
+          this.stats.total = response.length;
+          this.stats.captured = response.filter((ch: any) => ch.captured).length;
         },
         error: (error) => console.error('Error loading chuchemons:', error)
       });

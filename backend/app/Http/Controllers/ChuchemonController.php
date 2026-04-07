@@ -38,32 +38,52 @@ class ChuchemonController extends Controller
             $user = null;
         }
 
-        $allChuchemons = Chuchemon::when($request->query('element'), fn($q, $v) => $q->where('element', $v))
-                                   ->when($request->query('mida'),    fn($q, $v) => $q->where('mida', $v))
-                                   ->get();
-        
-        // Get all captured chuchemons for this user (if authenticated)
-        $capturedIds = [];
+        $allChuchemons = Chuchemon::query()
+            ->when($request->query('element'), fn($q, $v) => $q->where('element', $v))
+            ->when($request->query('mida'), fn($q, $v) => $q->where('mida', $v))
+            ->get();
+
         $capturedCounts = [];
+        $infectionMap = collect();
         if ($user) {
-            $userChuchemons = DB::table('user_chuchemons')
+            $capturedCounts = DB::table('user_chuchemons')
                 ->where('user_id', $user->id)
-                ->get();
-            foreach ($userChuchemons as $uc) {
-                $capturedIds[] = $uc->chuchemon_id;
-                $capturedCounts[$uc->chuchemon_id] = $uc->count;
-            }
+                ->pluck('count', 'chuchemon_id')
+                ->all();
+
+            $infectionMap = DB::table('user_infections')
+                ->join('malalties', 'user_infections.malaltia_id', '=', 'malalties.id')
+                ->where('user_infections.user_id', $user->id)
+                ->where('user_infections.is_active', true)
+                ->select(
+                    'user_infections.chuchemon_id',
+                    'user_infections.infection_percentage',
+                    'malalties.id as malaltia_id',
+                    'malalties.name',
+                    'malalties.type',
+                    'malalties.severity'
+                )
+                ->get()
+                ->groupBy('chuchemon_id');
         }
 
-        $chuchemons = $allChuchemons->map(function ($chuchemon) use ($capturedIds, $capturedCounts, $user) {
-            $captured = null;
-            $count = 0;
-            
-            if ($user) {
-                $captured = in_array($chuchemon->id, $capturedIds);
-                $count = $capturedCounts[$chuchemon->id] ?? 0;
-            }
-            
+        $chuchemons = $allChuchemons->map(function ($chuchemon) use ($capturedCounts, $infectionMap, $user) {
+            $count = (int) ($capturedCounts[$chuchemon->id] ?? 0);
+            $captured = $user ? $count > 0 : null;
+            $activeInfections = collect($infectionMap->get($chuchemon->id, []))
+                ->map(function ($infection) {
+                    return [
+                        'id' => $infection->malaltia_id,
+                        'name' => $infection->name,
+                        'type' => $infection->type,
+                        'severity' => $infection->severity,
+                        'infection_percentage' => $infection->infection_percentage,
+                    ];
+                })->values();
+            $cannotEat = $activeInfections->contains(function ($infection) {
+                return self::normalizeMalaltiaName($infection['name'] ?? null) === 'atracon';
+            });
+
             return [
                 'id' => $chuchemon->id,
                 'name' => $chuchemon->name,
@@ -75,6 +95,10 @@ class ChuchemonController extends Controller
                 'speed' => $chuchemon->speed ?? 50,
                 'captured' => $captured,
                 'count' => $count,
+                'active_infections' => $user ? $activeInfections->all() : [],
+                'has_active_infections' => $user ? $activeInfections->isNotEmpty() : false,
+                'cannot_eat' => $user ? $cannotEat : false,
+                'cannot_eat_reason' => $user && $cannotEat ? 'Atracón activo: este Xuxemon no puede comer más Xuxes por ahora.' : null,
                 'created_at' => $chuchemon->created_at,
                 'updated_at' => $chuchemon->updated_at,
             ];

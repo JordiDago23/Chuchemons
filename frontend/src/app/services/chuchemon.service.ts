@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { catchError, timeout } from 'rxjs/operators';
+import { catchError, tap, timeout } from 'rxjs/operators';
 import { Chuchemon } from '../models/chuchemon.model';
 
 @Injectable({
@@ -12,28 +12,41 @@ export class ChuchemonService {
   private userApiUrl = 'http://localhost:8000/api/user';
   private chuchechomsSubject = new BehaviorSubject<Chuchemon[]>([]);
   public chuchemons$ = this.chuchechomsSubject.asObservable();
+  private allChuchemonsCache: Chuchemon[] | null = null;
+  private allChuchemonsLoadedAt = 0;
+  private myChuchemonsCache: Chuchemon[] | null = null;
+  private myChuchemonsLoadedAt = 0;
+  private teamCache: any = null;
+  private teamLoadedAt = 0;
+  private readonly cacheTtlMs = 30000;
+
   constructor(private http: HttpClient) {}
 
-  private loadChuchemons(): void {
-    console.log('🔄 Cargando Chuchemons desde:', this.apiUrl);
-    this.getAllChuchemons().subscribe({
-      next: (data) => {
-        console.log('✅ Chuchemons cargados:', data.length, 'items');
-        this.chuchechomsSubject.next(data);
-      },
-      error: (error) => {
-        console.error('❌ Error cargando Chuchemons:');
-        console.error('   URL:', this.apiUrl);
-        console.error('   Status:', error.status);
-        console.error('   Mensaje:', error.message);
-        console.error('   Error completo:', error);
-        this.chuchechomsSubject.next([]);
-      }
-    });
+  private isFresh(timestamp: number): boolean {
+    return timestamp > 0 && Date.now() - timestamp < this.cacheTtlMs;
   }
 
-  getAllChuchemons(): Observable<Chuchemon[]> {
-    return this.http.get<Chuchemon[]>(this.apiUrl);
+  invalidateCaches(): void {
+    this.allChuchemonsCache = null;
+    this.allChuchemonsLoadedAt = 0;
+    this.myChuchemonsCache = null;
+    this.myChuchemonsLoadedAt = 0;
+    this.teamCache = null;
+    this.teamLoadedAt = 0;
+  }
+
+  getAllChuchemons(forceRefresh = false): Observable<Chuchemon[]> {
+    if (!forceRefresh && this.allChuchemonsCache && this.isFresh(this.allChuchemonsLoadedAt)) {
+      return of(this.allChuchemonsCache);
+    }
+
+    return this.http.get<Chuchemon[]>(this.apiUrl).pipe(
+      tap((data) => {
+        this.allChuchemonsCache = data;
+        this.allChuchemonsLoadedAt = Date.now();
+        this.chuchechomsSubject.next(data);
+      })
+    );
   }
 
   getChuchemonById(id: number): Observable<Chuchemon> {
@@ -51,8 +64,16 @@ export class ChuchemonService {
   /**
    * Obtiene los chuchemons capturados por el usuario autenticado
    */
-  getMyChuchemons(): Observable<Chuchemon[]> {
+  getMyChuchemons(forceRefresh = false): Observable<Chuchemon[]> {
+    if (!forceRefresh && this.myChuchemonsCache && this.isFresh(this.myChuchemonsLoadedAt)) {
+      return of(this.myChuchemonsCache);
+    }
+
     return this.http.get<Chuchemon[]>(`${this.userApiUrl}/chuchemons`).pipe(
+      tap((data) => {
+        this.myChuchemonsCache = data;
+        this.myChuchemonsLoadedAt = Date.now();
+      }),
       timeout(15000), // Aumentar timeout a 15 segundos
       catchError((error) => {
         console.warn('Error loading my chuchemons:', error);
@@ -67,6 +88,7 @@ export class ChuchemonService {
    */
   captureChuchemon(chuchemonId: number): Observable<any> {
     return this.http.post(`${this.userApiUrl}/chuchemons/${chuchemonId}/capture`, {}).pipe(
+      tap(() => this.invalidateCaches()),
       catchError((error) => {
         console.warn('Error capturing chuchemon:', error);
         return of({ message: 'Error capturando chuchemon' });
@@ -77,8 +99,16 @@ export class ChuchemonService {
   /**
    * Obtiene el equipo del usuario autenticado
    */
-  getTeam(): Observable<any> {
+  getTeam(forceRefresh = false): Observable<any> {
+    if (!forceRefresh && this.teamCache && this.isFresh(this.teamLoadedAt)) {
+      return of(this.teamCache);
+    }
+
     return this.http.get(`${this.userApiUrl}/team`).pipe(
+      tap((data) => {
+        this.teamCache = data;
+        this.teamLoadedAt = Date.now();
+      }),
       catchError((error) => {
         console.warn('Error loading team:', error);
         return of({ team: null, team_ids: [null, null, null] });
@@ -95,6 +125,10 @@ export class ChuchemonService {
       chuchemon_2_id,
       chuchemon_3_id
     }).pipe(
+      tap(() => {
+        this.teamCache = null;
+        this.teamLoadedAt = 0;
+      }),
       catchError((error) => {
         console.warn('Error saving team:', error);
         return of({ message: 'Error guardando equipo' });

@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -14,8 +13,6 @@ class AuthController extends Controller
     // ─── REGISTRO ─────────────────────────────────────────
     public function register(Request $request)
     {
-        Log::info('Registro - Datos recibidos:', $request->all());
-        
         $validator = Validator::make($request->all(), [   
             'nombre'            => 'required|string|max:255',
             'apellidos'         => 'required|string|max:255',
@@ -24,7 +21,6 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::error('Registro - Errores de validación:', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
@@ -50,8 +46,6 @@ class AuthController extends Controller
             ]);
 
             $token = JWTAuth::fromUser($user);
-            
-            Log::info('Registro exitoso - Usuario creado:', ['id' => $user->id, 'player_id' => $user->player_id]);
 
             return response()->json([
                 'message' => 'Usuario registrado correctamente',
@@ -59,7 +53,6 @@ class AuthController extends Controller
                 'token'   => $token,
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Registro - Error al crear usuario:', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al crear el usuario: ' . $e->getMessage()], 500);
         }
     }
@@ -67,35 +60,28 @@ class AuthController extends Controller
     // ─── LOGIN ────────────────────────────────────────────
     public function login(Request $request)
     {
-        Log::info('Login - Intento de login con player_id:', ['player_id' => $request->player_id]);
-        
         $validator = Validator::make($request->all(), [
             'player_id' => 'required|string',
             'password'  => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            Log::error('Login - Errores de validación:', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $user = User::where('player_id', $request->player_id)->first();
 
         if (!$user) {
-            Log::warning('Login - Usuario no encontrado:', ['player_id' => $request->player_id]);
             return response()->json(['message' => 'Usuario no encontrado'], 401);
         }
 
         if (!Hash::check($request->password, $user->password)) {
-            Log::warning('Login - Contraseña incorrecta:', ['player_id' => $request->player_id]);
             return response()->json(['message' => 'Contraseña incorrecta'], 401);
         }
 
         $user->forceFill(['last_seen_at' => now()])->save();
 
         $token = JWTAuth::fromUser($user);
-        
-        Log::info('Login exitoso:', ['player_id' => $user->player_id, 'id' => $user->id]);
 
         return response()->json([
             'message' => 'Login correcto',

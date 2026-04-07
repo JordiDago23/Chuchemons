@@ -100,7 +100,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         if (!this.isLoading && !document.hidden) {
-          this.loadChuchemons(false);
+          this.loadChuchemons(false, true);
         }
       });
   }
@@ -108,7 +108,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   @HostListener('window:focus', ['$event'])
   onWindowFocus(event: any): void {
     // Reload when window regains focus
-    this.loadChuchemons(false);
+    this.loadChuchemons(false, true);
   }
 
   checkAdminStatus(): void {
@@ -124,67 +124,31 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       });
   }
 
-  loadChuchemons(showLoader: boolean = true): void {
+  loadChuchemons(showLoader: boolean = true, forceRefresh: boolean = false): void {
     if (showLoader) {
       this.isLoading = true;
       this.errorMessage = null;
     }
 
-    this.chuchemonService.getAllChuchemons()
+    this.chuchemonService.getAllChuchemons(forceRefresh)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
           this.chuchemons = data as ChuchemonExtended[];
+          this.myChuchemons = this.isAdmin
+            ? []
+            : this.chuchemons.filter(c => c.captured);
           this.totalChuchemons = data.length;
-          
-          // Contar los capturados
           this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
           
-          this.updateCompletionPercentage();
-          
-          // Reload my chuchemons to sync captured status
-          if (!this.isAdmin) {
-            this.loadMyChuchemons(showLoader);
-          } else {
-            this.applyFilters();
-            this.isLoading = false;
-          }
-        },
-        error: (error) => {
-          console.error('Error loading Chuchemons:', error);
-          this.errorMessage = 'Error al cargar los Chuchemons';
-          this.isLoading = false;
-        }
-      });
-  }
-
-  loadMyChuchemons(showLoader: boolean = true): void {
-    this.chuchemonService.getMyChuchemons()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.myChuchemons = data as ChuchemonExtended[];
-          // Update captured state and per-user disease summary in all chuchemons list
-          const myMap = new Map(this.myChuchemons.map(c => [c.id, c]));
-          this.chuchemons.forEach(c => {
-            const owned = myMap.get(c.id);
-            c.captured = !!owned;
-            c.count = owned?.count ?? c.count;
-            c.active_infections = owned?.active_infections ?? [];
-            c.has_active_infections = owned?.has_active_infections ?? false;
-            c.cannot_eat = owned?.cannot_eat ?? false;
-            c.cannot_eat_reason = owned?.cannot_eat_reason ?? null;
-          });
-          this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
           this.updateCompletionPercentage();
           this.applyFilters();
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error loading my Chuchemons:', error);
-          if (showLoader) {
-            this.isLoading = false;
-          }
+          console.error('Error loading Chuchemons:', error);
+          this.errorMessage = 'Error al cargar los Chuchemons';
+          this.isLoading = false;
         }
       });
   }
@@ -320,8 +284,8 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           // Recargar datos
-          this.loadChuchemons();
-          this.loadMyChuchemons();
+          this.chuchemonService.invalidateCaches();
+          this.loadChuchemons(true, true);
         },
         error: (error) => {
           console.error('Error capturing chuchemon:', error);
@@ -365,8 +329,8 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
           this.showEvolutionDialog = false;
           this.evolvingChuchemonId = null;
           // Recargar datos
-          this.loadChuchemons();
-          this.loadMyChuchemons();
+          this.chuchemonService.invalidateCaches();
+          this.loadChuchemons(true, true);
         },
         error: (error) => {
           console.error('Error evolving chuchemon:', error);
