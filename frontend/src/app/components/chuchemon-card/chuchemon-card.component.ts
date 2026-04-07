@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './chuchemon-card.component.html',
   styleUrls: ['./chuchemon-card.component.css']
 })
-export class ChuchemonCardComponent implements OnInit {
+export class ChuchemonCardComponent {
   @Input() chuchemon: any = null;
   @Input() locked = false;
   @Input() showCaptureBtn = false;
@@ -20,12 +20,19 @@ export class ChuchemonCardComponent implements OnInit {
   @Output() details  = new EventEmitter<number>();
   @Output() evolve  = new EventEmitter<number>();
   @Output() cardClick = new EventEmitter<any>();
-
-  constructor(private cdRef: ChangeDetectorRef) {}
-
-  ngOnInit(): void {
-    // Forzar detección de cambios para asegurar que las imágenes se muestren
-    this.cdRef.detectChanges();
+  private normalizeElement(element?: string | null): 'Terra' | 'Aire' | 'Aigua' | '' {
+    switch (element) {
+      case 'Terra':
+      case 'Tierra':
+        return 'Terra';
+      case 'Aigua':
+      case 'Agua':
+        return 'Aigua';
+      case 'Aire':
+        return 'Aire';
+      default:
+        return '';
+    }
   }
 
   get sizeBadge(): string {
@@ -36,12 +43,24 @@ export class ChuchemonCardComponent implements OnInit {
   }
 
   getElementLabel(element?: string | null): string {
-    switch (element) {
+    switch (this.normalizeElement(element)) {
       case 'Aigua': return 'Agua';
       case 'Terra': return 'Tierra';
       case 'Aire': return 'Aire';
       default: return element ?? 'Desconocido';
     }
+  }
+
+  isWaterType(): boolean {
+    return this.normalizeElement(this.chuchemon?.element) === 'Aigua';
+  }
+
+  isEarthType(): boolean {
+    return this.normalizeElement(this.chuchemon?.element) === 'Terra';
+  }
+
+  isAirType(): boolean {
+    return this.normalizeElement(this.chuchemon?.element) === 'Aire';
   }
 
   get quantityLabel(): string {
@@ -55,10 +74,8 @@ export class ChuchemonCardComponent implements OnInit {
   }
 
   onDetails(e: Event): void {
-    console.log('onDetails called for chuchemon:', this.chuchemon?.name, 'ID:', this.chuchemon?.id);
     e.stopPropagation();
     if (this.chuchemon?.id) {
-      console.log('Emitting details event with ID:', this.chuchemon.id);
       this.details.emit(this.chuchemon.id);
     } else {
       console.error('No chuchemon ID to emit');

@@ -14,6 +14,21 @@ export class ChuchemonDetailsModalComponent {
   @Input() isVisible: boolean = false;
   @Output() close = new EventEmitter<void>();
 
+  private normalizeElement(element?: string | null): 'Terra' | 'Aire' | 'Aigua' | '' {
+    switch (element) {
+      case 'Terra':
+      case 'Tierra':
+        return 'Terra';
+      case 'Aigua':
+      case 'Agua':
+        return 'Aigua';
+      case 'Aire':
+        return 'Aire';
+      default:
+        return '';
+    }
+  }
+
   onClose(): void {
     console.log('Closing details modal');
     this.close.emit();
@@ -28,7 +43,7 @@ export class ChuchemonDetailsModalComponent {
   }
 
   getElementColor(element: string): string {
-    switch(element) {
+    switch (this.normalizeElement(element)) {
       case 'Terra': return '#d4a574';
       case 'Aire': return '#87ceeb';
       case 'Aigua': return '#3b5bdb';
@@ -37,7 +52,7 @@ export class ChuchemonDetailsModalComponent {
   }
 
   getElementLabel(element: string): string {
-    switch (element) {
+    switch (this.normalizeElement(element)) {
       case 'Terra': return 'Tierra';
       case 'Aire': return 'Aire';
       case 'Aigua': return 'Agua';

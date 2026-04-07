@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subject, interval } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
+import { Subject, Subscription, interval } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { EvolutionService } from '../../services/evolution.service';
@@ -17,6 +17,8 @@ interface ChuchemonExtended extends Chuchemon {
   count?: number;
 }
 
+type ElementFilter = 'Todos' | 'Terra' | 'Aire' | 'Aigua';
+
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
@@ -28,7 +30,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   chuchemons: ChuchemonExtended[] = [];
   myChuchemons: ChuchemonExtended[] = [];
   filteredChuchemons: ChuchemonExtended[] = [];
-  selectedElement: 'Todos' | 'Terra' | 'Aire' | 'Aigua' = 'Todos';
+  selectedElement: ElementFilter = 'Todos';
   selectedSize: 'Todas' | 'Petit' | 'Mitjà' | 'Gran' = 'Todas';
   selectedTab: 'todos' | 'mis' = 'todos';
   searchQuery: string = '';
@@ -52,13 +54,17 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   selectedChuchemonForDetails: ChuchemonExtended | null = null;
 
   private pageVisible = true;
-  private autoRefreshSubscription: any;
+  private autoRefreshSubscription?: Subscription;
+  private readonly visibilityChangeHandler = () => {
+    if (!document.hidden) {
+      this.loadChuchemons(false);
+    }
+  };
 
   constructor(
     private chuchemonService: ChuchemonService,
     private evolutionService: EvolutionService,
-    private authService: AuthService,
-    private cdRef: ChangeDetectorRef
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -69,16 +75,13 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     this.setupAutoRefresh();
     
     // Reload when page/tab becomes visible
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        this.loadChuchemons();
-      }
-    });
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
     if (this.autoRefreshSubscription) {
       this.autoRefreshSubscription.unsubscribe();
     }
@@ -90,7 +93,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         if (!this.isLoading && !document.hidden) {
-          this.loadChuchemons();
+          this.loadChuchemons(false);
         }
       });
   }
@@ -98,7 +101,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   @HostListener('window:focus', ['$event'])
   onWindowFocus(event: any): void {
     // Reload when window regains focus
-    this.loadChuchemons();
+    this.loadChuchemons(false);
   }
 
   checkAdminStatus(): void {
@@ -107,7 +110,6 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (user) => {
           this.isAdmin = user?.is_admin ?? false;
-          console.log('User admin status:', this.isAdmin, 'User:', user);
         },
         error: (error) => {
           console.error('Error checking admin status:', error);
@@ -115,9 +117,11 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       });
   }
 
-  loadChuchemons(): void {
-    this.isLoading = true;
-    this.errorMessage = null;
+  loadChuchemons(showLoader: boolean = true): void {
+    if (showLoader) {
+      this.isLoading = true;
+      this.errorMessage = null;
+    }
 
     this.chuchemonService.getAllChuchemons()
       .pipe(takeUntil(this.destroy$))
@@ -133,44 +137,39 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
           
           // Reload my chuchemons to sync captured status
           if (!this.isAdmin) {
-            this.loadMyChuchemons();
+            this.loadMyChuchemons(showLoader);
           } else {
             this.applyFilters();
             this.isLoading = false;
-            this.cdRef.detectChanges();
           }
         },
         error: (error) => {
           console.error('Error loading Chuchemons:', error);
           this.errorMessage = 'Error al cargar los Chuchemons';
           this.isLoading = false;
-          this.cdRef.detectChanges();
         }
       });
   }
 
-  loadMyChuchemons(): void {
-    console.log('Loading my chuchemons...');
+  loadMyChuchemons(showLoader: boolean = true): void {
     this.chuchemonService.getMyChuchemons()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('My chuchemons loaded:', data);
           this.myChuchemons = data as ChuchemonExtended[];
           // Update captured status in all chuchemons list
           const myIds = new Set(this.myChuchemons.map(c => c.id));
           this.chuchemons.forEach(c => c.captured = myIds.has(c.id));
-          console.log('Updated captured status. Total captured:', this.chuchemons.filter(c => c.captured).length);
           this.totalCaptured = this.chuchemons.filter(c => c.captured).length;
           this.updateCompletionPercentage();
           this.applyFilters();
           this.isLoading = false;
-          this.cdRef.detectChanges();
         },
         error: (error) => {
           console.error('Error loading my Chuchemons:', error);
-          this.isLoading = false;
-          this.cdRef.detectChanges();
+          if (showLoader) {
+            this.isLoading = false;
+          }
         }
       });
   }
@@ -195,7 +194,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
 
     // Aplicar filtros de elemento y búsqueda
     if (this.selectedElement !== 'Todos') {
-      filtered = filtered.filter(c => c.element === this.selectedElement);
+      filtered = filtered.filter(c => this.normalizeElement(c.element) === this.selectedElement);
     }
 
     if (this.selectedSize !== 'Todas') {
@@ -235,11 +234,26 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   getElementColor(element: string): string {
-    switch(element) {
+    switch (this.normalizeElement(element)) {
       case 'Terra': return '#d4a574';
       case 'Aire': return '#87ceeb';
       case 'Aigua': return '#3b5bdb';
       default: return '#808080';
+    }
+  }
+
+  private normalizeElement(element?: string | null): 'Terra' | 'Aire' | 'Aigua' | '' {
+    switch (element) {
+      case 'Terra':
+      case 'Tierra':
+        return 'Terra';
+      case 'Aigua':
+      case 'Agua':
+        return 'Aigua';
+      case 'Aire':
+        return 'Aire';
+      default:
+        return '';
     }
   }
 
@@ -257,9 +271,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   isCaptured(chuchemon: ChuchemonExtended): boolean {
-    const captured = chuchemon.captured ?? false;
-    console.log('isCaptured for', chuchemon.name, ':', captured);
-    return captured;
+    return chuchemon.captured ?? false;
   }
 
   isBlockedForDisplay(chuchemon: ChuchemonExtended): boolean {
@@ -351,8 +363,6 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   openDetailsModal(chuchemonId: number): void {
-    console.log('Opening details modal for chuchemon ID:', chuchemonId);
-
     // Buscar en todos los arrays posibles
     let chuchemon = this.chuchemons.find(c => c.id === chuchemonId);
     if (!chuchemon) {
@@ -363,10 +373,8 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     }
 
     if (chuchemon) {
-      console.log('Found chuchemon:', chuchemon);
       this.selectedChuchemonForDetails = chuchemon;
       this.showDetailsModal = true;
-      console.log('Modal should be visible now');
     } else {
       console.error('Chuchemon not found with ID:', chuchemonId);
     }

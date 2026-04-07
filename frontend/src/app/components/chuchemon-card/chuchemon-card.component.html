@@ -1,10 +1,10 @@
 <article
   class="cc-card card shadow-sm"
   [ngClass]="{
-    'cc-locked':   locked,
-    'cc-tipo-agua':   chuchemon?.element === 'Aigua',
-    'cc-tipo-tierra': chuchemon?.element === 'Terra',
-    'cc-tipo-aire':   chuchemon?.element === 'Aire'
+    'cc-locked': locked,
+    'cc-tipo-agua': isWaterType(),
+    'cc-tipo-tierra': isEarthType(),
+    'cc-tipo-aire': isAirType()
   }"
   tabindex="0"
   (click)="onCardClick()"
@@ -19,9 +19,9 @@
     <span
       class="cc-badge cc-badge-tipo"
       [ngClass]="{
-        'badge-agua':   chuchemon?.element === 'Aigua',
-        'badge-tierra': chuchemon?.element === 'Terra',
-        'badge-aire':   chuchemon?.element === 'Aire'
+        'badge-agua': isWaterType(),
+        'badge-tierra': isEarthType(),
+        'badge-aire': isAirType()
       }"
     >{{ getElementLabel(chuchemon?.element) }}</span>
     <span class="cc-badge cc-badge-mida">Tamaño {{ sizeBadge }}</span>
