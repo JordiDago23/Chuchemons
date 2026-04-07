@@ -345,6 +345,66 @@ export class MochilaComponent implements OnInit {
     return this.inventorySlots.filter(s => s.kind === this.inventoryFilter || s.kind === 'empty');
   }
 
+  // ── Popup ─────────────────────────────────────────────────────────────────
+  showPopup = false;
+  popupItem: {
+    name: string;
+    description: string;
+    kind: 'xux' | 'vacuna';
+    quantity: number;
+    imageUrl?: string;
+    imageEmoji?: string;
+    diseases?: string[];
+    applyLabel: string;
+  } | null = null;
+
+  private readonly XUX_POPUP_DESCRIPTION = '3 xuxes per pujar de petit a mitjà, i 5 de mitjà a gran.';
+
+  private readonly VACUNA_META: { [name: string]: { description: string; diseases: string[]; emoji: string } } = {
+    'Xocolatina':     { description: 'Al usar-la en un Xuxemon elimina "Bajón de azúcar".', diseases: ['Bajón de azúcar'], emoji: '🍫' },
+    'Xal de fruites': { description: 'Al usar-la en un Xuxemon elimina "Atracón".',          diseases: ['Atracón'],          emoji: '🍬' },
+    'Inxulina':       { description: 'Cura totes les malalties del Xuxemon.',                  diseases: ['Totes les malalties'], emoji: '💉' },
+  };
+
+  openPopup(slot: InventorySlot) {
+    if (slot.kind === 'xux' && slot.xuxItem) {
+      const imgUrl = slot.xuxItem.chuchemon.image
+        ? 'http://localhost:8000/chuchemons/' + slot.xuxItem.chuchemon.image
+        : undefined;
+      this.popupItem = {
+        name: 'Xux de ' + slot.xuxItem.chuchemon.name,
+        description: this.XUX_POPUP_DESCRIPTION,
+        kind: 'xux',
+        quantity: slot.slotQty ?? 0,
+        imageUrl: imgUrl,
+        imageEmoji: '🍬',
+        applyLabel: 'Aplicar Xux',
+      };
+    } else if (slot.kind === 'vacuna' && slot.vacunaItem) {
+      const meta = this.VACUNA_META[slot.vacunaItem.name];
+      this.popupItem = {
+        name: slot.vacunaItem.name,
+        description: meta?.description ?? slot.vacunaItem.description,
+        kind: 'vacuna',
+        quantity: slot.vacunaItem.quantity,
+        imageEmoji: meta?.emoji ?? '💉',
+        diseases: meta?.diseases,
+        applyLabel: 'Aplicar Vacuna',
+      };
+    }
+    this.showPopup = true;
+  }
+
+  closePopup() {
+    this.showPopup = false;
+    this.popupItem = null;
+  }
+
+  applyItem() {
+    // TODO: implement apply logic
+    this.closePopup();
+  }
+
   logout() {
     this.auth.logout();
   }

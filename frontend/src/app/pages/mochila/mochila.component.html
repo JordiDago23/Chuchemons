@@ -144,6 +144,7 @@
                 <span class="stack-label">Espacio:</span>
                 <span class="slot-chip">#{{ slot.index }}</span>
               </div>
+              <button class="detail-btn" (click)="openPopup(slot)" [attr.aria-label]="'Aplicar Xux de ' + slot.xuxItem.chuchemon.name">Aplicar</button>
             </div>
           }
 
@@ -172,7 +173,7 @@
                 <span class="stack-label">Espacio:</span>
                 <span class="slot-chip">#{{ slot.index }}</span>
               </div>
-              <button class="detail-btn" [attr.aria-label]="'Ver detalles de ' + slot.vacunaItem.name">Ver detalles</button>
+              <button class="detail-btn" (click)="openPopup(slot)" [attr.aria-label]="'Aplicar ' + slot.vacunaItem.name">Aplicar</button>
             </div>
           }
 
@@ -362,5 +363,68 @@
 
     } <!-- end @else -->
   </main>
+
+  <!-- ── POPUP MODAL ─────────────────────────────────────────────────────── -->
+  @if (showPopup && popupItem) {
+    <div class="popup-overlay" (click)="closePopup()" role="dialog" aria-modal="true" [attr.aria-label]="popupItem.name">
+      <div class="popup-box" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="popup-header">
+          <div class="popup-header-left">
+            <div class="popup-icon-wrap" [class.popup-icon-xux]="popupItem.kind === 'xux'" [class.popup-icon-vacuna]="popupItem.kind === 'vacuna'">
+              <span class="popup-icon-emoji">{{ popupItem.imageEmoji }}</span>
+            </div>
+            <div class="popup-header-text">
+              <h3 class="popup-title">{{ popupItem.name }}</h3>
+              <span class="popup-subtitle">
+                {{ popupItem.kind === 'vacuna' ? 'Vacuna' : 'Xux' }} • Quantitat disponible: {{ popupItem.quantity }}
+              </span>
+            </div>
+          </div>
+          <button class="popup-close-x" (click)="closePopup()" aria-label="Tancar">✕</button>
+        </div>
+
+        <!-- Image -->
+        @if (popupItem.imageUrl) {
+          <div class="popup-img-wrap">
+            <img [src]="popupItem.imageUrl" [alt]="popupItem.name" class="popup-img" />
+          </div>
+        } @else {
+          <div class="popup-img-placeholder">
+            <span class="popup-img-emoji">{{ popupItem.imageEmoji }}</span>
+          </div>
+        }
+
+        <!-- Description -->
+        <div class="popup-desc-box">
+          <div class="popup-desc-header">
+            <span class="popup-desc-icon">ℹ</span>
+            <span class="popup-desc-label">Descripció</span>
+          </div>
+          <p class="popup-desc-text">{{ popupItem.description }}</p>
+        </div>
+
+        <!-- Diseases (vacuna only) -->
+        @if (popupItem.diseases && popupItem.diseases.length > 0) {
+          <div class="popup-diseases-box">
+            <p class="popup-diseases-title">Cura les següents malalties:</p>
+            <div class="popup-diseases-chips">
+              @for (d of popupItem.diseases; track d) {
+                <span class="popup-disease-chip">{{ d }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Buttons -->
+        <div class="popup-actions">
+          <button class="popup-btn-apply" (click)="applyItem()">{{ popupItem.applyLabel }}</button>
+          <button class="popup-btn-close" (click)="closePopup()">Tancar</button>
+        </div>
+
+      </div>
+    </div>
+  }
 
 </div>
