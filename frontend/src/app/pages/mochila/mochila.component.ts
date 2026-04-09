@@ -413,6 +413,7 @@ export class MochilaComponent implements OnInit {
     'Xocolatina':     { description: 'Al usarla en un Xuxemon elimina "Bajón de azúcar".',       diseases: ['Bajón de azúcar'], emoji: '🍫' },
     'Xal de fruits':  { description: 'Al usarla en un Xuxemon elimina "Atracón".',               diseases: ['Atracón'],          emoji: '🍬' },
     'Insulina':       { description: 'Cura todas las enfermedades del Xuxemon.',                  diseases: ['Todas las enfermedades'], emoji: '💉' },
+    'Fruita fresca':  { description: 'Al usarla en un Xuxemon elimina "Sobredosis de sucre".',   diseases: ['Sobredosis de sucre'], emoji: '🍎' },
   };
 
   openPopup(slot: InventorySlot) {

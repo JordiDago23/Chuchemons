@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserInfection extends Model
 {
     protected $table = 'user_infections';
-    protected $fillable = ['user_id', 'chuchemon_id', 'malaltia_id', 'infection_percentage', 'is_active', 'infected_at', 'cured_at'];
+    protected $fillable = ['user_id', 'chuchemon_id', 'malaltia_id', 'infection_percentage', 'original_mida', 'is_active', 'infected_at', 'cured_at'];
     protected $casts = [
         'infected_at' => 'datetime',
         'cured_at' => 'datetime',

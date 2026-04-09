@@ -93,6 +93,7 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/settings/schedules/chuchemon', [AdminController::class, 'updateDailyChuchemonSchedule']);
         Route::post('/users/{id}/add-xux',          [AdminController::class, 'addXuxToUser']);
         Route::post('/users/{id}/add-item',         [AdminController::class, 'addItemToUser']);
+        Route::post('/users/{id}/add-vaccine',      [AdminController::class, 'addVaccineToUser']);
         Route::post('/users/{id}/add-chuchemon',    [AdminController::class, 'addRandomChuchemon']);
 
         // CRUD Xuxemons (admin)

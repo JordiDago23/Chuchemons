@@ -19,18 +19,26 @@ export class AdminComponent implements OnInit {
   activeTab: 'jugadors' | 'recursos' | 'configuracio' | 'horaris' = 'jugadors';
 
   // ── Stats ────────────────────────────────────────────────────────────────
-  stats = { jugadors: 0, totalUsuaris: 0, xuemons: 0, taxaInfeccio: 0 };
+  stats = { jugadors: 0, totalUsuaris: 0, xuemons: 0 };
 
   // ── Users list ───────────────────────────────────────────────────────────
   users: any[] = [];
   usersLoading = false;
 
-  // ── Afegir Xuxes ─────────────────────────────────────────────────────────
+  // ── Añadir Xuxes ───────────────────────────────────────────────────────────
   xuxPlayerId: number | null = null;
+  xuxItemId: number = 1;
   xuxQty = 10;
   xuxLoading = false;
   xuxFeedback = '';
   xuxFeedbackType: 'success' | 'error' | '' = '';
+
+  readonly xuxTypes = [
+    { id: 1, name: 'Xux de Maduixa', emoji: '🍓' },
+    { id: 2, name: 'Xux de Llimona', emoji: '🍋' },
+    { id: 3, name: 'Xux de Cola', emoji: '🥤' },
+    { id: 6, name: 'Xux Exp', emoji: '⭐' },
+  ];
 
   // ── Afegir Xuxemon Aleatori ───────────────────────────────────────────────
   aleatorioPlayerId: number | null = null;
@@ -38,14 +46,20 @@ export class AdminComponent implements OnInit {
   aleatorioFeedback = '';
   aleatorioFeedbackType: 'success' | 'error' | '' = '';
 
-  // ── Afegir Vacunes ────────────────────────────────────────────────────────
+  // ── Añadir Vacunas ──────────────────────────────────────────────────────
   vacunaPlayerId: number | null = null;
-  vacunaType = 'Vacuna Mareo';
+  vacunaId: number = 1;
+  vacunaQty = 1;
   vacunaLoading = false;
   vacunaFeedback = '';
   vacunaFeedbackType: 'success' | 'error' | '' = '';
 
-  readonly vacunaTypes = ['Vacuna Mareo', 'Vacuna Atracón', 'Insulina'];
+  readonly vacunaTypes = [
+    { id: 1, name: 'Xocolatina', emoji: '🍫', desc: 'Cura Bajón de azúcar' },
+    { id: 2, name: 'Xal de fruits', emoji: '🍬', desc: 'Cura Atracón' },
+    { id: 3, name: 'Insulina', emoji: '💉', desc: 'Cura todas las enfermedades' },
+    { id: 4, name: 'Fruita fresca', emoji: '🍎', desc: 'Cura Sobredosis de sucre' },
+  ];
 
   // ── Configuració ─────────────────────────────────────────────────────────
   cfg = { xuxPetitMitja: 3, xuxMitjaGran: 5 };
@@ -53,10 +67,10 @@ export class AdminComponent implements OnInit {
   cfgFeedback = '';
   cfgFeedbackType: 'success' | 'error' | '' = '';
 
-  taxaInfeccioEdit = 12;
   taxaLoading = false;
   taxaFeedback = '';
   taxaFeedbackType: 'success' | 'error' | '' = '';
+  diseases: { id: number; name: string; infection_rate: number }[] = [];
 
   saveConfig() {
     this.cfgLoading = true;
@@ -84,17 +98,16 @@ export class AdminComponent implements OnInit {
     this.taxaLoading = true;
     this.taxaFeedback = '';
     this.http.put<any>(`${this.apiUrl}/admin/settings/infection-rate`, {
-      taxa_infeccio: this.taxaInfeccioEdit,
+      diseases: this.diseases.map(d => ({ id: d.id, infection_rate: d.infection_rate })),
     }).subscribe({
       next: (res) => {
-        this.stats.taxaInfeccio = res.settings.taxa_infeccio;
-        this.taxaInfeccioEdit = res.settings.taxa_infeccio;
+        this.diseases = res.settings.diseases;
         this.taxaFeedback = res.message;
         this.taxaFeedbackType = 'success';
         this.taxaLoading = false;
       },
       error: (err) => {
-        this.taxaFeedback = err.error?.message || 'Error actualizando la tasa de infección.';
+        this.taxaFeedback = err.error?.message || 'Error actualizando las tasas de infección.';
         this.taxaFeedbackType = 'error';
         this.taxaLoading = false;
       }
@@ -183,7 +196,6 @@ export class AdminComponent implements OnInit {
         this.stats.jugadors      = data.jugadors;
         this.stats.totalUsuaris  = data.total_usuaris;
         this.stats.xuemons       = data.xuemons;
-        this.stats.taxaInfeccio  = data.taxa_infeccio;
       }
     });
   }
@@ -193,7 +205,7 @@ export class AdminComponent implements OnInit {
       next: (data) => {
         this.cfg.xuxPetitMitja = data.config.xux_petit_mitja;
         this.cfg.xuxMitjaGran = data.config.xux_mitja_gran;
-        this.taxaInfeccioEdit = data.infection.taxa_infeccio;
+        this.diseases = data.infection.diseases;
         this.horariXuxes.hora = data.schedules.daily_xux_hour;
         this.horariXuxes.quantitat = data.schedules.daily_xux_quantity;
         this.horariXuxemon.hora = data.schedules.daily_chuchemon_hour;
@@ -217,7 +229,10 @@ export class AdminComponent implements OnInit {
     if (!this.xuxPlayerId || this.xuxQty < 1) return;
     this.xuxLoading = true;
     this.xuxFeedback = '';
-    this.http.post<any>(`${this.apiUrl}/admin/users/${this.xuxPlayerId}/add-xux`, { quantity: this.xuxQty }).subscribe({
+    this.http.post<any>(`${this.apiUrl}/admin/users/${this.xuxPlayerId}/add-item`, {
+      item_id: this.xuxItemId,
+      quantity: this.xuxQty,
+    }).subscribe({
       next: (res) => {
         this.xuxFeedback     = res.message;
         this.xuxFeedbackType = 'success';
@@ -255,13 +270,22 @@ export class AdminComponent implements OnInit {
     if (!this.vacunaPlayerId) return;
     this.vacunaLoading = true;
     this.vacunaFeedback = '';
-    // Vacunes are not yet stored in DB — show a placeholder response
-    setTimeout(() => {
-      const player = this.users.find(u => u.id === this.vacunaPlayerId);
-      this.vacunaFeedback     = `Se ha añadido 1 ${this.vacunaType} a la mochila de ${player?.player_id ?? 'jugador'}.`;
-      this.vacunaFeedbackType = 'success';
-      this.vacunaLoading      = false;
-    }, 600);
+    this.http.post<any>(`${this.apiUrl}/admin/users/${this.vacunaPlayerId}/add-vaccine`, {
+      vaccine_id: this.vacunaId,
+      quantity: this.vacunaQty,
+    }).subscribe({
+      next: (res) => {
+        this.vacunaFeedback     = res.message;
+        this.vacunaFeedbackType = 'success';
+        this.vacunaLoading      = false;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.vacunaFeedback     = err.error?.message || 'Error al añadir vacuna.';
+        this.vacunaFeedbackType = 'error';
+        this.vacunaLoading      = false;
+      }
+    });
   }
 
   avatarColor(playerId: string): string {

@@ -7,6 +7,8 @@ use App\Models\Chuchemon;
 use App\Models\GameSetting;
 use App\Models\MochilaXux;
 use App\Models\Item;
+use App\Models\Vaccine;
+use App\Models\Malaltia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +28,7 @@ class AdminController extends Controller
                 'xux_mitja_gran' => GameSetting::getInt('xux_mitja_gran', 5),
             ],
             'infection' => [
-                'taxa_infeccio' => GameSetting::getInt('taxa_infeccio', 12),
+                'diseases' => Malaltia::select('id', 'name', 'infection_rate')->get(),
             ],
             'schedules' => [
                 'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
@@ -43,7 +45,6 @@ class AdminController extends Controller
             'jugadors'      => User::where('is_admin', false)->count(),
             'total_usuaris' => User::count(),
             'xuemons'       => Chuchemon::count(),
-            'taxa_infeccio' => GameSetting::getInt('taxa_infeccio', 12),
         ]);
     }
 
@@ -75,17 +76,21 @@ class AdminController extends Controller
     public function updateInfectionRate(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'taxa_infeccio' => 'required|integer|min:0|max:100',
+            'diseases' => 'required|array',
+            'diseases.*.id' => 'required|exists:malalties,id',
+            'diseases.*.infection_rate' => 'required|integer|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        GameSetting::setValue('taxa_infeccio', (int) $request->taxa_infeccio);
+        foreach ($request->diseases as $d) {
+            Malaltia::where('id', $d['id'])->update(['infection_rate' => $d['infection_rate']]);
+        }
 
         return response()->json([
-            'message' => 'Tasa de infección actualizada correctamente.',
+            'message' => 'Tasas de infección actualizadas correctamente.',
             'settings' => $this->settingsPayload()['infection'],
         ]);
     }
@@ -312,6 +317,58 @@ class AdminController extends Controller
             'message' => "S'han afegit {$request->quantity} {$item->name} a la motxilla de {$targetUser->player_id}.",
             'item' => $item,
             'added' => $request->quantity,
+        ]);
+    }
+
+    // ── POST /api/admin/users/{id}/add-vaccine ────────────────────────────────
+    public function addVaccineToUser(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'vaccine_id' => 'required|exists:vaccines,id',
+            'quantity' => 'required|integer|min:1|max:500',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $targetUser = User::find($id);
+        if (!$targetUser) {
+            return response()->json(['message' => 'Jugador no encontrado.'], 404);
+        }
+
+        $vaccine = Vaccine::find($request->vaccine_id);
+        if (!$vaccine) {
+            return response()->json(['message' => 'Vacuna no encontrada.'], 404);
+        }
+
+        $mochilaItems = MochilaXux::where('user_id', $targetUser->id)->where('quantity', '>', 0)->get();
+        $usedSpaces = $mochilaItems->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+        $freeSpaces = self::MAX_SPACES - $usedSpaces;
+
+        $qtyToAdd = (int) $request->quantity;
+        if ($freeSpaces < $qtyToAdd) {
+            return response()->json([
+                'message' => 'La mochila del jugador no tiene espacio suficiente.',
+                'added' => 0,
+            ], 422);
+        }
+
+        $existing = $mochilaItems->where('vaccine_id', $vaccine->id)->whereNull('item_id')->first();
+        if ($existing) {
+            $existing->quantity += $qtyToAdd;
+            $existing->save();
+        } else {
+            MochilaXux::create([
+                'user_id'    => $targetUser->id,
+                'vaccine_id' => $vaccine->id,
+                'quantity'   => $qtyToAdd,
+            ]);
+        }
+
+        return response()->json([
+            'message' => "Se han añadido {$qtyToAdd} {$vaccine->name} a la mochila de {$targetUser->player_id}.",
+            'vaccine' => $vaccine,
+            'added'   => $qtyToAdd,
         ]);
     }
 }

@@ -74,41 +74,86 @@ class LevelingController extends Controller
 
     private static function maybeApplyRandomInfection(int $userId, int $chuchemonId): ?array
     {
-        $taxaInfeccio = GameSetting::getInt('taxa_infeccio', 12);
-
-        if ($taxaInfeccio <= 0 || rand(1, 100) > $taxaInfeccio) {
-            return null;
-        }
-
+        // Each disease has its own infection_rate (%). Check each independently.
         $activeMalaltiaIds = UserInfection::query()
             ->where('user_id', $userId)
             ->where('chuchemon_id', $chuchemonId)
             ->where('is_active', true)
             ->pluck('malaltia_id');
 
-        $malaltia = Malaltia::query()
-            ->when($activeMalaltiaIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $activeMalaltiaIds))
-            ->inRandomOrder()
-            ->first();
+        $candidates = Malaltia::query()
+            ->where('infection_rate', '>', 0)
+            ->when($activeMalaltiaIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $activeMalaltiaIds))
+            ->get();
 
-        if (!$malaltia) {
+        if ($candidates->isEmpty()) {
             return null;
+        }
+
+        // Roll for each candidate disease individually
+        $infected = null;
+        foreach ($candidates as $malaltia) {
+            if (rand(1, 100) <= $malaltia->infection_rate) {
+                $infected = $malaltia;
+                break; // Only one infection per action
+            }
+        }
+
+        if (!$infected) {
+            return null;
+        }
+
+        // If Sobredosis de sucre → downgrade mida
+        $originalMida = null;
+        $normalizedName = self::normalizeMalaltiaName($infected->name);
+        if ($normalizedName === 'sobredosis de sucre') {
+            $uc = DB::table('user_chuchemons')
+                ->where('user_id', $userId)
+                ->where('chuchemon_id', $chuchemonId)
+                ->first();
+
+            if ($uc) {
+                $originalMida = $uc->current_mida;
+                $newMida = match ($uc->current_mida) {
+                    'Gran'  => 'Mitjà',
+                    'Mitjà' => 'Petit',
+                    default => 'Petit',
+                };
+
+                if ($newMida !== $uc->current_mida) {
+                    $chuchemon = \App\Models\Chuchemon::find($chuchemonId);
+                    $baseDefense = $chuchemon->defense ?? 50;
+                    $newMaxHp = self::computeMaxHp($baseDefense, $uc->level, $newMida);
+                    $newCurrentHp = min($uc->current_hp, $newMaxHp);
+
+                    DB::table('user_chuchemons')
+                        ->where('user_id', $userId)
+                        ->where('chuchemon_id', $chuchemonId)
+                        ->update([
+                            'current_mida' => $newMida,
+                            'max_hp'       => $newMaxHp,
+                            'current_hp'   => $newCurrentHp,
+                            'updated_at'   => now(),
+                        ]);
+                }
+            }
         }
 
         $infection = UserInfection::create([
             'user_id' => $userId,
             'chuchemon_id' => $chuchemonId,
-            'malaltia_id' => $malaltia->id,
+            'malaltia_id' => $infected->id,
             'infection_percentage' => rand(10, 50),
+            'original_mida' => $originalMida,
             'is_active' => true,
             'infected_at' => now(),
         ]);
 
         return [
-            'id' => $malaltia->id,
-            'name' => $malaltia->name,
-            'type' => $malaltia->type,
-            'severity' => $malaltia->severity,
+            'id' => $infected->id,
+            'name' => $infected->name,
+            'type' => $infected->type,
+            'severity' => $infected->severity,
             'infection_percentage' => $infection->infection_percentage,
         ];
     }
