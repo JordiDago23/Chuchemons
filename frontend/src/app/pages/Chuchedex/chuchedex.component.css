@@ -533,26 +533,77 @@
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    width: 160px;
+  .layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
   }
-
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    flex-direction: row;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.12);
+    z-index: 1000;
+  }
+  .sidebar-brand,
+  .sidebar-footer { display: none; }
+  .sidebar-nav {
+    flex-direction: row;
+    padding: 0.35rem 0;
+    gap: 0;
+    overflow-x: auto;
+    justify-content: space-around;
+    width: 100%;
+  }
+  .nav-item {
+    flex-direction: column;
+    font-size: 0;
+    padding: 0.4rem 0.2rem;
+    margin: 0;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    min-width: 44px;
+    color: transparent;
+  }
+  .nav-item:hover { background: transparent; color: transparent; }
+  .nav-item.active { background: transparent; color: transparent; }
+  .nav-item.active .nav-icon { color: #e63946; }
+  .nav-icon { font-size: 1.3rem; width: auto; color: #555; }
   .main {
+    width: 100%;
     padding: 1rem;
+    padding-bottom: 72px;
+    height: auto;
+    min-height: calc(100vh - 56px);
     gap: 0.8rem;
   }
-
   .chuchemons-grid { gap: 0.8rem; }
-
   .filters-section {
     flex-direction: column;
     gap: 10px;
   }
-
   .search-box-wrapper {
     width: 100%;
     min-width: unset;
   }
+  .page-header h1 { font-size: 1.4rem; }
+}
+
+@media (max-width: 480px) {
+  .chuchemons-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .main { padding: 0.75rem; padding-bottom: 72px; }
+  .card-image { height: 100px; }
 }
 
 /* ─── ACCESSIBILITAT ─────────────────────────────────────────────────────────── */

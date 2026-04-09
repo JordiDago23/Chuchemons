@@ -399,6 +399,24 @@
   background: linear-gradient(135deg, #fff3e0, #ffcc02);
 }
 
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .infections-panel { padding: 14px; }
+  .infections-panel h2 { font-size: 1.3rem; }
+  .infections-list { grid-template-columns: 1fr; }
+  .vaccines-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .low-hp-actions { flex-direction: column; align-items: flex-start; }
+  .evolve-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .btn-evolve-inline { margin-left: 0; }
+  .todos-list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .infections-panel { padding: 10px; }
+  .cure-options { flex-direction: column; }
+  .cure-options button { width: 100%; }
+}
+
 .todo-card.priority-low {
   border-left-color: #4caf50;
   background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
