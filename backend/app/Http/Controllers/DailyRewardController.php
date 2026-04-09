@@ -6,6 +6,8 @@ use App\Models\DailyReward;
 use App\Models\Chuchemon;
 use App\Models\GameSetting;
 use App\Models\Item;
+use App\Models\MochilaXux;
+use App\Models\Vaccine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -99,11 +101,49 @@ class DailyRewardController extends Controller
                 ], 400);
             }
 
+            // Repartir 10 items: cantidad aleatoria de vacunas (1-3), el resto xuxes
+            $totalItems = $reward->quantity; // 10
+            $vaccineQty = rand(1, 3);
+            $xuxQty = $totalItems - $vaccineQty;
+
             // Agregar los xuxes a la mochila
-            DB::table('mochila_xuxes')->updateOrCreate(
-                ['user_id' => $user->id, 'item_id' => $reward->item_id],
-                ['quantity' => DB::raw('quantity + ' . $reward->quantity)]
-            );
+            $xuxRow = MochilaXux::where('user_id', $user->id)
+                ->where('item_id', $reward->item_id)
+                ->whereNull('chuchemon_id')
+                ->whereNull('vaccine_id')
+                ->first();
+
+            if ($xuxRow) {
+                $xuxRow->increment('quantity', $xuxQty);
+            } else {
+                MochilaXux::create([
+                    'user_id'  => $user->id,
+                    'item_id'  => $reward->item_id,
+                    'quantity' => $xuxQty,
+                ]);
+            }
+
+            // Agregar vacunas aleatorias a la mochila
+            $vaccine = Vaccine::inRandomOrder()->first();
+            $vaccineName = null;
+            if ($vaccine) {
+                $vaccineRow = MochilaXux::where('user_id', $user->id)
+                    ->where('vaccine_id', $vaccine->id)
+                    ->whereNull('item_id')
+                    ->whereNull('chuchemon_id')
+                    ->first();
+
+                if ($vaccineRow) {
+                    $vaccineRow->increment('quantity', $vaccineQty);
+                } else {
+                    MochilaXux::create([
+                        'user_id'    => $user->id,
+                        'vaccine_id' => $vaccine->id,
+                        'quantity'   => $vaccineQty,
+                    ]);
+                }
+                $vaccineName = $vaccine->name;
+            }
 
             // Actualizar el reward
             $reward->update([
@@ -112,8 +152,10 @@ class DailyRewardController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Reward de xuxes reclamado exitosamente',
-                'quantity' => $reward->quantity,
+                'message' => 'Reward reclamado exitosamente',
+                'xux_quantity'    => $xuxQty,
+                'vaccine_quantity' => $vaccineQty,
+                'vaccine'  => $vaccineName,
                 'next_available_at' => $reward->next_available_at,
             ], 200);
         } catch (\Exception $e) {
@@ -156,10 +198,24 @@ class DailyRewardController extends Controller
             }
 
             // Capturar el chuchemon
-            DB::table('user_chuchemons')->updateOrCreate(
-                ['user_id' => $user->id, 'chuchemon_id' => $reward->chuchemon_id],
-                ['count' => DB::raw('COALESCE(count, 0) + 1')]
-            );
+            $existing = DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->where('chuchemon_id', $reward->chuchemon_id)
+                ->first();
+
+            if ($existing) {
+                DB::table('user_chuchemons')
+                    ->where('id', $existing->id)
+                    ->increment('count');
+            } else {
+                DB::table('user_chuchemons')->insert([
+                    'user_id'       => $user->id,
+                    'chuchemon_id'  => $reward->chuchemon_id,
+                    'count'         => 1,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+            }
 
             // Actualizar el reward
             $reward->update([
@@ -182,10 +238,9 @@ class DailyRewardController extends Controller
      */
     private function createDailyXuxReward($userId): DailyReward
     {
-        // Obtener un item aleatorio de tipo 'xux' (Xocolatina, Xal de fruits, etc.)
-        $item = Item::where('type', 'vaccine')->inRandomOrder()->first();
+        $item = Item::where('type', 'apilable')->inRandomOrder()->first();
         if (!$item) {
-            $item = Item::first(); // Fallback al primer item
+            $item = Item::first();
         }
 
         $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '06:00');
@@ -195,7 +250,7 @@ class DailyRewardController extends Controller
             'reward_type' => 'xux',
             'item_id' => $item->id,
             'quantity' => GameSetting::getInt('daily_xux_quantity', 10),
-            'next_available_at' => $nextAvailable,
+            'next_available_at' => now(),
         ]);
     }
 
@@ -204,8 +259,11 @@ class DailyRewardController extends Controller
      */
     private function createDailyChuchemonReward($userId): DailyReward
     {
-        // Obtener un chuchemon aleatorio
-        $chuchemon = Chuchemon::inRandomOrder()->first();
+        // Obtener un chuchemon aleatorio de tamaño Petit
+        $chuchemon = Chuchemon::where('mida', 'Petit')->inRandomOrder()->first();
+        if (!$chuchemon) {
+            $chuchemon = Chuchemon::inRandomOrder()->first();
+        }
 
         $nextAvailable = $this->nextAvailableAt('daily_chuchemon_hour', '08:00');
 
@@ -213,7 +271,7 @@ class DailyRewardController extends Controller
             'user_id' => $userId,
             'reward_type' => 'chuchemon',
             'chuchemon_id' => $chuchemon->id,
-            'next_available_at' => $nextAvailable,
+            'next_available_at' => now(),
         ]);
     }
 }

@@ -31,19 +31,13 @@ class ItemSeeder extends Seeder
             'image' => 'xux-cola.png',
         ]);
 
-        // Items no apilables (Vacunes)
         Item::create([
-            'name' => 'Antídot',
-            'description' => 'Cura l\'enverinament',
-            'type' => 'no_apilable',
-            'image' => 'antidot.png',
+            'name' => 'Xux Exp',
+            'description' => 'Xux especial que serveix per pujar de nivell els Xuxemons.',
+            'type' => 'apilable',
+            'image' => 'xux-exp.png',
         ]);
 
-        Item::create([
-            'name' => 'Reviviscència',
-            'description' => 'Reviu un Xuxemon desfet',
-            'type' => 'no_apilable',
-            'image' => 'reviviscencia.png',
-        ]);
+
     }
 }

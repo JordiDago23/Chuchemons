@@ -14,7 +14,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class LevelingController extends Controller
 {
-    private static function normalizeMalaltiaName(?string $name): string
+    public static function normalizeMalaltiaName(?string $name): string
     {
         return str_replace(
             ['á', 'à', 'é', 'è', 'í', 'ì', 'ó', 'ò', 'ú', 'ù'],
@@ -23,7 +23,7 @@ class LevelingController extends Controller
         );
     }
 
-    private static function mapActiveInfections(int $userId, array $chuchemonIds): Collection
+    public static function mapActiveInfections(int $userId, array $chuchemonIds): Collection
     {
         if (empty($chuchemonIds)) {
             return collect();
@@ -61,6 +61,14 @@ class LevelingController extends Controller
     {
         return $infections->contains(function ($infection) {
             return self::normalizeMalaltiaName($infection['name'] ?? null) === 'atracon';
+        });
+    }
+
+    private static function hasBajonDeAzucar(Collection $infections): bool
+    {
+        return $infections->contains(function ($infection) {
+            $name = self::normalizeMalaltiaName($infection['name'] ?? null);
+            return $name === 'bajon de azucar' || $name === 'bajo de azucar';
         });
     }
 
@@ -201,6 +209,8 @@ class LevelingController extends Controller
                     'user_chuchemons.current_mida',
                     'user_chuchemons.current_hp',
                     'user_chuchemons.max_hp',
+                    'user_chuchemons.attack_boost',
+                    'user_chuchemons.defense_boost',
                 )
                 ->get();
 
@@ -214,28 +224,35 @@ class LevelingController extends Controller
                     $currHp  = $c->current_hp ?? $maxHp;
 
                     $c->experience_progress   = round(($c->experience / $c->experience_for_next_level) * 100, 2);
-                    $c->effective_attack      = self::effectiveAttack($baseAtk, $mida);
-                    $c->effective_defense     = self::effectiveDefense($baseDef, $mida);
+                    $atkBoost = ($c->attack_boost ?? 0) / 100;
+                    $defBoost = ($c->defense_boost ?? 0) / 100;
+                    $c->effective_attack      = round(self::effectiveAttack($baseAtk, $mida) * (1 + $atkBoost), 1);
+                    $c->effective_defense     = round(self::effectiveDefense($baseDef, $mida) * (1 + $defBoost), 1);
                     $c->max_hp                = $maxHp;
                     $c->current_hp            = min($currHp, $maxHp);
                     $c->hp_percent            = round(($c->current_hp / $maxHp) * 100, 1);
 
-                    // Xuxes disponibles (chuchemon-specific candies in the mochila)
-                    $c->xuxes_qty = MochilaXux::where('user_id', $userId)
-                        ->where('chuchemon_id', $c->id)
-                        ->sum('quantity');
+                    // Per-type xux quantities
+                    $c->xuxes_maduixa = MochilaXux::where('user_id', $userId)->where('item_id', 1)->sum('quantity');
+                    $c->xuxes_llimona = MochilaXux::where('user_id', $userId)->where('item_id', 2)->sum('quantity');
+                    $c->xuxes_cola    = MochilaXux::where('user_id', $userId)->where('item_id', 3)->sum('quantity');
+                    $c->xuxes_exp     = MochilaXux::where('user_id', $userId)->where('item_id', 6)->sum('quantity');
+                    $c->xuxes_qty     = $c->xuxes_maduixa + $c->xuxes_llimona + $c->xuxes_cola + $c->xuxes_exp;
 
                     return $c;
                 })->map(function ($c) use ($infectionMap) {
                     $activeInfections = $infectionMap->get($c->id, collect());
                     $cannotEat = self::hasAtraconInfection($activeInfections);
+                    $hasBajon  = self::hasBajonDeAzucar($activeInfections);
 
                     $c->active_infections = $activeInfections->values()->all();
                     $c->has_active_infections = $activeInfections->isNotEmpty();
                     $c->cannot_eat = $cannotEat;
                     $c->cannot_eat_reason = $cannotEat
-                        ? 'Atracón activo: este Xuxemon no puede comer más Xuxes por ahora.'
+                        ? 'Atracón activo: este Xuxemon no puede alimentarse.'
                         : null;
+                    $c->has_bajon = $hasBajon;
+                    $c->evolve_cost_extra = $hasBajon ? 2 : 0;
 
                     return $c;
                 });
@@ -323,7 +340,7 @@ class LevelingController extends Controller
             if (!$user) return response()->json(['message' => 'Usuario no autenticado'], 401);
 
             $qty = (int) ($request->input('quantity', 1));
-            if ($qty < 1) return response()->json(['message' => 'Quantitat no vàlida'], 422);
+            if ($qty < 1) return response()->json(['message' => 'Cantidad no válida'], 422);
 
             $activeInfections = self::mapActiveInfections($user->id, [$chuchemonId])->get($chuchemonId, collect());
             if (self::hasAtraconInfection($activeInfections)) {
@@ -333,14 +350,14 @@ class LevelingController extends Controller
                 ], 422);
             }
 
-            // Check the user has enough xuxes for this chuchemon
+            // Check the user has enough Xux Exp (item_id=6)
             $mochilaXux = MochilaXux::where('user_id', $user->id)
-                ->where('chuchemon_id', $chuchemonId)
+                ->where('item_id', 6)
                 ->first();
 
             if (!$mochilaXux || $mochilaXux->quantity < $qty) {
                 return response()->json([
-                    'message' => 'No tens prou Xuxes per a aquest Xuxemon.',
+                    'message' => 'No tienes suficientes Xux Exp.',
                     'have'    => $mochilaXux?->quantity ?? 0,
                     'need'    => $qty,
                 ], 422);
@@ -363,7 +380,7 @@ class LevelingController extends Controller
             $newInfection = self::maybeApplyRandomInfection($user->id, $chuchemonId);
             if ($newInfection) {
                 $payload['infection_triggered'] = $newInfection;
-                $payload['message'] = ($payload['message'] ?? 'Experiència afegida') . ' A més, el Xuxemon ha contret una malaltia.';
+                $payload['message'] = ($payload['message'] ?? 'Experiencia añadida') . ' Además, el Xuxemon ha contraído una enfermedad.';
             }
 
             return response()->json($payload, $response->getStatusCode());
@@ -373,7 +390,7 @@ class LevelingController extends Controller
     }
 
     /**
-     * Cura el Xuxemon gastant Xuxes del inventari (+20 HP per Xux, fins a max_hp)
+     * Cura el Xuxemon gastant Xux de Maduixa del inventari (+20 HP per Xux, fins a max_hp)
      * POST /api/user/chuchemons/{id}/heal  — body: { quantity: N }
      */
     public function healChuchemon(Request $request, int $chuchemonId): JsonResponse
@@ -383,17 +400,26 @@ class LevelingController extends Controller
             if (!$user) return response()->json(['message' => 'Usuario no autenticado'], 401);
 
             $qty = (int) ($request->input('quantity', 1));
-            if ($qty < 1) return response()->json(['message' => 'Quantitat no vàlida'], 422);
+            if ($qty < 1) return response()->json(['message' => 'Cantidad no válida'], 422);
 
-            // Check xuxes
-            $mochilaXux = MochilaXux::where('user_id', $user->id)
-                ->where('chuchemon_id', $chuchemonId)
+            // Atracón blocks feeding
+            $activeInfections = self::mapActiveInfections($user->id, [$chuchemonId])->get($chuchemonId, collect());
+            if (self::hasAtraconInfection($activeInfections)) {
+                return response()->json([
+                    'message' => 'Atracón activo: este Xuxemon no puede alimentarse.',
+                    'active_infections' => $activeInfections->values()->all(),
+                ], 422);
+            }
+
+            // Only Xux de Maduixa (item_id=1) heals HP
+            $maduixaRow = MochilaXux::where('user_id', $user->id)
+                ->where('item_id', 1)
                 ->first();
 
-            if (!$mochilaXux || $mochilaXux->quantity < $qty) {
+            if (!$maduixaRow || $maduixaRow->quantity < $qty) {
                 return response()->json([
-                    'message' => 'No tens prou Xuxes per curar aquest Xuxemon.',
-                    'have'    => $mochilaXux?->quantity ?? 0,
+                    'message' => 'No tienes suficientes Xux de Maduixa para curar.',
+                    'have'    => $maduixaRow?->quantity ?? 0,
                     'need'    => $qty,
                 ], 422);
             }
@@ -403,14 +429,14 @@ class LevelingController extends Controller
                 ->where('chuchemon_id', $chuchemonId)
                 ->first();
 
-            if (!$uc) return response()->json(['message' => 'Xuxemon no trobat a la col·lecció'], 404);
+            if (!$uc) return response()->json(['message' => 'Xuxemon no encontrado en tu colección'], 404);
 
             $maxHp  = $uc->max_hp  ?? 105;
             $currHp = $uc->current_hp ?? $maxHp;
 
             if ($currHp >= $maxHp) {
                 return response()->json([
-                    'message'    => 'El Xuxemon ja té la vida plena!',
+                    'message'    => '¡El Xuxemon ya tiene la vida llena!',
                     'current_hp' => $currHp,
                     'max_hp'     => $maxHp,
                 ], 422);
@@ -422,8 +448,8 @@ class LevelingController extends Controller
 
             // Only consume xuxes needed (don't waste if already near full)
             $xuxesUsed = (int) ceil($actualHeal / 20);
-            $mochilaXux->quantity -= $xuxesUsed;
-            $mochilaXux->quantity <= 0 ? $mochilaXux->delete() : $mochilaXux->save();
+            $maduixaRow->quantity -= $xuxesUsed;
+            $maduixaRow->quantity <= 0 ? $maduixaRow->delete() : $maduixaRow->save();
 
             DB::table('user_chuchemons')
                 ->where('user_id', $user->id)
@@ -431,12 +457,97 @@ class LevelingController extends Controller
                 ->update(['current_hp' => $newHp]);
 
             return response()->json([
-                'message'      => "Has curat {$actualHeal} PS al Xuxemon!",
+                'message'      => "¡Has curado {$actualHeal} PS al Xuxemon!",
                 'healed'       => $actualHeal,
                 'current_hp'   => $newHp,
                 'max_hp'       => $maxHp,
                 'xuxes_used'   => $xuxesUsed,
-                'xuxes_left'   => $mochilaXux->exists ? $mochilaXux->quantity : 0,
+                'xuxes_left'   => $maduixaRow->exists ? $maduixaRow->quantity : 0,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Aplica Xux de Llimona: +10% atac temporal (guarda boost a user_chuchemons)
+     * POST /api/user/chuchemons/{id}/boost-attack  — body: { quantity: N }
+     */
+    public function boostAttack(Request $request, int $chuchemonId): JsonResponse
+    {
+        return $this->applyBuff($request, $chuchemonId, 'attack', 2, 'Xux de Llimona');
+    }
+
+    /**
+     * Aplica Xux de Cola: +10% defensa temporal (guarda boost a user_chuchemons)
+     * POST /api/user/chuchemons/{id}/boost-defense  — body: { quantity: N }
+     */
+    public function boostDefense(Request $request, int $chuchemonId): JsonResponse
+    {
+        return $this->applyBuff($request, $chuchemonId, 'defense', 3, 'Xux de Cola');
+    }
+
+    private function applyBuff(Request $request, int $chuchemonId, string $stat, int $itemId, string $itemName): JsonResponse
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if (!$user) return response()->json(['message' => 'Usuario no autenticado'], 401);
+
+            $qty = (int) ($request->input('quantity', 1));
+            if ($qty < 1) return response()->json(['message' => 'Cantidad no válida'], 422);
+
+            // Atracón blocks feeding
+            $activeInfections = self::mapActiveInfections($user->id, [$chuchemonId])->get($chuchemonId, collect());
+            if (self::hasAtraconInfection($activeInfections)) {
+                return response()->json([
+                    'message' => 'Atracón activo: este Xuxemon no puede alimentarse.',
+                    'active_infections' => $activeInfections->values()->all(),
+                ], 422);
+            }
+
+            $row = MochilaXux::where('user_id', $user->id)
+                ->where('item_id', $itemId)
+                ->first();
+
+            if (!$row || $row->quantity < $qty) {
+                return response()->json([
+                    'message' => "No tienes suficientes {$itemName}.",
+                    'have'    => $row?->quantity ?? 0,
+                    'need'    => $qty,
+                ], 422);
+            }
+
+            $uc = DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->where('chuchemon_id', $chuchemonId)
+                ->first();
+
+            if (!$uc) return response()->json(['message' => 'Xuxemon no encontrado en tu colección'], 404);
+
+            // Each xux gives +10% boost (stacks up to max 50%)
+            $boostColumn = $stat === 'attack' ? 'attack_boost' : 'defense_boost';
+            $currentBoost = $uc->$boostColumn ?? 0;
+            $addBoost = $qty * 10;
+            $newBoost = min($currentBoost + $addBoost, 50);
+            $actualBoost = $newBoost - $currentBoost;
+
+            $xuxesUsed = (int) ceil($actualBoost / 10);
+            $row->quantity -= $xuxesUsed;
+            $row->quantity <= 0 ? $row->delete() : $row->save();
+
+            DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->where('chuchemon_id', $chuchemonId)
+                ->update([$boostColumn => $newBoost]);
+
+            $statLabel = $stat === 'attack' ? 'ataque' : 'defensa';
+
+            return response()->json([
+                'message'    => "¡+{$actualBoost}% de {$statLabel} temporal para el Xuxemon!",
+                'boost'      => $newBoost,
+                'stat'       => $stat,
+                'xuxes_used' => $xuxesUsed,
+                'xuxes_left' => $row->exists ? $row->quantity : 0,
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);

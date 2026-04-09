@@ -10,6 +10,7 @@ class MochilaXux extends Model
         'user_id',
         'item_id',
         'chuchemon_id',
+        'vaccine_id',
         'quantity',
     ];
 
@@ -26,5 +27,10 @@ class MochilaXux extends Model
     public function item()
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function vaccine()
+    {
+        return $this->belongsTo(Vaccine::class);
     }
 }

@@ -1,12 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-infections-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './infections-panel.component.html',
   styleUrls: ['./infections-panel.component.css']
 })
@@ -15,9 +17,16 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
   malalties: any[] = [];
   vaccines: any[] = [];
   todos: any[] = [];
+  teamChuchemons: any[] = [];
+  lowHpChuchemons: any[] = [];
+  healQtyMap: Record<number, number> = {};
+  healingMap: Record<number, boolean> = {};
+  evolvingMap: Record<number, boolean> = {};
+  feedbackMap: Record<number, { type: string; msg: string } | null> = {};
   isLoading = false;
   errorMessage: string | null = null;
   private pollingSubscription?: Subscription;
+  private readonly api = 'http://localhost:8000/api';
 
   constructor(private http: HttpClient) {}
 
@@ -25,6 +34,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
     this.loadInfections();
     this.loadMalalties();
     this.loadVaccines();
+    this.loadTeamHp();
     this.startPolling();
   }
 
@@ -33,10 +43,10 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
   }
 
   private startPolling(): void {
-    // Verificar cambios cada 30 segundos
     this.pollingSubscription = interval(30000).subscribe(() => {
       this.loadInfections();
       this.loadVaccines();
+      this.loadTeamHp();
     });
   }
 
@@ -134,5 +144,71 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Error curando la infección';
       }
     });
+  }
+
+  loadTeamHp(): void {
+    this.http.get<any[]>(`${this.api}/level/chuchemons`).subscribe({
+      next: (data) => {
+        this.teamChuchemons = data;
+        this.lowHpChuchemons = data.filter(c => {
+          const curr = c.current_hp ?? c.max_hp;
+          const max = c.max_hp ?? 1;
+          return curr < max;
+        });
+        // Init heal qty map
+        data.forEach(c => {
+          if (this.healQtyMap[c.id] === undefined) this.healQtyMap[c.id] = 1;
+        });
+      },
+      error: () => {}
+    });
+  }
+
+  healChuchemon(c: any): void {
+    const qty = this.healQtyMap[c.id] ?? 1;
+    if (qty < 1 || this.healingMap[c.id]) return;
+    this.healingMap[c.id] = true;
+    this.feedbackMap[c.id] = null;
+    this.http.post<any>(`${this.api}/user/chuchemons/${c.id}/heal`, { quantity: qty }).subscribe({
+      next: (res) => {
+        this.feedbackMap[c.id] = { type: 'success', msg: res.message };
+        this.healingMap[c.id] = false;
+        this.loadTeamHp();
+      },
+      error: (err) => {
+        this.feedbackMap[c.id] = { type: 'error', msg: err.error?.message ?? 'Error al curar' };
+        this.healingMap[c.id] = false;
+      }
+    });
+  }
+
+  evolveChuchemon(c: any): void {
+    if (this.evolvingMap[c.id]) return;
+    this.evolvingMap[c.id] = true;
+    this.feedbackMap[c.id] = null;
+    this.http.post<any>(`${this.api}/chuchemons/${c.id}/evolve`, {}).subscribe({
+      next: (res) => {
+        this.feedbackMap[c.id] = { type: 'success', msg: res.message };
+        this.evolvingMap[c.id] = false;
+        this.loadTeamHp();
+      },
+      error: (err) => {
+        this.feedbackMap[c.id] = { type: 'error', msg: err.error?.message ?? 'Error al evolucionar' };
+        this.evolvingMap[c.id] = false;
+      }
+    });
+  }
+
+  getSizeLabel(mida: string): string {
+    return mida === 'Petit' ? 'Pequeño' : mida === 'Mitjà' ? 'Mediano' : mida === 'Gran' ? 'Grande' : mida;
+  }
+
+  getNextSize(mida: string): string {
+    return mida === 'Petit' ? 'Mediano' : mida === 'Mitjà' ? 'Grande' : '';
+  }
+
+  getEvolveCost(c: any): number {
+    const base = c.current_mida === 'Petit' ? 3 : c.current_mida === 'Mitjà' ? 5 : 0;
+    return base + (c.evolve_cost_extra ?? 0);
   }
 }

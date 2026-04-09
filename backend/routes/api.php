@@ -65,8 +65,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/level/chuchemon/{id}/add-experience/{amount}', [LevelingController::class, 'addExperience']);
 
     // ─── HP: curar i gastar Xuxes ───────────────────────────
-    Route::post('/user/chuchemons/{id}/heal',    [LevelingController::class, 'healChuchemon']);
-    Route::post('/user/chuchemons/{id}/use-xux', [LevelingController::class, 'useXuxForExperience']);
+    Route::post('/user/chuchemons/{id}/heal',          [LevelingController::class, 'healChuchemon']);
+    Route::post('/user/chuchemons/{id}/use-xux',       [LevelingController::class, 'useXuxForExperience']);
+    Route::post('/user/chuchemons/{id}/boost-attack',  [LevelingController::class, 'boostAttack']);
+    Route::post('/user/chuchemons/{id}/boost-defense', [LevelingController::class, 'boostDefense']);
 
     // ─── INFECTIONS & MALALTIES ─────────────────────────────
     Route::get('/infections',           [InfectionController::class, 'getActiveInfections']);

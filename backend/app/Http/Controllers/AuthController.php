@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Chuchemon;
+use App\Models\UserTeam;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -46,6 +49,34 @@ class AuthController extends Controller
             ]);
 
             $token = JWTAuth::fromUser($user);
+
+            // Give 3 random Petit chuchemons as starters
+            $starters = Chuchemon::where('mida', 'Petit')->inRandomOrder()->limit(3)->get();
+            $starterIds = [];
+            foreach ($starters as $chuchemon) {
+                DB::table('user_chuchemons')->insert([
+                    'user_id'       => $user->id,
+                    'chuchemon_id'  => $chuchemon->id,
+                    'count'         => 1,
+                    'current_mida'  => 'Petit',
+                    'level'         => 1,
+                    'experience'    => 0,
+                    'experience_for_next_level' => 150,
+                    'current_hp'    => LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit'),
+                    'max_hp'        => LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit'),
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+                $starterIds[] = $chuchemon->id;
+            }
+
+            // Auto-equip starters to team
+            UserTeam::create([
+                'user_id'         => $user->id,
+                'chuchemon_1_id'  => $starterIds[0] ?? null,
+                'chuchemon_2_id'  => $starterIds[1] ?? null,
+                'chuchemon_3_id'  => $starterIds[2] ?? null,
+            ]);
 
             return response()->json([
                 'message' => 'Usuario registrado correctamente',

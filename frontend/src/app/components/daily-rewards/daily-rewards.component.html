@@ -35,8 +35,8 @@
     @if (xuxReward) {
       <div class="reward-card xux-reward">
         <h3>Recompensa Diaria - Xuxes</h3>
-        <div class="reward-icon">🧪</div>
-        <p class="quantity">x{{ xuxReward.quantity }} {{ xuxReward.item?.name ?? 'Xuxes' }}</p>
+        <div class="reward-icon">🍬</div>
+        <p class="quantity">10 objetos: Xuxes + Vacunas aleatorias</p>
         
         <div class="availability-status">
           @if (isRewardAvailable(xuxReward)) {
@@ -61,7 +61,7 @@
       <div class="reward-card chuchemon-reward">
         <h3>Recompensa Diaria - Xuxemon</h3>
         <div class="reward-icon">🎁</div>
-        <p class="quantity">{{ chuchemonReward.chuchemon?.name ?? 'Xuxemon Aleatorio' }}</p>
+        <p class="quantity">1 Xuxemon aleatorio (Petit)</p>
         
         <div class="availability-status">
           @if (isRewardAvailable(chuchemonReward)) {
@@ -83,7 +83,7 @@
   </div>
 
   <div class="info-box">
-    <p><strong>ℹ️ Nota:</strong> Las recompensas se renuevan diariamente a las 08:00 AM</p>
+    <p><strong>ℹ️ Nota:</strong> Las recompensas se renuevan cada día a las 08:00 AM</p>
   </div>
 
   @if (simulationEnabled) {

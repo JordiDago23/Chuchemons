@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -12,12 +12,12 @@ import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
   styleUrls: ['./leveling-panel.component.css']
 })
 export class LevelingPanelComponent implements OnInit {
+  @Input() compact = false;
   chuchemons: any[] = [];
   selectedChuchemon: any = null;
   isLoading = false;
   errorMessage: string | null = null;
   actionMessage: string | null = null;
-  xuxQtyToUse = 1;
   healQty = 1;
   showActionConfirm = false;
   confirmTitle = '';
@@ -55,59 +55,64 @@ export class LevelingPanelComponent implements OnInit {
     this.actionMessage = null;
   }
 
-  addExperience(amount: number): void {
+  evolve(): void {
     if (!this.selectedChuchemon) return;
-    this.http.post(`${this.api}/level/chuchemon/${this.selectedChuchemon.id}/add-experience/${amount}`, {}).subscribe({
-      next: (res: any) => {
-        this.actionMessage = res.level_up ? '⬆️ ¡El Xuxemon ha subido de nivel!' : `+${amount} XP añadidos`;
-        this.loadChuchemons();
-      },
-      error: () => { this.errorMessage = 'Error añadiendo experiencia'; }
-    });
-  }
-
-  useXuxForXp(): void {
-    if (!this.selectedChuchemon || this.xuxQtyToUse < 1) return;
-    if (this.selectedChuchemon.cannot_eat) {
-      this.actionMessage = this.selectedChuchemon.cannot_eat_reason ?? 'Este Xuxemon no puede comer más Xuxes ahora mismo.';
+    const cost = this.getEvolveCost();
+    if ((this.selectedChuchemon.xuxes_exp ?? 0) < cost) {
+      this.actionMessage = `Necesitas ${cost} Xux Exp para evolucionar. Tienes ${this.selectedChuchemon.xuxes_exp ?? 0}.`;
       return;
     }
-    if ((this.selectedChuchemon.xuxes_qty ?? 0) < this.xuxQtyToUse) {
-      this.actionMessage = 'No tienes suficientes Xuxes para esa cantidad.';
-      return;
-    }
-
     this.openConfirmDialog(
-      'Confirmar alimentación',
-      `Vas a gastar ${this.xuxQtyToUse} Xuxes para dar ${this.xuxQtyToUse * 20} XP a ${this.selectedChuchemon.name}.`,
-      () => this.executeUseXuxForXp()
+      'Confirmar evolución',
+      `Gastarás ${cost} Xux Exp para evolucionar ${this.selectedChuchemon.name} a ${this.getNextSizeLabel()}.`,
+      () => this.executeEvolve()
     );
   }
 
-  private executeUseXuxForXp(): void {
-    this.http.post(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/use-xux`, { quantity: this.xuxQtyToUse }).subscribe({
-      next: (res: any) => {
-        this.actionMessage = res.level_up
-          ? `🍬 ${this.xuxQtyToUse} Xux gastades → ⬆️ Nivell pujat!`
-          : `🍬 ${this.xuxQtyToUse} Xux gastades → +${this.xuxQtyToUse * 20} XP`;
+  private executeEvolve(): void {
+    this.http.post<any>(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/evolve`, {}).subscribe({
+      next: (res) => {
+        this.actionMessage = res.message ?? '¡Xuxemon evolucionado!';
         this.loadChuchemons();
       },
       error: (err) => {
-        this.actionMessage = err.error?.message ?? 'No tienes suficientes Xuxes';
+        this.actionMessage = err.error?.message ?? 'Error al evolucionar';
       }
     });
   }
 
+  getEvolveCost(): number {
+    const mida = this.selectedChuchemon?.current_mida;
+    let base = 0;
+    if (mida === 'Petit') base = 3;
+    else if (mida === 'Mitjà') base = 5;
+    return base + (this.selectedChuchemon?.evolve_cost_extra ?? 0);
+  }
+
+  getNextSizeLabel(): string {
+    const mida = this.selectedChuchemon?.current_mida;
+    if (mida === 'Petit') return 'Mitjà';
+    if (mida === 'Mitjà') return 'Gran';
+    return 'Màxim';
+  }
+
+  getNextMida(): string {
+    const mida = this.selectedChuchemon?.current_mida;
+    if (mida === 'Petit') return 'Mitjà';
+    if (mida === 'Mitjà') return 'Gran';
+    return 'Gran';
+  }
+
   healWithXux(): void {
     if (!this.selectedChuchemon || this.healQty < 1) return;
-    if ((this.selectedChuchemon.xuxes_qty ?? 0) < this.healQty) {
-      this.actionMessage = 'No tienes suficientes Xuxes para curar esa cantidad.';
+    if ((this.selectedChuchemon.xuxes_maduixa ?? 0) < this.healQty) {
+      this.actionMessage = 'No tienes suficientes Xux de Maduixa para curar.';
       return;
     }
 
     this.openConfirmDialog(
       'Confirmar curación',
-      `Vas a gastar hasta ${this.healQty} Xuxes para curar a ${this.selectedChuchemon.name} y recuperar hasta ${this.healQty * 20} PS.`,
+      `Vas a gastar hasta ${this.healQty} Xux de Maduixa para curar a ${this.selectedChuchemon.name} y recuperar hasta ${this.healQty * 20} PS.`,
       () => this.executeHealWithXux()
     );
   }
@@ -115,7 +120,7 @@ export class LevelingPanelComponent implements OnInit {
   private executeHealWithXux(): void {
     this.http.post(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/heal`, { quantity: this.healQty }).subscribe({
       next: (res: any) => {
-        this.actionMessage = `❤️ Curat +${res.healed} PS (${res.current_hp}/${res.max_hp})`;
+        this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp})`;
         this.loadChuchemons();
       },
       error: (err) => {
@@ -126,11 +131,26 @@ export class LevelingPanelComponent implements OnInit {
 
   getSizeLabel(size?: string): string {
     switch (size) {
-      case 'Petit': return 'Pequeño';
-      case 'Mitjà': return 'Mediano';
-      case 'Gran': return 'Grande';
-      default: return size ?? 'Pequeño';
+      case 'Petit': return 'Petit';
+      case 'Mitjà': return 'Mitjà';
+      case 'Gran': return 'Gran';
+      default: return size ?? 'Petit';
     }
+  }
+
+  statsForSize(size: string): { hp: number; atk: number; def: number } {
+    const c = this.selectedChuchemon;
+    if (!c) return { hp: 0, atk: 0, def: 0 };
+    const baseAtk = c.attack ?? 50;
+    const baseDef = c.defense ?? 50;
+    let mult = 1;
+    if (size === 'Mitjà') mult = 1.02;
+    if (size === 'Gran') mult = 1.071;
+    return {
+      hp: Math.round((100 + baseDef * 0.5) * mult),
+      atk: Math.round(baseAtk * mult),
+      def: Math.round(baseDef * mult),
+    };
   }
 
   get hpPercent(): number {
@@ -144,10 +164,6 @@ export class LevelingPanelComponent implements OnInit {
     if (p > 60) return '#4caf50';
     if (p > 25) return '#ff9800';
     return '#f44336';
-  }
-
-  get xpPreview(): number {
-    return this.xuxQtyToUse * 20;
   }
 
   get healPreview(): number {

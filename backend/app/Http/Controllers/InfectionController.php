@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UserInfection;
 use App\Models\Malaltia;
+use App\Models\MochilaXux;
 use App\Models\Vaccine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -109,6 +110,18 @@ class InfectionController extends Controller
             if ($vaccine->malaltia_id !== $infection->malaltia_id) {
                 return response()->json(['message' => 'Esta vacuna no cura esta malaltia'], 400);
             }
+
+            // Verificar que el usuario tiene la vacuna en la mochila
+            $mochilaItem = MochilaXux::where('user_id', $user->id)
+                ->where('vaccine_id', $vaccineId)
+                ->first();
+
+            if (!$mochilaItem) {
+                return response()->json(['message' => 'No tienes esta vacuna en tu mochila'], 400);
+            }
+
+            // Consumir la vacuna de la mochila
+            $mochilaItem->delete();
 
             // Actualizar la infección
             $infection->update([

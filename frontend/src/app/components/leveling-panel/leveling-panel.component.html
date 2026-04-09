@@ -15,7 +15,7 @@
           (click)="selectChuchemon(c)"
         >
           <p class="name">{{ c.name }}</p>
-          <p class="level">Niv. {{ c.level }} · {{ getSizeLabel(c.current_mida) }}</p>
+          <p class="level">{{ getSizeLabel(c.current_mida) }}</p>
           @if (c.has_active_infections) {
             <p class="infection-summary">🦠 {{ c.active_infections[0]?.name }}@if ((c.active_infections?.length ?? 0) > 1) { +{{ (c.active_infections?.length ?? 0) - 1 }} }</p>
           }
@@ -27,10 +27,6 @@
                                    c.max_hp > 0 && (c.current_hp / c.max_hp) <= 0.6  ? '#ff9800' : '#4caf50'">
             </div>
           </div>
-          <!-- Mini barra XP -->
-          <div class="xp-bar-small">
-            <div class="xp-fill-small" [style.width.%]="c.experience / c.experience_for_next_level * 100"></div>
-          </div>
         </div>
       }
     </div>
@@ -40,7 +36,7 @@
     <div class="details-section">
       <h3>{{ selectedChuchemon.name }}</h3>
 
-      @if (hasSelectedInfections) {
+      @if (!compact && hasSelectedInfections) {
         <div class="infection-panel">
           <p class="infection-title">Malalties actives</p>
           <div class="infection-tags">
@@ -57,6 +53,7 @@
       }
 
       <!-- ── BARRA DE VIDA ───────────────────────────────── -->
+      @if (!compact) {
       <div class="stat-block">
         <div class="stat-label-row">
           <span>❤️ Punts de Salut (PS)</span>
@@ -71,72 +68,100 @@
             [style.background]="hpColor">
           </div>
         </div>
-        <!-- Curar con Xuxes -->
+        <!-- Curar con Xux de Maduixa -->
         <div class="action-row">
-          <label class="action-label">Curar con Xuxes:</label>
+          <label class="action-label">Curar con Xux de Maduixa:</label>
           <input type="number" [(ngModel)]="healQty" min="1" max="99" class="qty-input"
-            [attr.aria-label]="'Cantidad de Xuxes para curar'" />
+            [attr.aria-label]="'Cantidad de Xux de Maduixa para curar'" />
           <button class="btn-heal" (click)="healWithXux()"
-            [disabled]="selectedChuchemon.current_hp >= selectedChuchemon.max_hp || selectedChuchemon.xuxes_qty < 1">
+            [disabled]="selectedChuchemon.cannot_eat || selectedChuchemon.current_hp >= selectedChuchemon.max_hp || (selectedChuchemon.xuxes_maduixa ?? 0) < 1">
             ❤️ Curar <small>(+{{ healPreview }} PS)</small>
           </button>
-          <span class="xux-stock">Xuxes disponibles: <strong>{{ selectedChuchemon.xuxes_qty ?? 0 }}</strong></span>
+          <span class="xux-stock">🍓 Maduixa: <strong>{{ selectedChuchemon.xuxes_maduixa ?? 0 }}</strong></span>
         </div>
-        <p class="preview-note">Preview: gastar {{ healQty }} Xuxes para recuperar hasta {{ healPreview }} PS.</p>
+        <p class="preview-note">Gastar {{ healQty }} Xux de Maduixa para recuperar hasta {{ healPreview }} PS.</p>
       </div>
+      }
 
       <!-- ── STATS ──────────────────────────────────────── -->
       <div class="stat-block">
-        <p><strong>Nivel:</strong> {{ selectedChuchemon.level }} &nbsp;|&nbsp;
-           <strong>Tamaño:</strong> {{ getSizeLabel(selectedChuchemon.current_mida) }}</p>
+        <p><strong>Tamaño:</strong> {{ getSizeLabel(selectedChuchemon.current_mida) }}</p>
         <p>
           ⚔️ Ataque efectivo: <strong>{{ selectedChuchemon.effective_attack ?? selectedChuchemon.attack }}</strong>
+          @if (selectedChuchemon.attack_boost > 0) { <small class="boost-badge">+{{ selectedChuchemon.attack_boost }}%</small> }
           &nbsp;🛡️ Def. efectiva: <strong>{{ selectedChuchemon.effective_defense ?? selectedChuchemon.defense }}</strong>
-          <em class="mida-note">
-            @if (selectedChuchemon.current_mida === 'Mitjà') { (+2% por evolución) }
-            @if (selectedChuchemon.current_mida === 'Gran')  { (+7.1% por evolución) }
-          </em>
+          @if (selectedChuchemon.defense_boost > 0) { <small class="boost-badge">+{{ selectedChuchemon.defense_boost }}%</small> }
         </p>
       </div>
 
-      <!-- ── BARRA XP ────────────────────────────────────── -->
-      <div class="stat-block">
-        <div class="stat-label-row">
-          <span>⭐ Experiencia</span>
-          <span class="stat-val">{{ selectedChuchemon.experience }} / {{ selectedChuchemon.experience_for_next_level }}</span>
+      <!-- ── EVOLVE ─────────────────────────────────────── -->
+      @if (selectedChuchemon.cannot_eat) {
+        <div class="stat-block infection-block">
+          <p class="infection-warning">🚫 {{ selectedChuchemon.cannot_eat_reason }}</p>
         </div>
-        <div class="xp-bar-container">
-          <div class="xp-bar">
-            <div class="xp-fill"
-              [style.width.%]="selectedChuchemon.experience / selectedChuchemon.experience_for_next_level * 100">
-            </div>
+      }
+      @if (selectedChuchemon.current_mida !== 'Gran') {
+        <div class="stat-block evolve-block">
+          <p class="evolve-title">🔮 Evolución</p>
+          <p class="evolve-info">
+            Coste: <strong>{{ getEvolveCost() }} Xux Exp</strong>
+            @if (selectedChuchemon.evolve_cost_extra > 0) { <small class="boost-badge" style="background:#f44336">+{{ selectedChuchemon.evolve_cost_extra }} por Bajón de azúcar</small> }
+            · Tienes: <strong>{{ selectedChuchemon.xuxes_exp ?? 0 }}</strong>
+          </p>
+          <div class="evolve-preview">
+            <span class="evolve-preview-title">Al evolucionar a {{ getNextSizeLabel() }}:</span>
+            <span class="evolve-stat-change">❤️ PS: {{ statsForSize(selectedChuchemon.current_mida).hp }} → <strong>{{ statsForSize(getNextMida()).hp }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).hp - statsForSize(selectedChuchemon.current_mida).hp }})</small></span>
+            <span class="evolve-stat-change">⚔️ Ataque: {{ statsForSize(selectedChuchemon.current_mida).atk }} → <strong>{{ statsForSize(getNextMida()).atk }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).atk - statsForSize(selectedChuchemon.current_mida).atk }})</small></span>
+            <span class="evolve-stat-change">🛡️ Defensa: {{ statsForSize(selectedChuchemon.current_mida).def }} → <strong>{{ statsForSize(getNextMida()).def }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).def - statsForSize(selectedChuchemon.current_mida).def }})</small></span>
           </div>
-          <span class="progress-text">{{ selectedChuchemon.experience_progress }}%</span>
-        </div>
-
-        <!-- Botons Afegir XP directe -->
-        <div class="buttons">
-          <button (click)="addExperience(10)">+10 XP</button>
-          <button (click)="addExperience(50)">+50 XP</button>
-          <button (click)="addExperience(100)">+100 XP</button>
-        </div>
-
-        <!-- Gastar Xuxes per XP -->
-        <div class="action-row">
-          <label class="action-label">Gastar Xuxes para XP:</label>
-          <input type="number" [(ngModel)]="xuxQtyToUse" min="1" max="99" class="qty-input"
-            [attr.aria-label]="'Cantidad de Xuxes a gastar'" />
-          <button class="btn-xux" (click)="useXuxForXp()"
-            [disabled]="selectedChuchemon.xuxes_qty < 1 || selectedChuchemon.cannot_eat">
-            🍬 Gastar <small>(+{{ xpPreview }}XP)</small>
+          <button class="btn-evolve" (click)="evolve()"
+            [disabled]="selectedChuchemon.cannot_eat || (selectedChuchemon.xuxes_exp ?? 0) < getEvolveCost()">
+            Evolucionar a {{ getNextSizeLabel() }}
           </button>
-          <span class="xux-stock">Xuxes: <strong>{{ selectedChuchemon.xuxes_qty ?? 0 }}</strong></span>
         </div>
-        <p class="preview-note">Preview: gastar {{ xuxQtyToUse }} Xuxes para ganar {{ xpPreview }} XP.</p>
-        @if (selectedChuchemon.cannot_eat) {
-          <p class="blocked-note">Este Xuxemon no puede alimentarse mientras tenga Atracón activo.</p>
-        }
+      } @else {
+        <div class="stat-block evolve-block">
+          <p class="evolve-title">🔮 Evolución</p>
+          <p class="evolve-info">Este Xuxemon ya es <strong>Gran</strong> (máximo).</p>
+        </div>
+      }
+
+      <!-- ── STATS PER SIZE TABLE ───────────────────────── -->
+      @if (!compact) {
+      <div class="stat-block">
+        <p class="stats-table-title">📊 Estadísticas por tamaño</p>
+        <table class="size-table">
+          <thead>
+            <tr>
+              <th></th>
+              @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
+                <th [class.current]="selectedChuchemon.current_mida === size">{{ size }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-label">PS</td>
+              @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
+                <td [class.current]="selectedChuchemon.current_mida === size">{{ statsForSize(size).hp }}</td>
+              }
+            </tr>
+            <tr>
+              <td class="row-label">Atac</td>
+              @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
+                <td [class.current]="selectedChuchemon.current_mida === size">{{ statsForSize(size).atk }}</td>
+              }
+            </tr>
+            <tr>
+              <td class="row-label">Def</td>
+              @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
+                <td [class.current]="selectedChuchemon.current_mida === size">{{ statsForSize(size).def }}</td>
+              }
+            </tr>
+          </tbody>
+        </table>
       </div>
+      }
     </div>
   }
 

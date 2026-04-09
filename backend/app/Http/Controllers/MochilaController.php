@@ -24,7 +24,7 @@ class MochilaController extends Controller
             return response()->json(['message' => 'No autoritzat'], 401);
         }
 
-        $items = MochilaXux::with('chuchemon')
+        $items = MochilaXux::with(['chuchemon', 'item', 'vaccine'])
             ->where('user_id', $user->id)
             ->where('quantity', '>', 0)
             ->get();

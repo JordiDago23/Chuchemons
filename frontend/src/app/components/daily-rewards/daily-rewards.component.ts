@@ -49,9 +49,13 @@ export class DailyRewardsComponent implements OnInit {
 
     this.http.post('http://localhost:8000/api/daily-rewards/xux', {}).subscribe({
       next: (response: any) => {
-        this.successMessage = response.message;
+        let msg = `+${response.xux_quantity} Xuxes`;
+        if (response.vaccine) {
+          msg += ` + ${response.vaccine_quantity} ${response.vaccine}`;
+        }
+        this.successMessage = msg;
         this.loadDailyRewards();
-        setTimeout(() => this.successMessage = null, 3000);
+        setTimeout(() => this.successMessage = null, 4000);
       },
       error: (error) => {
         console.error('Error claiming xux reward:', error);

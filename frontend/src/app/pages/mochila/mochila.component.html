@@ -54,7 +54,7 @@
     <!-- Page header -->
     <div class="page-header">
       <h1>Mochila</h1>
-      <p class="page-sub">Tu inventario d'objectes i vacunes</p>
+      <p class="page-sub">Tu inventario de objetos y vacunas</p>
     </div>
 
     <!-- Stats row -->
@@ -97,7 +97,7 @@
     </div>
 
     <!-- ── Tabs ──────────────────────────────────────────────────────────────── -->
-    <div class="tabs" role="tablist" aria-label="Pestanyes d'inventari">
+    <div class="tabs" role="tablist" aria-label="Pestañas de inventario">
       <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'all'" (click)="setInventoryFilter('all')">
         <span aria-hidden="true">🎁</span> Items
       </button>
@@ -110,10 +110,10 @@
     </div>
 
     <!-- ── Inventari fix 4x5 ────────────────────────────────────────────────── -->
-    <section class="inventory-fixed-panel card shadow-sm" aria-label="Inventari 4x5">
+    <section class="inventory-fixed-panel card shadow-sm" aria-label="Inventario 4x5">
       <div class="inventory-fixed-head">
-        <h2>Inventari Fix (4×5 — 20 slots)</h2>
-        <span class="inventory-counter">{{ usedSpaces }}/{{ MAX_SPACES }} ocupats</span>
+        <h2>Inventario Fijo (4×5 — 20 slots)</h2>
+        <span class="inventory-counter">{{ usedSpaces }}/{{ MAX_SPACES }} ocupados</span>
       </div>
 
       <div class="inventory-cards-grid">
@@ -121,68 +121,42 @@
 
           <!-- ── Slot Xux ── -->
           @if (slot.kind === 'xux' && slot.xuxItem) {
-            <div class="inv-card inv-card-xux card-apilable" [ngClass]="'card-element-' + slot.xuxItem.chuchemon.element.toLowerCase()">
-              <div class="inv-card-badges">
-                <span class="qty-badge">x{{ slot.slotQty }}</span>
-                <span class="apilable-flag apilable-yes">🔁 Apilable</span>
-                <span class="item-tag tag-mejora">Xux</span>
+            <div class="inv-card inv-card-xux">
+              <span class="card-slot-num">#{{ slot.index }}</span>
+              <span class="card-qty">x{{ slot.slotQty }}</span>
+              <div class="card-icon">
+                @if (slot.xuxItem.item?.name === 'Xux de Maduixa') { <span>🍓</span> }
+                @else if (slot.xuxItem.item?.name === 'Xux de Llimona') { <span>🍋</span> }
+                @else if (slot.xuxItem.item?.name === 'Xux de Cola') { <span>🥤</span> }
+                @else if (slot.xuxItem.item?.name === 'Xux Exp') { <span>⭐</span> }
+                @else { <span>🍬</span> }
               </div>
-              <div class="item-img-wrap">
-                <div class="item-img-placeholder candy-img">
-                  @if (slot.xuxItem.chuchemon.image) {
-                    <img [src]="'http://localhost:8000/chuchemons/' + slot.xuxItem.chuchemon.image" [alt]="slot.xuxItem.chuchemon.name" style="width:42px;height:42px;object-fit:contain;" />
-                  } @else {
-                    <span class="candy-emoji">🍬</span>
-                  }
-                </div>
-              </div>
-              <div class="item-body">
-                <h2 class="item-name">Xux de {{ slot.xuxItem.chuchemon.name }}</h2>
-                <p class="item-desc">Elemento {{ getElementLabel(slot.xuxItem.chuchemon.element) }}. Stack: ×{{ slot.slotQty }}.</p>
-              </div>
-              <div class="stack-info">
-                <span class="stack-label">Espacio:</span>
-                <span class="slot-chip">#{{ slot.index }}</span>
-              </div>
-              <button class="detail-btn" (click)="openPopup(slot)" [attr.aria-label]="'Aplicar Xux de ' + slot.xuxItem.chuchemon.name">Aplicar</button>
+              <h3 class="card-name">{{ slot.xuxItem.item?.name ?? 'Xux' }}</h3>
+              <button class="card-btn card-btn-xux" (click)="openPopup(slot)">Aplicar</button>
             </div>
           }
 
           <!-- ── Slot Vacuna ── -->
           @if (slot.kind === 'vacuna' && slot.vacunaItem) {
-            <div class="inv-card inv-card-vacuna card-no-apilable">
-              <div class="inv-card-badges">
-                <span class="qty-badge">x1</span>
-                <span class="apilable-flag apilable-no">🚫 No apilable</span>
-                <span class="item-tag tag-defensa">{{ slot.vacunaItem.tag }}</span>
+            <div class="inv-card inv-card-vacuna">
+              <span class="card-slot-num">#{{ slot.index }}</span>
+              <span class="card-qty">x1</span>
+              <div class="card-icon">
+                @if (slot.vacunaItem.name === 'Xocolatina') { <span>🍫</span> }
+                @else if (slot.vacunaItem.name === 'Xal de fruits') { <span>🍬</span> }
+                @else { <span>💉</span> }
               </div>
-              <div class="item-img-wrap">
-                <div class="item-img-placeholder vacuna-img">
-                  <span class="candy-emoji">
-                    @if (slot.vacunaItem.name === 'Xocolatina') { 🍫 }
-                    @else if (slot.vacunaItem.name === 'Xal de fruites') { 🍬 }
-                    @else { 💉 }
-                  </span>
-                </div>
-              </div>
-              <div class="item-body">
-                <h2 class="item-name">{{ slot.vacunaItem.name }}</h2>
-                <p class="item-desc">{{ slot.vacunaItem.description }}</p>
-              </div>
-              <div class="stack-info">
-                <span class="stack-label">Espacio:</span>
-                <span class="slot-chip">#{{ slot.index }}</span>
-              </div>
-              <button class="detail-btn" (click)="openPopup(slot)" [attr.aria-label]="'Aplicar ' + slot.vacunaItem.name">Aplicar</button>
+              <h3 class="card-name">{{ slot.vacunaItem.name }}</h3>
+              <button class="card-btn card-btn-vacuna" (click)="openPopup(slot)">Aplicar</button>
             </div>
           }
 
-          <!-- ── Slot Buit ── -->
+          <!-- ── Slot Vacío ── -->
           @if (slot.kind === 'empty') {
             <div class="inv-card inv-card-empty">
-              <span class="slot-index">#{{ slot.index }}</span>
+              <span class="card-slot-num">#{{ slot.index }}</span>
               <span class="slot-empty-icon">＋</span>
-              <span class="inv-empty-label">Libre</span>
+              <span class="inv-empty-label">Vacío</span>
             </div>
           }
 
@@ -369,59 +343,119 @@
     <div class="popup-overlay" (click)="closePopup()" role="dialog" aria-modal="true" [attr.aria-label]="popupItem.name">
       <div class="popup-box" (click)="$event.stopPropagation()">
 
-        <!-- Header -->
-        <div class="popup-header">
-          <div class="popup-header-left">
-            <div class="popup-icon-wrap" [class.popup-icon-xux]="popupItem.kind === 'xux'" [class.popup-icon-vacuna]="popupItem.kind === 'vacuna'">
-              <span class="popup-icon-emoji">{{ popupItem.imageEmoji }}</span>
+        @if (popupStep === 'info') {
+          <!-- ── INFO STEP ─────────────────────────────────────────── -->
+          <div class="popup-header">
+            <div class="popup-header-left">
+              <div class="popup-icon-wrap" [class.popup-icon-xux]="popupItem.kind === 'xux'" [class.popup-icon-vacuna]="popupItem.kind === 'vacuna'">
+                <span class="popup-icon-emoji">{{ popupItem.imageEmoji }}</span>
+              </div>
+              <div class="popup-header-text">
+                <h3 class="popup-title">{{ popupItem.name }}</h3>
+                <span class="popup-subtitle">
+                  {{ popupItem.kind === 'vacuna' ? 'Vacuna' : 'Xux' }} • Cantidad disponible: {{ popupItem.quantity }}
+                </span>
+              </div>
             </div>
-            <div class="popup-header-text">
-              <h3 class="popup-title">{{ popupItem.name }}</h3>
-              <span class="popup-subtitle">
-                {{ popupItem.kind === 'vacuna' ? 'Vacuna' : 'Xux' }} • Quantitat disponible: {{ popupItem.quantity }}
-              </span>
-            </div>
+            <button class="popup-close-x" (click)="closePopup()" aria-label="Cerrar">✕</button>
           </div>
-          <button class="popup-close-x" (click)="closePopup()" aria-label="Tancar">✕</button>
-        </div>
 
-        <!-- Image -->
-        @if (popupItem.imageUrl) {
-          <div class="popup-img-wrap">
-            <img [src]="popupItem.imageUrl" [alt]="popupItem.name" class="popup-img" />
+          @if (popupItem.imageUrl) {
+            <div class="popup-img-wrap">
+              <img [src]="popupItem.imageUrl" [alt]="popupItem.name" class="popup-img" />
+            </div>
+          } @else {
+            <div class="popup-img-placeholder">
+              <span class="popup-img-emoji">{{ popupItem.imageEmoji }}</span>
+            </div>
+          }
+
+          <div class="popup-desc-box">
+            <div class="popup-desc-header">
+              <span class="popup-desc-icon">ℹ</span>
+              <span class="popup-desc-label">Descripción</span>
+            </div>
+            <p class="popup-desc-text">{{ popupItem.description }}</p>
           </div>
+
+          @if (popupItem.diseases && popupItem.diseases.length > 0) {
+            <div class="popup-diseases-box">
+              <p class="popup-diseases-title">Cura las siguientes enfermedades:</p>
+              <div class="popup-diseases-chips">
+                @for (d of popupItem.diseases; track d) {
+                  <span class="popup-disease-chip">{{ d }}</span>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="popup-actions">
+            <button class="popup-btn-apply" (click)="goToTeamSelect()">{{ popupItem.applyLabel }}</button>
+            <button class="popup-btn-close" (click)="closePopup()">Cerrar</button>
+          </div>
+
         } @else {
-          <div class="popup-img-placeholder">
-            <span class="popup-img-emoji">{{ popupItem.imageEmoji }}</span>
-          </div>
-        }
-
-        <!-- Description -->
-        <div class="popup-desc-box">
-          <div class="popup-desc-header">
-            <span class="popup-desc-icon">ℹ</span>
-            <span class="popup-desc-label">Descripció</span>
-          </div>
-          <p class="popup-desc-text">{{ popupItem.description }}</p>
-        </div>
-
-        <!-- Diseases (vacuna only) -->
-        @if (popupItem.diseases && popupItem.diseases.length > 0) {
-          <div class="popup-diseases-box">
-            <p class="popup-diseases-title">Cura les següents malalties:</p>
-            <div class="popup-diseases-chips">
-              @for (d of popupItem.diseases; track d) {
-                <span class="popup-disease-chip">{{ d }}</span>
-              }
+          <!-- ── SELECT TEAM STEP ──────────────────────────────────── -->
+          <div class="popup-header">
+            <div class="popup-header-left">
+              <div class="popup-icon-wrap popup-icon-team">
+                <span class="popup-icon-emoji">🎯</span>
+              </div>
+              <div class="popup-header-text">
+                <h3 class="popup-title">Elige un Xuxemon</h3>
+                <span class="popup-subtitle">Aplica {{ popupItem.name }} a un miembro de tu equipo</span>
+              </div>
             </div>
+            <button class="popup-close-x" (click)="closePopup()" aria-label="Cerrar">✕</button>
+          </div>
+
+          <div class="popup-team-list">
+            @if (teamLoading) {
+              <p class="popup-team-loading">Cargando equipo...</p>
+            } @else if (teamChuchemons.length === 0) {
+              <p class="popup-team-empty">No tienes ningún Xuxemon en el equipo.</p>
+            } @else {
+              @for (member of teamChuchemons; track member.id) {
+                <div class="popup-team-card"
+                     [class.popup-team-card--selected]="selectedTeamMember?.id === member.id"
+                     (click)="selectTeamMember(member)">
+                  <div class="popup-team-img-wrap">
+                    @if (member.image) {
+                      <img [src]="'http://localhost:8000/chuchemons/' + member.image" [alt]="member.name" class="popup-team-img" />
+                    } @else {
+                      <span class="popup-team-emoji">🐾</span>
+                    }
+                  </div>
+                  <div class="popup-team-info">
+                    <span class="popup-team-name">{{ member.name }}</span>
+                    <span class="popup-team-size">{{ member.current_mida }}</span>
+                    @if (infectionsFor(member.id).length > 0) {
+                      <span class="popup-team-sick">🤒 {{ infectionsFor(member.id).length }} infección(es)</span>
+                    }
+                  </div>
+                  <div class="popup-team-check">
+                    @if (selectedTeamMember?.id === member.id) {
+                      <span>✔</span>
+                    }
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          @if (applyFeedback) {
+            <div class="popup-feedback" [class.popup-feedback--success]="applyFeedback.type === 'success'" [class.popup-feedback--error]="applyFeedback.type === 'error'">
+              {{ applyFeedback.msg }}
+            </div>
+          }
+
+          <div class="popup-actions">
+            <button class="popup-btn-apply" [disabled]="!selectedTeamMember || applying" (click)="applyItem()">
+              {{ applying ? 'Aplicando...' : 'Confirmar' }}
+            </button>
+            <button class="popup-btn-close" (click)="popupStep = 'info'">Atrás</button>
           </div>
         }
-
-        <!-- Buttons -->
-        <div class="popup-actions">
-          <button class="popup-btn-apply" (click)="applyItem()">{{ popupItem.applyLabel }}</button>
-          <button class="popup-btn-close" (click)="closePopup()">Tancar</button>
-        </div>
 
       </div>
     </div>

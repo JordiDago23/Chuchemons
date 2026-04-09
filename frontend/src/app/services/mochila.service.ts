@@ -5,14 +5,28 @@ import { Observable } from 'rxjs';
 export interface MochilaXuxItem {
   id: number;
   user_id: number;
-  chuchemon_id: number;
+  chuchemon_id: number | null;
   quantity: number;
+  item_id: number | null;
+  vaccine_id: number | null;
   chuchemon: {
     id: number;
     name: string;
     element: string;
     image: string;
-  };
+  } | null;
+  item: {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+    image: string;
+  } | null;
+  vaccine: {
+    id: number;
+    name: string;
+    description: string;
+  } | null;
 }
 
 export interface MochilaResponse {

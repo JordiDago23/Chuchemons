@@ -67,25 +67,8 @@
     <div class="banner">
       <div class="banner-text">
         <h1>¡Bienvenido, Maestro {{ user?.nombre }}!</h1>
-        <p class="banner-sub">Entrenador nivel {{ stats.level }}</p>
-        <div class="xp-bar-wrap">
-          <span class="xp-label">Experiencia</span>
-          <span class="xp-val">{{ stats.xp }}/{{ stats.xpMax }} XP</span>
-        </div>
-        <div class="xp-track">
-          <div class="xp-fill" [style.width.%]="experienceProgress * 100" [style.width.%]="xpPercent"></div>
-        </div>
+        <p class="banner-sub">{{ stats.captured }} Xuxemons capturats de {{ stats.total }}</p>
       </div>
-      <div class="banner-level">
-        <span class="level-icon">↗</span>
-        <span class="level-num">{{ stats.level }}</span>
-        <span class="level-label">Nivel</span>
-      </div>
-    </div>
-
-    <!-- DAILY REWARDS -->
-    <div class="daily-rewards-section">
-      <app-daily-rewards></app-daily-rewards>
     </div>
 
     <!-- STATS -->
@@ -122,18 +105,6 @@
         <div class="stat-value">{{ winRatio }}</div>
         <div class="stat-desc">Tasa de victorias</div>
       </div>
-    </div>
-
-    <!-- LEVELING PANEL -->
-    <div class="leveling-section">
-      <h2 class="section-title">📊 Chuchemons de tu Equipo</h2>
-      <app-leveling-panel></app-leveling-panel>
-    </div>
-
-    <!-- INFECTIONS PANEL -->
-    <div class="infections-section">
-      <h2 class="section-title">⚕️ Estado de Salud</h2>
-      <app-infections-panel></app-infections-panel>
     </div>
 
     <!-- TEAM -->
@@ -173,7 +144,7 @@
               </div>
               <div class="mon-info">
                 <span class="mon-name">{{ mon.name }}</span>
-                <span class="mon-id">Niv. {{ mon.level ?? 1 }} · {{ getSizeLabel(mon.current_mida) }}</span>
+                <span class="mon-id">{{ getSizeLabel(mon.current_mida) }}</span>
               </div>
               <!-- PS -->
               <div class="mon-hp-row">
@@ -186,37 +157,27 @@
                   [style.background]="(mon.hp_percent ?? 100) > 60 ? '#4caf50' : (mon.hp_percent ?? 100) > 25 ? '#ff9800' : '#f44336'">
                 </div>
               </div>
-              <!-- XP -->
-              <div class="mon-xp-row">
-                <span>⭐ XP</span>
-                <span>{{ mon.experience ?? 0 }}/{{ mon.experience_for_next_level ?? 150 }}</span>
-              </div>
-              <div class="xp-track">
-                <div class="xp-fill-team" [style.width.%]="mon.xp_percent ?? 0"></div>
-              </div>
             </div>
           }
         </div>
       </div>
     }
 
-    <!-- ACTIONS -->
-    <div class="actions-grid">
-      <a routerLink="/chuchedex" class="action-card yellow">
-        <span class="action-icon">📖</span>
-        <span class="action-title">Explorar la Chuchedex</span>
-        <span class="action-desc">Descubre nuevos Chuchemons</span>
-      </a>
-      <a routerLink="/mochila" class="action-card blue">
-        <span class="action-icon">🎒</span>
-        <span class="action-title">Mi Mochila</span>
-        <span class="action-desc">Gestiona tu inventario</span>
-      </a>
-      <a routerLink="/profile" class="action-card purple">
-        <span class="action-icon">👤</span>
-        <span class="action-title">Mi Perfil</span>
-        <span class="action-desc">Edita tu información</span>
-      </a>
+    <!-- LEVELING PANEL -->
+    <div class="leveling-section">
+      <h2 class="section-title">📊 Chuchemons de tu Equipo</h2>
+      <app-leveling-panel [compact]="true"></app-leveling-panel>
+    </div>
+
+    <!-- INFECTIONS PANEL -->
+    <div class="infections-section">
+      <h2 class="section-title">⚕️ Estado de Salud</h2>
+      <app-infections-panel></app-infections-panel>
+    </div>
+
+    <!-- DAILY REWARDS -->
+    <div class="daily-rewards-section">
+      <app-daily-rewards></app-daily-rewards>
     </div>
 
   </main>

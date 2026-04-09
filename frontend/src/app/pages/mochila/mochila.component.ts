@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { MochilaService, MochilaXuxItem } from '../../services/mochila.service';
@@ -70,12 +71,13 @@ export class MochilaComponent implements OnInit {
   backendFreeSpaces = 20;
   mochilaLoading = false;
 
-  // ── Vacunes (hardcoded per ara) ────────────────────────────────────────────
-  vacunaItems: VacunaItem[] = [
-    { id: 4, type: 'no_apilable', name: 'Xocolatina',   description: 'Al usarla en un Xuxemon elimina "Bajón de azúcar".', imageUrl: '', tag: 'Estado',   quantity: 3 },
-    { id: 5, type: 'no_apilable', name: 'Xal de fruites', description: 'Al usarla en un Xuxemon elimina "Atracón".',          imageUrl: '', tag: 'Estado',   quantity: 2 },
-    { id: 6, type: 'no_apilable', name: 'Inxulina',      description: 'Cura todas las enfermedades del Xuxemon.',              imageUrl: '', tag: 'Cura',    quantity: 1 },
-  ];
+  // ── Vacunes (carregades del backend) ─────────────────────────────────────
+  vacunaItems: VacunaItem[] = [];
+
+  // ── Team (for apply popup) ────────────────────────────────────────────────
+  teamChuchemons: any[] = [];
+  teamLoading = false;
+  activeInfections: any[] = [];
 
   // ── Chuchemons – for the "Afegir Xuxes" panel ─────────────────────────────
   chuchemons: Chuchemon[] = [];
@@ -91,6 +93,7 @@ export class MochilaComponent implements OnInit {
     private chuchemonService: ChuchemonService,
     private mochilaService: MochilaService,
     private itemService: ItemService,
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
@@ -118,6 +121,27 @@ export class MochilaComponent implements OnInit {
     this.loadItems();
     this.loadMochila();
     this.loadChuchemons();
+    this.loadTeam();
+    this.loadInfections();
+  }
+
+  private get authHeaders(): HttpHeaders {
+    return new HttpHeaders({ Authorization: 'Bearer ' + localStorage.getItem('token') });
+  }
+
+  private loadTeam() {
+    this.teamLoading = true;
+    this.http.get<any>('http://localhost:8000/api/user/team', { headers: this.authHeaders }).subscribe({
+      next: (res) => { this.teamChuchemons = res.team ?? []; this.teamLoading = false; },
+      error: () => { this.teamLoading = false; }
+    });
+  }
+
+  private loadInfections() {
+    this.http.get<any[]>('http://localhost:8000/api/infections', { headers: this.authHeaders }).subscribe({
+      next: (data) => { this.activeInfections = data ?? []; },
+      error: () => {}
+    });
   }
 
   private loadItems() {
@@ -144,9 +168,22 @@ export class MochilaComponent implements OnInit {
     this.mochilaLoading = true;
     this.mochilaService.getMochila().subscribe({
       next: (res) => {
-        this.mochilaXuxes   = res.items;
+        this.mochilaXuxes   = res.items.filter((i: any) => !i.vaccine_id);
         this.backendUsedSpaces = res.used_spaces;
         this.backendFreeSpaces = res.free_spaces;
+
+        // Cargar vacunas de la mochila
+        const vaccineRows = res.items.filter((i: any) => i.vaccine_id && i.vaccine);
+        this.vacunaItems = vaccineRows.map((row: any) => ({
+          id: row.vaccine_id,
+          type: 'no_apilable' as const,
+          name: row.vaccine.name,
+          description: row.vaccine.description ?? '',
+          imageUrl: '',
+          tag: 'Vacuna',
+          quantity: row.quantity,
+        }));
+
         this.mochilaLoading = false;
       },
       error: () => { this.mochilaLoading = false; }
@@ -200,11 +237,11 @@ export class MochilaComponent implements OnInit {
 
   // ── Space calculations (backend data) ─────────────────────────────────────
   get usedSpaces(): number {
-    return this.backendUsedSpaces + this.totalVacunaSlots;
+    return this.backendUsedSpaces;
   }
 
   get freeSpaces(): number {
-    return this.MAX_SPACES - this.usedSpaces;
+    return this.backendFreeSpaces;
   }
 
   get spacePercent(): number {
@@ -257,7 +294,8 @@ export class MochilaComponent implements OnInit {
     for (const xuxItem of this.mochilaXuxes) {
       for (const qty of this.xuxSlotBreakdownForItem(xuxItem)) {
         if (slotIndex > this.MAX_SPACES) break;
-        slots.push({ index: slotIndex++, kind: 'xux', label: xuxItem.chuchemon.name, xuxItem, slotQty: qty });
+        const label = xuxItem.item?.name ?? 'Xux';
+        slots.push({ index: slotIndex++, kind: 'xux', label, xuxItem, slotQty: qty });
       }
     }
 
@@ -347,6 +385,11 @@ export class MochilaComponent implements OnInit {
 
   // ── Popup ─────────────────────────────────────────────────────────────────
   showPopup = false;
+  popupStep: 'info' | 'select-team' = 'info';
+  selectedTeamMember: any = null;
+  applyFeedback: { type: 'success' | 'error'; msg: string } | null = null;
+  applying = false;
+  private currentSlot: InventorySlot | null = null;
   popupItem: {
     name: string;
     description: string;
@@ -356,29 +399,40 @@ export class MochilaComponent implements OnInit {
     imageEmoji?: string;
     diseases?: string[];
     applyLabel: string;
+    vaccineId?: number;
   } | null = null;
 
-  private readonly XUX_POPUP_DESCRIPTION = '3 xuxes per pujar de petit a mitjà, i 5 de mitjà a gran.';
+  private readonly XUX_DESCRIPTIONS: { [name: string]: { description: string; emoji: string; applyLabel: string } } = {
+    'Xux de Maduixa': { description: 'Recupera 20 puntos de salud (PS) por unidad.', emoji: '🍓', applyLabel: 'Curar' },
+    'Xux de Llimona': { description: 'Aumenta el ataque temporalmente (+10% por unidad, máx 50%).', emoji: '🍋', applyLabel: 'Potenciar Ataque' },
+    'Xux de Cola':    { description: 'Aumenta la defensa temporalmente (+10% por unidad, máx 50%).', emoji: '🥤', applyLabel: 'Potenciar Defensa' },
+    'Xux Exp':        { description: 'Xux especial para evolucionar Xuxemons. 3 para Petit→Mitjà, 5 para Mitjà→Gran.', emoji: '⭐', applyLabel: 'Evolucionar' },
+  };
 
   private readonly VACUNA_META: { [name: string]: { description: string; diseases: string[]; emoji: string } } = {
-    'Xocolatina':     { description: 'Al usar-la en un Xuxemon elimina "Bajón de azúcar".', diseases: ['Bajón de azúcar'], emoji: '🍫' },
-    'Xal de fruites': { description: 'Al usar-la en un Xuxemon elimina "Atracón".',          diseases: ['Atracón'],          emoji: '🍬' },
-    'Inxulina':       { description: 'Cura totes les malalties del Xuxemon.',                  diseases: ['Totes les malalties'], emoji: '💉' },
+    'Xocolatina':     { description: 'Al usarla en un Xuxemon elimina "Bajón de azúcar".',       diseases: ['Bajón de azúcar'], emoji: '🍫' },
+    'Xal de fruits':  { description: 'Al usarla en un Xuxemon elimina "Atracón".',               diseases: ['Atracón'],          emoji: '🍬' },
+    'Insulina':       { description: 'Cura todas las enfermedades del Xuxemon.',                  diseases: ['Todas las enfermedades'], emoji: '💉' },
   };
 
   openPopup(slot: InventorySlot) {
+    this.currentSlot = slot;
+    this.popupStep = 'info';
+    this.selectedTeamMember = null;
+    this.applyFeedback = null;
+    this.applying = false;
+
     if (slot.kind === 'xux' && slot.xuxItem) {
-      const imgUrl = slot.xuxItem.chuchemon.image
-        ? 'http://localhost:8000/chuchemons/' + slot.xuxItem.chuchemon.image
-        : undefined;
+      const itemName = slot.xuxItem.item?.name ?? 'Xux';
+      const meta = this.XUX_DESCRIPTIONS[itemName];
       this.popupItem = {
-        name: 'Xux de ' + slot.xuxItem.chuchemon.name,
-        description: this.XUX_POPUP_DESCRIPTION,
+        name: itemName,
+        description: meta?.description ?? '',
         kind: 'xux',
         quantity: slot.slotQty ?? 0,
-        imageUrl: imgUrl,
-        imageEmoji: '🍬',
-        applyLabel: 'Aplicar Xux',
+        imageUrl: undefined,
+        imageEmoji: meta?.emoji ?? '🍬',
+        applyLabel: meta?.applyLabel ?? 'Aplicar',
       };
     } else if (slot.kind === 'vacuna' && slot.vacunaItem) {
       const meta = this.VACUNA_META[slot.vacunaItem.name];
@@ -390,6 +444,7 @@ export class MochilaComponent implements OnInit {
         imageEmoji: meta?.emoji ?? '💉',
         diseases: meta?.diseases,
         applyLabel: 'Aplicar Vacuna',
+        vaccineId: slot.vacunaItem.id,
       };
     }
     this.showPopup = true;
@@ -398,11 +453,96 @@ export class MochilaComponent implements OnInit {
   closePopup() {
     this.showPopup = false;
     this.popupItem = null;
+    this.popupStep = 'info';
+    this.selectedTeamMember = null;
+    this.applyFeedback = null;
+    this.applying = false;
+    this.currentSlot = null;
+  }
+
+  goToTeamSelect() {
+    this.popupStep = 'select-team';
+    this.selectedTeamMember = null;
+    this.applyFeedback = null;
+  }
+
+  selectTeamMember(member: any) {
+    this.selectedTeamMember = member;
+    this.applyFeedback = null;
+  }
+
+  infectionsFor(chuchemonId: number): any[] {
+    return this.activeInfections.filter(i => i.chuchemon_id === chuchemonId);
   }
 
   applyItem() {
-    // TODO: implement apply logic
-    this.closePopup();
+    if (!this.selectedTeamMember || !this.popupItem) return;
+    const memberId = this.selectedTeamMember.id;
+    this.applying = true;
+    this.applyFeedback = null;
+
+    if (this.popupItem.kind === 'xux') {
+      const itemName = this.popupItem.name;
+      let endpoint = '';
+      let body: any = {};
+
+      if (itemName === 'Xux de Maduixa') {
+        endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/heal`;
+        body = { quantity: 1 };
+      } else if (itemName === 'Xux de Llimona') {
+        endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/boost-attack`;
+        body = { quantity: 1 };
+      } else if (itemName === 'Xux de Cola') {
+        endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/boost-defense`;
+        body = { quantity: 1 };
+      } else if (itemName === 'Xux Exp') {
+        endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/evolve`;
+        body = {};
+      } else {
+        this.applyFeedback = { type: 'error', msg: 'Tipo de xux desconocido.' };
+        this.applying = false;
+        return;
+      }
+
+      this.http.post<any>(endpoint, body, { headers: this.authHeaders }).subscribe({
+        next: (res) => {
+          this.applyFeedback = { type: 'success', msg: res.message ?? '¡Aplicado!' };
+          this.applying = false;
+          this.loadMochila();
+          this.loadTeam();
+        },
+        error: (err) => {
+          this.applyFeedback = { type: 'error', msg: err?.error?.message ?? 'Error al aplicar.' };
+          this.applying = false;
+        }
+      });
+    } else if (this.popupItem.kind === 'vacuna') {
+      const infections = this.infectionsFor(memberId);
+      if (infections.length === 0) {
+        this.applyFeedback = { type: 'error', msg: 'Este Xuxemon no tiene ninguna infección activa.' };
+        this.applying = false;
+        return;
+      }
+      const infectionId = infections[0].id;
+      const vaccineId = this.popupItem.vaccineId;
+      this.http.post<any>(
+        `http://localhost:8000/api/infections/cure/${infectionId}/${vaccineId}`,
+        {},
+        { headers: this.authHeaders }
+      ).subscribe({
+        next: (res) => {
+          this.applyFeedback = { type: 'success', msg: res.message ?? '¡Infección curada!' };
+          this.applying = false;
+          this.loadMochila();
+          this.loadInfections();
+          this.loadTeam();
+        },
+        error: (err) => {
+          this.applyFeedback = { type: 'error', msg: err?.error?.message ?? 'Error al curar.' };
+          this.applying = false;
+        }
+      });
+    }
   }
 
   logout() {

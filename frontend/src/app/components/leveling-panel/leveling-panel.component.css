@@ -305,52 +305,145 @@
   margin-bottom: 16px;
 }
 
-/* ── Buttons (XP direct) ──────────────────────────── */
-.buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 12px 0;
+/* ── Boost badge ───────────────────────────────────── */
+.boost-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1565c0;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
 }
 
-.buttons button {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #4caf50, #45a049);
+/* ── Evolve block ──────────────────────────────────── */
+.evolve-block {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.evolve-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 6px;
+}
+
+.evolve-info {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0 0 10px;
+}
+
+.btn-evolve {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ff9800, #f57c00);
   color: #fff;
   border: none;
   border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
-.buttons button:hover {
-  background: linear-gradient(135deg, #45a049, #388e3c);
+.btn-evolve:hover:not(:disabled) {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255,152,0,.35);
 }
 
-.buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 20px;
+.btn-evolve:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.buttons button {
-  padding: 12px 15px;
-  border: none;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #4caf50, #45a049);
-  color: #fff;
-  font-weight: 600;
+/* ── Evolve preview ────────────────────────────────── */
+.evolve-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #f0faf0;
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  font-size: 0.88rem;
+}
+
+.evolve-preview-title {
+  font-weight: 700;
+  margin-bottom: 2px;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.buttons button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(76,175,80,.3);
+.evolve-stat-change {
+  color: #333;
+}
+
+.stat-up {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* ── Stats per size table ──────────────────────────── */
+.stats-table-title {
+  font-weight: 700;
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.size-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.88rem;
+}
+
+.size-table thead th {
+  padding: 10px 12px;
+  background: #f5f5f5;
+  color: #777;
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.size-table thead th.current {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.size-table tbody td {
+  padding: 9px 12px;
+  text-align: center;
+  color: #555;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.size-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.size-table tbody td.row-label {
+  text-align: left;
+  font-weight: 600;
+  color: #666;
+  background: #fafafa;
+}
+
+.size-table tbody td.current {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 700;
 }
 
 .error {

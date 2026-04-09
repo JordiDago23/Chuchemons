@@ -29,43 +29,48 @@
       </div>
     </div>
   } @else {
-    <p class="no-infections">¡Todos tus Xuxemons están sanos!</p>
+    <p class="no-infections">✅ Ningún Xuxemon tiene enfermedades activas.</p>
   }
 
-  @if (todos.length > 0) {
-    <div class="todos-section">
-      <h3>Tareas Pendientes</h3>
-      <div class="todos-list">
-        @for (todo of todos; track todo.id) {
-          <div class="todo-card" [class]="'priority-' + todo.priority">
-            <div class="todo-header">
-              <h4>{{ todo.title }}</h4>
-              <span class="priority-badge" [class]="'priority-' + todo.priority">
-                {{ todo.priority === 'high' ? 'Alta' : todo.priority === 'medium' ? 'Media' : 'Baja' }}
-              </span>
+  <!-- LOW HP WARNINGS -->
+  @if (lowHpChuchemons.length > 0) {
+    <div class="low-hp-section">
+      <h3>⚠️ Xuxemons con vida baja</h3>
+      <div class="low-hp-list">
+        @for (c of lowHpChuchemons; track c.id) {
+          <div class="low-hp-card">
+            <div class="low-hp-top">
+              <span class="low-hp-name">{{ c.name }}</span>
+              <span class="low-hp-size">{{ getSizeLabel(c.current_mida) }}</span>
+              <span class="low-hp-val">❤️ {{ c.current_hp }}/{{ c.max_hp }} PS</span>
             </div>
-            <p class="todo-description">{{ todo.description }}</p>
-            <p class="todo-action">{{ todo.action }}</p>
+            <div class="low-hp-bar">
+              <div class="low-hp-fill"
+                [style.width.%]="c.max_hp > 0 ? (c.current_hp / c.max_hp * 100) : 100"
+                [style.background]="(c.current_hp / c.max_hp) <= 0.25 ? '#f44336' : (c.current_hp / c.max_hp) <= 0.6 ? '#ff9800' : '#4caf50'">
+              </div>
+            </div>
+            <div class="low-hp-actions">
+              <span class="low-hp-stock">🍓 Maduixa: <strong>{{ c.xuxes_maduixa ?? 0 }}</strong></span>
+              <input type="number" class="heal-qty-input" [(ngModel)]="healQtyMap[c.id]" min="1" max="99" />
+              <button class="btn-heal-inline" (click)="healChuchemon(c)"
+                [disabled]="healingMap[c.id] || (c.xuxes_maduixa ?? 0) < 1 || c.cannot_eat">
+                @if (!healingMap[c.id]) { ❤️ Curar } @else { Curando… }
+              </button>
+            </div>
+            @if (c.cannot_eat) {
+              <p class="atracon-warn">🚫 Atracón activo: no puede alimentarse</p>
+            }
+            @if (feedbackMap[c.id]) {
+              <p class="inline-feedback" [class.fb-success]="feedbackMap[c.id]?.type === 'success'" [class.fb-error]="feedbackMap[c.id]?.type === 'error'">
+                {{ feedbackMap[c.id]?.msg }}
+              </p>
+            }
           </div>
         }
       </div>
     </div>
   }
-
-  <div class="vaccines-section">
-    <h3>Disponibles</h3>
-    <div class="vaccines-grid">
-      @for (vaccine of vaccines; track vaccine.id) {
-        <div class="vaccine-card">
-          <h4>{{ vaccine.name }}</h4>
-          <p class="description">{{ vaccine.description }}</p>
-          @if (vaccine.malaltia) {
-            <p class="cures"><strong>Cura:</strong> {{ vaccine.malaltia.name }}</p>
-          }
-        </div>
-      }
-    </div>
-  </div>
 
   @if (errorMessage) {
     <div class="error">{{ errorMessage }}</div>

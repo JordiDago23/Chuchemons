@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chuchemon;
+use App\Models\GameSetting;
+use App\Models\MochilaXux;
 use App\Models\User;
 use App\Models\UserTeam;
+use App\Http\Controllers\LevelingController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -483,14 +486,61 @@ class ChuchemonController extends Controller
 
             $currentMida = $userChuchemon->pivot->current_mida;
             $nextMida = null;
+            $cost = 0;
 
-            // Determine next size
+            // Atracón blocks feeding / evolving
+            $activeInfections = LevelingController::mapActiveInfections($user->id, [$chuchemonId])
+                ->get($chuchemonId, collect());
+            if ($activeInfections->contains(fn ($inf) => LevelingController::normalizeMalaltiaName($inf['name'] ?? null) === 'atracon')) {
+                return response()->json([
+                    'message' => 'Atracón activo: este Xuxemon no puede alimentarse ni evolucionar.',
+                ], 422);
+            }
+
+            // Determine next size and cost
             if ($currentMida === 'Petit') {
                 $nextMida = 'Mitjà';
+                $cost = GameSetting::getInt('xux_petit_mitja', 3);
             } elseif ($currentMida === 'Mitjà') {
                 $nextMida = 'Gran';
+                $cost = GameSetting::getInt('xux_mitja_gran', 5);
             } elseif ($currentMida === 'Gran') {
                 return response()->json(['message' => 'Tu Xuxemon ya está en su máxima evolución'], 400);
+            }
+
+            // Bajón de azúcar: +2 extra xuxes per evolution
+            if ($activeInfections->contains(fn ($inf) => in_array(
+                LevelingController::normalizeMalaltiaName($inf['name'] ?? null),
+                ['bajon de azucar', 'bajo de azucar']
+            ))) {
+                $cost += 2;
+            }
+
+            // Check Xux Exp (item_id=6) for evolution
+            $totalXuxExp = MochilaXux::where('user_id', $user->id)
+                ->where('item_id', 6)
+                ->sum('quantity');
+
+            if ($totalXuxExp < $cost) {
+                return response()->json([
+                    'message' => "Necesitas {$cost} Xux Exp para evolucionar. Tienes {$totalXuxExp}.",
+                ], 400);
+            }
+
+            // Deduct Xux Exp
+            $remaining = $cost;
+            $xuxRows = MochilaXux::where('user_id', $user->id)
+                ->where('item_id', 6)
+                ->where('quantity', '>', 0)
+                ->orderBy('quantity', 'asc')
+                ->get();
+
+            foreach ($xuxRows as $row) {
+                if ($remaining <= 0) break;
+                $deduct = min($remaining, $row->quantity);
+                $row->quantity -= $deduct;
+                $row->save();
+                $remaining -= $deduct;
             }
 
             // Update the pivot table with new mida
