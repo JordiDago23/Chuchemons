@@ -43,8 +43,8 @@
     </div>
   </aside>
 
-  <main class="main">
-    <div class="page-header">
+  <main class="main" id="main-content">
+    <header class="page-header">
       <div>
         <h1>Amigos</h1>
         <p>{{ stats.online }} en línea • {{ stats.total }} amigos totales</p>
@@ -52,7 +52,7 @@
       <button class="add-btn" (click)="toggleSearchPanel()">
         {{ showSearchPanel ? 'Cerrar' : 'Añadir amigo' }}
       </button>
-    </div>
+    </header>
 
     @if (success) {
       <div class="feedback success">{{ success }}</div>

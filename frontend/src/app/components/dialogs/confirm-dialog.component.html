@@ -1,15 +1,15 @@
-<div class="confirm-dialog-overlay" *ngIf="isVisible" (click)="close($event)">
-  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+<div class="confirm-dialog-overlay" *ngIf="isVisible" (click)="close($event)" (keydown.escape)="onCancel()">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" (click)="$event.stopPropagation()">
     <div class="dialog-header">
-      <h2>{{ title }}</h2>
-      <button class="close-btn" (click)="onCancel()">×</button>
+      <h2 id="confirm-dialog-title">{{ title }}</h2>
+      <button class="close-btn" aria-label="Cerrar diálogo" (click)="onCancel()">×</button>
     </div>
     <div class="dialog-content">
       <p>{{ message }}</p>
     </div>
     <div class="dialog-actions">
       <button class="btn btn-secondary" (click)="onCancel()">{{ cancelLabel }}</button>
-      <button class="btn btn-danger" (click)="onConfirm()">{{ confirmLabel }}</button>
+      <button class="btn btn-danger" #confirmBtn (click)="onConfirm()">{{ confirmLabel }}</button>
     </div>
   </div>
 </div>
