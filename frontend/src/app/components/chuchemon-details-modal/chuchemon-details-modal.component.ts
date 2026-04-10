@@ -63,4 +63,50 @@ export class ChuchemonDetailsModalComponent {
   get activeInfections(): Array<{ name: string; infection_percentage: number }> {
     return this.chuchemon?.active_infections ?? [];
   }
+
+  get displayAttack(): number {
+    return this.chuchemon?.effective_attack ?? this.chuchemon?.attack ?? 0;
+  }
+
+  get displayDefense(): number {
+    return this.chuchemon?.effective_defense ?? this.chuchemon?.defense ?? 0;
+  }
+
+  get displaySpeed(): number {
+    return this.chuchemon?.effective_speed ?? this.chuchemon?.speed ?? 0;
+  }
+
+  get currentHp(): number | null {
+    return typeof this.chuchemon?.current_hp === 'number' ? this.chuchemon.current_hp : null;
+  }
+
+  get maxHp(): number | null {
+    return typeof this.chuchemon?.max_hp === 'number' ? this.chuchemon.max_hp : null;
+  }
+
+  get hpPercent(): number {
+    if (this.currentHp === null || this.maxHp === null || this.maxHp <= 0) {
+      return 100;
+    }
+
+    return Math.max(0, Math.min(100, (this.currentHp / this.maxHp) * 100));
+  }
+
+  get experience(): number | null {
+    return typeof this.chuchemon?.experience === 'number' ? this.chuchemon.experience : null;
+  }
+
+  get experienceForNextLevel(): number | null {
+    return typeof this.chuchemon?.experience_for_next_level === 'number'
+      ? this.chuchemon.experience_for_next_level
+      : null;
+  }
+
+  get xpPercent(): number {
+    if (this.experience === null || this.experienceForNextLevel === null || this.experienceForNextLevel <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, (this.experience / this.experienceForNextLevel) * 100));
+  }
 }

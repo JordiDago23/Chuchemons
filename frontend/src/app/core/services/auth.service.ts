@@ -133,12 +133,15 @@ export class AuthService {
 
   logout() {
     const token = this.getToken();
-    this.clearSession();
 
     if (token) {
       this.http.post(`${this.apiUrl}/logout`, {}).pipe(
         catchError(() => of(null))
-      ).subscribe();
+      ).subscribe({
+        complete: () => this.clearSession(),
+      });
+    } else {
+      this.clearSession();
     }
 
     this.router.navigate(['/login']);

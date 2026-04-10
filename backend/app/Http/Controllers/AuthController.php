@@ -61,7 +61,7 @@ class AuthController extends Controller
                     'current_mida'  => 'Petit',
                     'level'         => 1,
                     'experience'    => 0,
-                    'experience_for_next_level' => 150,
+                    'experience_for_next_level' => LevelingController::experienceForMida('Petit'),
                     'current_hp'    => LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit'),
                     'max_hp'        => LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit'),
                     'created_at'    => now(),

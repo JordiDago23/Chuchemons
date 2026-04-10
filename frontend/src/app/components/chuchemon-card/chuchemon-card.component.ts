@@ -36,6 +36,11 @@ export class ChuchemonCardComponent {
   }
 
   get sizeBadge(): string {
+    const currentMida = this.chuchemon?.current_mida;
+    if (currentMida === 'Petit') return 'Pequeño';
+    if (currentMida === 'Mitjà') return 'Mediano';
+    if (currentMida === 'Gran') return 'Grande';
+
     const count = this.chuchemon?.count ?? 1;
     if (count >= 5) return 'Grande';
     if (count >= 3) return 'Mediano';
@@ -70,6 +75,34 @@ export class ChuchemonCardComponent {
 
   get hasActiveInfections(): boolean {
     return !this.locked && (this.chuchemon?.has_active_infections || (this.chuchemon?.active_infections?.length ?? 0) > 0);
+  }
+
+  get hpValueLabel(): string {
+    const currentHp = this.chuchemon?.current_hp;
+    const maxHp = this.chuchemon?.max_hp;
+
+    if (typeof currentHp !== 'number' || typeof maxHp !== 'number') {
+      return '—/—';
+    }
+
+    return `${currentHp}/${maxHp}`;
+  }
+
+  get hpPercent(): number {
+    const currentHp = this.chuchemon?.current_hp;
+    const maxHp = this.chuchemon?.max_hp;
+
+    if (typeof currentHp !== 'number' || typeof maxHp !== 'number' || maxHp <= 0) {
+      return 100;
+    }
+
+    return Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
+  }
+
+  get hpColor(): string {
+    if (this.hpPercent > 60) return '#4caf50';
+    if (this.hpPercent > 25) return '#ff9800';
+    return '#f44336';
   }
 
   get primaryInfectionLabel(): string {

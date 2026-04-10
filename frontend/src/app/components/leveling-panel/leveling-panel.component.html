@@ -79,7 +79,7 @@
           </button>
           <span class="xux-stock">🍓 Maduixa: <strong>{{ selectedChuchemon.xuxes_maduixa ?? 0 }}</strong></span>
         </div>
-        <p class="preview-note">Gastar {{ healQty }} Xux de Maduixa para recuperar hasta {{ healPreview }} PS.</p>
+        <p class="preview-note">Gastar {{ healQty }} Xux de Maduixa para recuperar hasta {{ healPreview }} PS y ganar {{ healQty * 50 }} XP.</p>
       </div>
       }
 
@@ -91,6 +91,7 @@
           @if (selectedChuchemon.attack_boost > 0) { <small class="boost-badge">+{{ selectedChuchemon.attack_boost }}%</small> }
           &nbsp;🛡️ Def. efectiva: <strong>{{ selectedChuchemon.effective_defense ?? selectedChuchemon.defense }}</strong>
           @if (selectedChuchemon.defense_boost > 0) { <small class="boost-badge">+{{ selectedChuchemon.defense_boost }}%</small> }
+          &nbsp;💨 Vel. efectiva: <strong>{{ selectedChuchemon.effective_speed ?? selectedChuchemon.speed }}</strong>
         </p>
       </div>
 
@@ -113,6 +114,7 @@
             <span class="evolve-stat-change">❤️ PS: {{ statsForSize(selectedChuchemon.current_mida).hp }} → <strong>{{ statsForSize(getNextMida()).hp }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).hp - statsForSize(selectedChuchemon.current_mida).hp }})</small></span>
             <span class="evolve-stat-change">⚔️ Ataque: {{ statsForSize(selectedChuchemon.current_mida).atk }} → <strong>{{ statsForSize(getNextMida()).atk }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).atk - statsForSize(selectedChuchemon.current_mida).atk }})</small></span>
             <span class="evolve-stat-change">🛡️ Defensa: {{ statsForSize(selectedChuchemon.current_mida).def }} → <strong>{{ statsForSize(getNextMida()).def }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).def - statsForSize(selectedChuchemon.current_mida).def }})</small></span>
+            <span class="evolve-stat-change">💨 Velocidad: {{ statsForSize(selectedChuchemon.current_mida).speed }} → <strong>{{ statsForSize(getNextMida()).speed }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).speed - statsForSize(selectedChuchemon.current_mida).speed }})</small></span>
           </div>
           <button class="btn-evolve" (click)="evolve()"
             [disabled]="selectedChuchemon.cannot_eat || (selectedChuchemon.xuxes_exp ?? 0) < getEvolveCost()">
@@ -156,6 +158,12 @@
               <td class="row-label">Def</td>
               @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
                 <td [class.current]="selectedChuchemon.current_mida === size">{{ statsForSize(size).def }}</td>
+              }
+            </tr>
+            <tr>
+              <td class="row-label">Vel</td>
+              @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
+                <td [class.current]="selectedChuchemon.current_mida === size">{{ statsForSize(size).speed }}</td>
               }
             </tr>
           </tbody>

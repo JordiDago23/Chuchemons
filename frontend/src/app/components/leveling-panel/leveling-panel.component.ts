@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
+import { ChuchemonService } from '../../services/chuchemon.service';
 
 @Component({
   selector: 'app-leveling-panel',
@@ -26,7 +27,10 @@ export class LevelingPanelComponent implements OnInit {
 
   private readonly api = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private chuchemonService: ChuchemonService
+  ) {}
 
   ngOnInit(): void {
     this.loadChuchemons();
@@ -74,6 +78,7 @@ export class LevelingPanelComponent implements OnInit {
       next: (res) => {
         this.actionMessage = res.message ?? '¡Xuxemon evolucionado!';
         this.loadChuchemons();
+        this.chuchemonService.notifyChuchemonStateChanged();
       },
       error: (err) => {
         this.actionMessage = err.error?.message ?? 'Error al evolucionar';
@@ -112,7 +117,7 @@ export class LevelingPanelComponent implements OnInit {
 
     this.openConfirmDialog(
       'Confirmar curación',
-      `Vas a gastar hasta ${this.healQty} Xux de Maduixa para curar a ${this.selectedChuchemon.name} y recuperar hasta ${this.healQty * 20} PS.`,
+      `Vas a gastar hasta ${this.healQty} Xux de Maduixa para curar a ${this.selectedChuchemon.name}, recuperar hasta ${this.healQty * 20} PS y ganar ${this.healQty * 50} XP.`,
       () => this.executeHealWithXux()
     );
   }
@@ -120,8 +125,9 @@ export class LevelingPanelComponent implements OnInit {
   private executeHealWithXux(): void {
     this.http.post(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/heal`, { quantity: this.healQty }).subscribe({
       next: (res: any) => {
-        this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp})`;
+        this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp}) · +${res.xp_gained ?? 0} XP`;
         this.loadChuchemons();
+        this.chuchemonService.notifyChuchemonStateChanged();
       },
       error: (err) => {
         this.actionMessage = err.error?.message ?? 'No se puede curar ahora';
@@ -138,18 +144,27 @@ export class LevelingPanelComponent implements OnInit {
     }
   }
 
-  statsForSize(size: string): { hp: number; atk: number; def: number } {
+  statsForSize(size: string): { hp: number; atk: number; def: number; speed: number } {
     const c = this.selectedChuchemon;
-    if (!c) return { hp: 0, atk: 0, def: 0 };
+    if (!c) return { hp: 0, atk: 0, def: 0, speed: 0 };
     const baseAtk = c.attack ?? 50;
     const baseDef = c.defense ?? 50;
+    const baseSpeed = c.speed ?? 50;
+    const level = c.level ?? 1;
+    const attackBoost = 1 + ((c.attack_boost ?? 0) / 100);
+    const defenseBoost = 1 + ((c.defense_boost ?? 0) / 100);
     let mult = 1;
     if (size === 'Mitjà') mult = 1.02;
     if (size === 'Gran') mult = 1.071;
+    let hpBonus = 0;
+    if (size === 'Mitjà') hpBonus = 25;
+    if (size === 'Gran') hpBonus = 50;
+
     return {
-      hp: Math.round((100 + baseDef * 0.5) * mult),
-      atk: Math.round(baseAtk * mult),
-      def: Math.round(baseDef * mult),
+      hp: Math.round(50 + baseDef + (level * 5) + hpBonus),
+      atk: Math.round((baseAtk * mult) * attackBoost),
+      def: Math.round((baseDef * mult) * defenseBoost),
+      speed: Math.round(baseSpeed * mult),
     };
   }
 

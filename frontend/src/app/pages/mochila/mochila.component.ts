@@ -406,7 +406,7 @@ export class MochilaComponent implements OnInit {
     'Xux de Maduixa': { description: 'Recupera 20 puntos de salud (PS) por unidad.', emoji: '🍓', applyLabel: 'Curar' },
     'Xux de Llimona': { description: 'Aumenta el ataque temporalmente (+10% por unidad, máx 50%).', emoji: '🍋', applyLabel: 'Potenciar Ataque' },
     'Xux de Cola':    { description: 'Aumenta la defensa temporalmente (+10% por unidad, máx 50%).', emoji: '🥤', applyLabel: 'Potenciar Defensa' },
-    'Xux Exp':        { description: 'Xux especial para evolucionar Xuxemons. 3 para Petit→Mitjà, 5 para Mitjà→Gran.', emoji: '⭐', applyLabel: 'Evolucionar' },
+    'Xux Exp':        { description: 'Aporta 50 XP al Xuxemon y se guarda al usarlo.', emoji: '⭐', applyLabel: 'Dar XP' },
   };
 
   private readonly VACUNA_META: { [name: string]: { description: string; diseases: string[]; emoji: string } } = {
@@ -497,8 +497,8 @@ export class MochilaComponent implements OnInit {
         endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/boost-defense`;
         body = { quantity: 1 };
       } else if (itemName === 'Xux Exp') {
-        endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/evolve`;
-        body = {};
+        endpoint = `http://localhost:8000/api/user/chuchemons/${memberId}/use-xux`;
+        body = { quantity: 1 };
       } else {
         this.applyFeedback = { type: 'error', msg: 'Tipo de xux desconocido.' };
         this.applying = false;
@@ -507,7 +507,10 @@ export class MochilaComponent implements OnInit {
 
       this.http.post<any>(endpoint, body, { headers: this.authHeaders }).subscribe({
         next: (res) => {
-          this.applyFeedback = { type: 'success', msg: res.message ?? '¡Aplicado!' };
+          const successMsg = itemName === 'Xux Exp'
+            ? (res.message ?? `+${res.xp_gained ?? 50} XP añadidos y guardados.`)
+            : (res.message ?? '¡Aplicado!');
+          this.applyFeedback = { type: 'success', msg: successMsg };
           this.applying = false;
           this.loadMochila();
           this.loadTeam();

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, of } from 'rxjs';
 import { catchError, tap, timeout } from 'rxjs/operators';
 import { Chuchemon } from '../models/chuchemon.model';
 
@@ -12,6 +12,8 @@ export class ChuchemonService {
   private userApiUrl = 'http://localhost:8000/api/user';
   private chuchechomsSubject = new BehaviorSubject<Chuchemon[]>([]);
   public chuchemons$ = this.chuchechomsSubject.asObservable();
+  private stateChangesSubject = new Subject<void>();
+  public stateChanges$ = this.stateChangesSubject.asObservable();
   private allChuchemonsCache: Chuchemon[] | null = null;
   private allChuchemonsLoadedAt = 0;
   private myChuchemonsCache: Chuchemon[] | null = null;
@@ -33,6 +35,11 @@ export class ChuchemonService {
     this.myChuchemonsLoadedAt = 0;
     this.teamCache = null;
     this.teamLoadedAt = 0;
+  }
+
+  notifyChuchemonStateChanged(): void {
+    this.invalidateCaches();
+    this.stateChangesSubject.next();
   }
 
   getAllChuchemons(forceRefresh = false): Observable<Chuchemon[]> {
@@ -88,7 +95,7 @@ export class ChuchemonService {
    */
   captureChuchemon(chuchemonId: number): Observable<any> {
     return this.http.post(`${this.userApiUrl}/chuchemons/${chuchemonId}/capture`, {}).pipe(
-      tap(() => this.invalidateCaches()),
+      tap(() => this.notifyChuchemonStateChanged()),
       catchError((error) => {
         console.warn('Error capturing chuchemon:', error);
         return of({ message: 'Error capturando chuchemon' });
@@ -125,10 +132,7 @@ export class ChuchemonService {
       chuchemon_2_id,
       chuchemon_3_id
     }).pipe(
-      tap(() => {
-        this.teamCache = null;
-        this.teamLoadedAt = 0;
-      }),
+      tap(() => this.notifyChuchemonStateChanged()),
       catchError((error) => {
         console.warn('Error saving team:', error);
         return of({ message: 'Error guardando equipo' });

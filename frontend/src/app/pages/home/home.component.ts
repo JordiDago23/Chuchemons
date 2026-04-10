@@ -103,6 +103,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.chuchemonService.stateChanges$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadTeam(true);
+        this.loadStats(true);
+      });
+
     const cached = this.auth.currentUser;
     if (cached) {
       this.user = cached;
@@ -130,9 +137,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadTeam(): void {
+  loadTeam(forceRefresh: boolean = false): void {
     this.teamLoading = true;
-    this.chuchemonService.getTeam()
+    this.chuchemonService.getTeam(forceRefresh)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => { this.teamLoading = false; })
@@ -170,8 +177,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadStats(): void {
-    this.chuchemonService.getAllChuchemons()
+  loadStats(forceRefresh: boolean = false): void {
+    this.chuchemonService.getAllChuchemons(forceRefresh)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

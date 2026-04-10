@@ -37,7 +37,7 @@ export class AdminComponent implements OnInit {
     { id: 1, name: 'Xux de Maduixa', emoji: '🍓' },
     { id: 2, name: 'Xux de Llimona', emoji: '🍋' },
     { id: 3, name: 'Xux de Cola', emoji: '🥤' },
-    { id: 6, name: 'Xux Exp', emoji: '⭐' },
+    { id: 4, name: 'Xux Exp', emoji: '⭐' },
   ];
 
   // ── Afegir Xuxemon Aleatori ───────────────────────────────────────────────

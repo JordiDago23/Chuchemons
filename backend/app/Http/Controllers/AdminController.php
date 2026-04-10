@@ -12,6 +12,7 @@ use App\Models\Malaltia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -22,13 +23,26 @@ class AdminController extends Controller
 
     private function settingsPayload(): array
     {
+        $defaultRate = GameSetting::getInt('taxa_infeccio', 12);
+        $diseases = Malaltia::query()->select('id', 'name')->get()->map(function ($disease) use ($defaultRate) {
+            $disease->infection_rate = Schema::hasColumn('malalties', 'infection_rate')
+                ? (int) ($disease->getAttribute('infection_rate') ?? $defaultRate)
+                : $defaultRate;
+
+            return $disease;
+        });
+
+        if (Schema::hasColumn('malalties', 'infection_rate')) {
+            $diseases = Malaltia::query()->select('id', 'name', 'infection_rate')->get();
+        }
+
         return [
             'config' => [
                 'xux_petit_mitja' => GameSetting::getInt('xux_petit_mitja', 3),
                 'xux_mitja_gran' => GameSetting::getInt('xux_mitja_gran', 5),
             ],
             'infection' => [
-                'diseases' => Malaltia::select('id', 'name', 'infection_rate')->get(),
+                'diseases' => $diseases,
             ],
             'schedules' => [
                 'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
@@ -75,6 +89,12 @@ class AdminController extends Controller
 
     public function updateInfectionRate(Request $request): JsonResponse
     {
+        if (!Schema::hasColumn('malalties', 'infection_rate')) {
+            return response()->json([
+                'message' => 'Falta la migración de infection_rate en malalties. Ejecuta las migraciones del backend.',
+            ], 409);
+        }
+
         $validator = Validator::make($request->all(), [
             'diseases' => 'required|array',
             'diseases.*.id' => 'required|exists:malalties,id',
@@ -246,13 +266,17 @@ class AdminController extends Controller
             // Insert new captured chuchemon — initialize HP
             $maxHp = LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit');
             DB::table('user_chuchemons')->insert([
-                'user_id'      => $targetUser->id,
-                'chuchemon_id' => $chuchemon->id,
-                'count'        => 1,
-                'max_hp'       => $maxHp,
-                'current_hp'   => $maxHp,
-                'created_at'   => now(),
-                'updated_at'   => now(),
+                'user_id'                    => $targetUser->id,
+                'chuchemon_id'               => $chuchemon->id,
+                'count'                      => 1,
+                'current_mida'               => 'Petit',
+                'level'                      => 1,
+                'experience'                 => 0,
+                'experience_for_next_level'  => LevelingController::experienceForMida('Petit'),
+                'max_hp'                     => $maxHp,
+                'current_hp'                 => $maxHp,
+                'created_at'                 => now(),
+                'updated_at'                 => now(),
             ]);
         }
 

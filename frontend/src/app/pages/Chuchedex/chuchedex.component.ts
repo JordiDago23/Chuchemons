@@ -74,6 +74,13 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.checkAdminStatus();
     this.loadChuchemons();
+    this.chuchemonService.stateChanges$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (!this.isLoading) {
+          this.loadChuchemons(false, true);
+        }
+      });
     
     // Auto-refresh every 10 seconds when page is visible
     this.setupAutoRefresh();
@@ -265,6 +272,10 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   getSizeBadge(chuchemon: ChuchemonExtended): 'Petit' | 'Mitjà' | 'Gran' {
+    if (chuchemon.current_mida === 'Petit' || chuchemon.current_mida === 'Mitjà' || chuchemon.current_mida === 'Gran') {
+      return chuchemon.current_mida;
+    }
+
     const quantity = this.getMultiplier(chuchemon);
     if (quantity >= 5) return 'Gran';
     if (quantity >= 3) return 'Mitjà';

@@ -67,9 +67,9 @@
         <p class="cc-status">Afectado por malaltia activa</p>
       }
       <div class="cc-hp-row">
-        <span>HP</span><span class="cc-hp-val">100/100</span>
+        <span>HP</span><span class="cc-hp-val">{{ hpValueLabel }}</span>
       </div>
-      <div class="cc-hp-bar"><div class="cc-hp-fill" style="width:100%"></div></div>
+      <div class="cc-hp-bar"><div class="cc-hp-fill" [style.width.%]="hpPercent" [style.background]="hpColor"></div></div>
     }
 
     @if (!locked && showCaptureBtn) {

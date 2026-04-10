@@ -40,31 +40,31 @@
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-bar">
-                <div class="stat-fill" [style.width.%]="(chuchemon.attack / 255) * 100"></div>
+                <div class="stat-fill" [style.width.%]="(displayAttack / 255) * 100"></div>
               </div>
               <div class="stat-info">
                 <span class="stat-label">Atac</span>
-                <span class="stat-value">{{ chuchemon.attack }}</span>
+                <span class="stat-value">{{ displayAttack }}</span>
               </div>
             </div>
 
             <div class="stat-item">
               <div class="stat-bar">
-                <div class="stat-fill" [style.width.%]="(chuchemon.defense / 255) * 100"></div>
+                <div class="stat-fill" [style.width.%]="(displayDefense / 255) * 100"></div>
               </div>
               <div class="stat-info">
                 <span class="stat-label">Defensa</span>
-                <span class="stat-value">{{ chuchemon.defense }}</span>
+                <span class="stat-value">{{ displayDefense }}</span>
               </div>
             </div>
 
             <div class="stat-item">
               <div class="stat-bar">
-                <div class="stat-fill" [style.width.%]="(chuchemon.speed / 255) * 100"></div>
+                <div class="stat-fill" [style.width.%]="(displaySpeed / 255) * 100"></div>
               </div>
               <div class="stat-info">
                 <span class="stat-label">Velocidad</span>
-                <span class="stat-value">{{ chuchemon.speed }}</span>
+                <span class="stat-value">{{ displaySpeed }}</span>
               </div>
             </div>
           </div>
@@ -72,20 +72,20 @@
           <div class="modal-hp-section">
             <div class="hp-row">
               <span>Puntos de vida</span>
-              <span class="hp-val">100/100</span>
+              <span class="hp-val">{{ currentHp ?? '—' }}/{{ maxHp ?? '—' }}</span>
             </div>
             <div class="hp-bar">
-              <div class="hp-fill" style="width: 100%"></div>
+              <div class="hp-fill" [style.width.%]="hpPercent"></div>
             </div>
           </div>
 
           <div class="modal-xp-section">
             <div class="xp-row">
               <span>Experiencia</span>
-              <span class="xp-val">750/1000 XP</span>
+              <span class="xp-val">{{ experience ?? 0 }}/{{ experienceForNextLevel ?? 0 }} XP</span>
             </div>
             <div class="xp-bar">
-              <div class="xp-fill" style="width: 75%"></div>
+              <div class="xp-fill" [style.width.%]="xpPercent"></div>
             </div>
           </div>
         </div>

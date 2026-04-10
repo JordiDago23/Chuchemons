@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GameSetting;
+use App\Models\Item;
 use App\Models\Malaltia;
 use App\Models\MochilaXux;
 use App\Models\UserInfection;
@@ -10,10 +11,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class LevelingController extends Controller
 {
+    private static array $itemIdsByName = [];
+
+    public const XP_PER_CANDY = 50;
+
     public static function normalizeMalaltiaName(?string $name): string
     {
         return str_replace(
@@ -21,6 +27,34 @@ class LevelingController extends Controller
             ['a', 'a', 'e', 'e', 'i', 'i', 'o', 'o', 'u', 'u'],
             mb_strtolower((string) $name)
         );
+    }
+
+    private static function itemId(string $itemName): ?int
+    {
+        if (!array_key_exists($itemName, self::$itemIdsByName)) {
+            self::$itemIdsByName[$itemName] = Item::idByName($itemName);
+        }
+
+        return self::$itemIdsByName[$itemName];
+    }
+
+    private static function itemQuantity(int $userId, string $itemName): int
+    {
+        $itemId = self::itemId($itemName);
+        if (!$itemId) {
+            return 0;
+        }
+
+        return (int) MochilaXux::where('user_id', $userId)->where('item_id', $itemId)->sum('quantity');
+    }
+
+    public static function experienceForMida(string $currentMida): int
+    {
+        return match ($currentMida) {
+            'Mitjà' => 350,
+            'Gran' => 450,
+            default => 250,
+        };
     }
 
     public static function mapActiveInfections(int $userId, array $chuchemonIds): Collection
@@ -81,10 +115,17 @@ class LevelingController extends Controller
             ->where('is_active', true)
             ->pluck('malaltia_id');
 
-        $candidates = Malaltia::query()
-            ->where('infection_rate', '>', 0)
-            ->when($activeMalaltiaIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $activeMalaltiaIds))
-            ->get();
+        $baseQuery = Malaltia::query()
+            ->when($activeMalaltiaIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $activeMalaltiaIds));
+
+        if (Schema::hasColumn('malalties', 'infection_rate')) {
+            $candidates = $baseQuery->where('infection_rate', '>', 0)->get();
+        } else {
+            $fallbackRate = GameSetting::getInt('taxa_infeccio', 12);
+            $candidates = $baseQuery->get()->each(function ($malaltia) use ($fallbackRate) {
+                $malaltia->infection_rate = $fallbackRate;
+            });
+        }
 
         if ($candidates->isEmpty()) {
             return null;
@@ -214,7 +255,9 @@ class LevelingController extends Controller
                 'level'                   => $uc->level,
                 'experience'              => $uc->experience,
                 'experience_for_next_level' => $uc->experience_for_next_level,
-                'experience_progress'     => round(($uc->experience / $uc->experience_for_next_level) * 100, 2),
+                'experience_progress'     => $uc->experience_for_next_level > 0
+                    ? round(($uc->experience / $uc->experience_for_next_level) * 100, 2)
+                    : 0,
                 'current_hp'              => $uc->current_hp ?? $uc->max_hp,
                 'max_hp'                  => $uc->max_hp ?? 105,
                 'active_infections'       => $activeInfections->values()->all(),
@@ -268,7 +311,9 @@ class LevelingController extends Controller
                     $maxHp   = $c->max_hp   ?? self::computeMaxHp($baseDef, $c->level, $mida);
                     $currHp  = $c->current_hp ?? $maxHp;
 
-                    $c->experience_progress   = round(($c->experience / $c->experience_for_next_level) * 100, 2);
+                    $c->experience_progress   = $c->experience_for_next_level > 0
+                        ? round(($c->experience / $c->experience_for_next_level) * 100, 2)
+                        : 0;
                     $atkBoost = ($c->attack_boost ?? 0) / 100;
                     $defBoost = ($c->defense_boost ?? 0) / 100;
                     $c->effective_attack      = round(self::effectiveAttack($baseAtk, $mida) * (1 + $atkBoost), 1);
@@ -278,10 +323,10 @@ class LevelingController extends Controller
                     $c->hp_percent            = round(($c->current_hp / $maxHp) * 100, 1);
 
                     // Per-type xux quantities
-                    $c->xuxes_maduixa = MochilaXux::where('user_id', $userId)->where('item_id', 1)->sum('quantity');
-                    $c->xuxes_llimona = MochilaXux::where('user_id', $userId)->where('item_id', 2)->sum('quantity');
-                    $c->xuxes_cola    = MochilaXux::where('user_id', $userId)->where('item_id', 3)->sum('quantity');
-                    $c->xuxes_exp     = MochilaXux::where('user_id', $userId)->where('item_id', 6)->sum('quantity');
+                    $c->xuxes_maduixa = self::itemQuantity($userId, Item::NAME_XUX_MADUIXA);
+                    $c->xuxes_llimona = self::itemQuantity($userId, Item::NAME_XUX_LLIMONA);
+                    $c->xuxes_cola    = self::itemQuantity($userId, Item::NAME_XUX_COLA);
+                    $c->xuxes_exp     = self::itemQuantity($userId, Item::NAME_XUX_EXP);
                     $c->xuxes_qty     = $c->xuxes_maduixa + $c->xuxes_llimona + $c->xuxes_cola + $c->xuxes_exp;
 
                     return $c;
@@ -328,19 +373,19 @@ class LevelingController extends Controller
 
             if (!$uc) return response()->json(['message' => 'Chuchemon no encontrado en tu colección'], 404);
 
+            $mida      = $uc->current_mida ?? 'Petit';
             $newXp     = $uc->experience + $experienceAmount;
             $level     = $uc->level;
-            $xpForNext = $uc->experience_for_next_level;
+            $xpForNext = $uc->experience_for_next_level ?: self::experienceForMida($mida);
             $leveledUp = false;
 
             while ($newXp >= $xpForNext) {
                 $newXp    -= $xpForNext;
                 $level++;
-                $xpForNext = 100 + ($level * 50);
+                $xpForNext = self::experienceForMida($mida);
                 $leveledUp = true;
             }
 
-            $mida   = $uc->current_mida ?? 'Petit';
             $maxHp  = self::computeMaxHp($uc->defense ?? 50, $level, $mida);
             $currHp = $uc->current_hp ?? $maxHp;
 
@@ -375,7 +420,7 @@ class LevelingController extends Controller
     }
 
     /**
-     * Gasta N Xuxes del inventari per donar +20 XP cada un
+    * Gasta N Xuxes del inventari per donar +50 XP cada un
      * POST /api/user/chuchemons/{id}/use-xux  — body: { quantity: N }
      */
     public function useXuxForExperience(Request $request, int $chuchemonId): JsonResponse
@@ -395,9 +440,14 @@ class LevelingController extends Controller
                 ], 422);
             }
 
-            // Check the user has enough Xux Exp (item_id=6)
+            $xuxExpItemId = self::itemId(Item::NAME_XUX_EXP);
+            if (!$xuxExpItemId) {
+                return response()->json(['message' => 'No existe el item Xux Exp en la base de datos.'], 409);
+            }
+
+            // Check the user has enough Xux Exp
             $mochilaXux = MochilaXux::where('user_id', $user->id)
-                ->where('item_id', 6)
+                ->where('item_id', $xuxExpItemId)
                 ->first();
 
             if (!$mochilaXux || $mochilaXux->quantity < $qty) {
@@ -412,8 +462,8 @@ class LevelingController extends Controller
             $mochilaXux->quantity -= $qty;
             $mochilaXux->quantity <= 0 ? $mochilaXux->delete() : $mochilaXux->save();
 
-            // Add experience (20 XP per xux)
-            $xpToAdd = $qty * 20;
+            // Add experience (+50 XP per candy)
+            $xpToAdd = $qty * self::XP_PER_CANDY;
 
             $response = $this->addExperience($chuchemonId, $xpToAdd);
             $payload = $response->getData(true);
@@ -427,6 +477,8 @@ class LevelingController extends Controller
                 $payload['infection_triggered'] = $newInfection;
                 $payload['message'] = ($payload['message'] ?? 'Experiencia añadida') . ' Además, el Xuxemon ha contraído una enfermedad.';
             }
+
+            $payload['xp_gained'] = $xpToAdd;
 
             return response()->json($payload, $response->getStatusCode());
         } catch (\Exception $e) {
@@ -456,9 +508,14 @@ class LevelingController extends Controller
                 ], 422);
             }
 
-            // Only Xux de Maduixa (item_id=1) heals HP
+            $maduixaItemId = self::itemId(Item::NAME_XUX_MADUIXA);
+            if (!$maduixaItemId) {
+                return response()->json(['message' => 'No existe el item Xux de Maduixa en la base de datos.'], 409);
+            }
+
+            // Only Xux de Maduixa heals HP
             $maduixaRow = MochilaXux::where('user_id', $user->id)
-                ->where('item_id', 1)
+                ->where('item_id', $maduixaItemId)
                 ->first();
 
             if (!$maduixaRow || $maduixaRow->quantity < $qty) {
@@ -501,13 +558,26 @@ class LevelingController extends Controller
                 ->where('chuchemon_id', $chuchemonId)
                 ->update(['current_hp' => $newHp]);
 
+            $xpToAdd = $xuxesUsed * self::XP_PER_CANDY;
+            $xpResponse = $this->addExperience($chuchemonId, $xpToAdd);
+            $xpPayload = $xpResponse->getData(true);
+
+            if ($xpResponse->getStatusCode() >= 400) {
+                return $xpResponse;
+            }
+
             return response()->json([
-                'message'      => "¡Has curado {$actualHeal} PS al Xuxemon!",
+                'message'      => "¡Has curado {$actualHeal} PS al Xuxemon y ha ganado {$xpToAdd} XP!",
                 'healed'       => $actualHeal,
                 'current_hp'   => $newHp,
                 'max_hp'       => $maxHp,
                 'xuxes_used'   => $xuxesUsed,
                 'xuxes_left'   => $maduixaRow->exists ? $maduixaRow->quantity : 0,
+                'xp_gained'    => $xpToAdd,
+                'experience'   => $xpPayload['experience'] ?? null,
+                'experience_for_next_level' => $xpPayload['experience_for_next_level'] ?? null,
+                'level'        => $xpPayload['level'] ?? null,
+                'level_up'     => $xpPayload['level_up'] ?? false,
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
@@ -520,7 +590,7 @@ class LevelingController extends Controller
      */
     public function boostAttack(Request $request, int $chuchemonId): JsonResponse
     {
-        return $this->applyBuff($request, $chuchemonId, 'attack', 2, 'Xux de Llimona');
+        return $this->applyBuff($request, $chuchemonId, 'attack', Item::NAME_XUX_LLIMONA);
     }
 
     /**
@@ -529,14 +599,19 @@ class LevelingController extends Controller
      */
     public function boostDefense(Request $request, int $chuchemonId): JsonResponse
     {
-        return $this->applyBuff($request, $chuchemonId, 'defense', 3, 'Xux de Cola');
+        return $this->applyBuff($request, $chuchemonId, 'defense', Item::NAME_XUX_COLA);
     }
 
-    private function applyBuff(Request $request, int $chuchemonId, string $stat, int $itemId, string $itemName): JsonResponse
+    private function applyBuff(Request $request, int $chuchemonId, string $stat, string $itemName): JsonResponse
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
             if (!$user) return response()->json(['message' => 'Usuario no autenticado'], 401);
+
+            $itemId = self::itemId($itemName);
+            if (!$itemId) {
+                return response()->json(['message' => "No existe {$itemName} en la base de datos."], 409);
+            }
 
             $qty = (int) ($request->input('quantity', 1));
             if ($qty < 1) return response()->json(['message' => 'Cantidad no válida'], 422);
@@ -585,14 +660,27 @@ class LevelingController extends Controller
                 ->where('chuchemon_id', $chuchemonId)
                 ->update([$boostColumn => $newBoost]);
 
+            $xpToAdd = $xuxesUsed * self::XP_PER_CANDY;
+            $xpResponse = $this->addExperience($chuchemonId, $xpToAdd);
+            $xpPayload = $xpResponse->getData(true);
+
+            if ($xpResponse->getStatusCode() >= 400) {
+                return $xpResponse;
+            }
+
             $statLabel = $stat === 'attack' ? 'ataque' : 'defensa';
 
             return response()->json([
-                'message'    => "¡+{$actualBoost}% de {$statLabel} temporal para el Xuxemon!",
+                'message'    => "¡+{$actualBoost}% de {$statLabel} temporal para el Xuxemon y +{$xpToAdd} XP!",
                 'boost'      => $newBoost,
                 'stat'       => $stat,
                 'xuxes_used' => $xuxesUsed,
                 'xuxes_left' => $row->exists ? $row->quantity : 0,
+                'xp_gained'  => $xpToAdd,
+                'experience' => $xpPayload['experience'] ?? null,
+                'experience_for_next_level' => $xpPayload['experience_for_next_level'] ?? null,
+                'level'      => $xpPayload['level'] ?? null,
+                'level_up'   => $xpPayload['level_up'] ?? false,
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);

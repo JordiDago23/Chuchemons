@@ -10,6 +10,7 @@ use App\Models\MochilaXux;
 use App\Models\Vaccine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 
@@ -64,6 +65,10 @@ class DailyRewardController extends Controller
                 'chuchemon' => $chuchemonReward,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error loading daily rewards', [
+                'user_id' => $user->id ?? null,
+                'message' => $e->getMessage(),
+            ]);
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
@@ -99,6 +104,10 @@ class DailyRewardController extends Controller
                     'message' => 'El reward no está disponible aún',
                     'available_at' => $reward->next_available_at,
                 ], 400);
+            }
+
+            if (!$reward->item_id) {
+                return response()->json(['message' => 'La recompensa diaria de Xux no está configurada correctamente.'], 409);
             }
 
             // Repartir 10 items: cantidad aleatoria de vacunas (1-3), el resto xuxes
@@ -159,6 +168,9 @@ class DailyRewardController extends Controller
                 'next_available_at' => $reward->next_available_at,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error claiming daily xux reward', [
+                'message' => $e->getMessage(),
+            ]);
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
@@ -197,6 +209,10 @@ class DailyRewardController extends Controller
                 ], 400);
             }
 
+            if (!$reward->chuchemon_id) {
+                return response()->json(['message' => 'La recompensa diaria de Xuxemon no está configurada correctamente.'], 409);
+            }
+
             // Capturar el chuchemon
             $existing = DB::table('user_chuchemons')
                 ->where('user_id', $user->id)
@@ -208,12 +224,23 @@ class DailyRewardController extends Controller
                     ->where('id', $existing->id)
                     ->increment('count');
             } else {
+                $rewardChuchemon = Chuchemon::find($reward->chuchemon_id);
+                $maxHp = $rewardChuchemon
+                    ? \App\Http\Controllers\LevelingController::computeMaxHp($rewardChuchemon->defense ?? 50, 1, 'Petit')
+                    : 105;
+
                 DB::table('user_chuchemons')->insert([
-                    'user_id'       => $user->id,
-                    'chuchemon_id'  => $reward->chuchemon_id,
-                    'count'         => 1,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
+                    'user_id'                    => $user->id,
+                    'chuchemon_id'               => $reward->chuchemon_id,
+                    'count'                      => 1,
+                    'current_mida'               => 'Petit',
+                    'level'                      => 1,
+                    'experience'                 => 0,
+                    'experience_for_next_level'  => \App\Http\Controllers\LevelingController::experienceForMida('Petit'),
+                    'max_hp'                     => $maxHp,
+                    'current_hp'                 => $maxHp,
+                    'created_at'                 => now(),
+                    'updated_at'                 => now(),
                 ]);
             }
 
@@ -229,6 +256,9 @@ class DailyRewardController extends Controller
                 'next_available_at' => $reward->next_available_at,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error claiming daily chuchemon reward', [
+                'message' => $e->getMessage(),
+            ]);
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
@@ -240,10 +270,15 @@ class DailyRewardController extends Controller
     {
         $item = Item::where('type', 'apilable')->inRandomOrder()->first();
         if (!$item) {
-            $item = Item::first();
+            $item = Item::query()->firstOrCreate(
+                ['name' => Item::NAME_XUX_MADUIXA],
+                [
+                    'description' => 'Llaminadura de maduixa. Recupera 20 punts de salut',
+                    'type' => 'apilable',
+                    'image' => 'xux-maduixa.png',
+                ]
+            );
         }
-
-        $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '06:00');
 
         return DailyReward::create([
             'user_id' => $userId,
@@ -265,7 +300,9 @@ class DailyRewardController extends Controller
             $chuchemon = Chuchemon::inRandomOrder()->first();
         }
 
-        $nextAvailable = $this->nextAvailableAt('daily_chuchemon_hour', '08:00');
+        if (!$chuchemon) {
+            throw new \RuntimeException('No hay Chuchemons disponibles para generar la recompensa diaria.');
+        }
 
         return DailyReward::create([
             'user_id' => $userId,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Chuchemon;
 use App\Models\GameSetting;
+use App\Models\Item;
 use App\Models\MochilaXux;
 use App\Models\User;
 use App\Models\UserTeam;
@@ -26,6 +27,73 @@ class ChuchemonController extends Controller
         );
     }
 
+    private static function effectiveSpeed(int $base, string $currentMida): float
+    {
+        return LevelingController::effectiveAttack($base, $currentMida);
+    }
+
+    private static function progressPercent(?int $current, ?int $total): ?float
+    {
+        if ($current === null || $total === null || $total <= 0) {
+            return null;
+        }
+
+        return round(($current / $total) * 100, 2);
+    }
+
+    private static function buildUserChuchemonPayload(object $chuchemon, ?object $pivot, bool $isAuthenticated): array
+    {
+        $baseAttack = $chuchemon->attack ?? 50;
+        $baseDefense = $chuchemon->defense ?? 50;
+        $baseSpeed = $chuchemon->speed ?? 50;
+        $captured = $pivot !== null;
+        $currentMida = $captured ? ($pivot->current_mida ?? 'Petit') : ($chuchemon->mida ?? 'Petit');
+        $level = $captured ? ($pivot->level ?? 1) : null;
+        $count = (int) ($pivot->count ?? 0);
+        $experience = $captured ? ($pivot->experience ?? 0) : null;
+        $xpForNext = $captured ? ($pivot->experience_for_next_level ?? LevelingController::experienceForMida($currentMida)) : null;
+        $maxHp = $captured
+            ? ($pivot->max_hp ?? LevelingController::computeMaxHp($baseDefense, $level ?? 1, $currentMida))
+            : null;
+        $currentHp = $captured && $maxHp !== null
+            ? min($pivot->current_hp ?? $maxHp, $maxHp)
+            : null;
+        $attackBoost = $captured ? ($pivot->attack_boost ?? 0) : 0;
+        $defenseBoost = $captured ? ($pivot->defense_boost ?? 0) : 0;
+
+        return [
+            'id' => $chuchemon->id,
+            'name' => $chuchemon->name,
+            'element' => $chuchemon->element,
+            'mida' => $chuchemon->mida,
+            'current_mida' => $currentMida,
+            'image' => $chuchemon->image,
+            'attack' => $baseAttack,
+            'defense' => $baseDefense,
+            'speed' => $baseSpeed,
+            'effective_attack' => $captured
+                ? round(LevelingController::effectiveAttack($baseAttack, $currentMida) * (1 + ($attackBoost / 100)), 1)
+                : (float) $baseAttack,
+            'effective_defense' => $captured
+                ? round(LevelingController::effectiveDefense($baseDefense, $currentMida) * (1 + ($defenseBoost / 100)), 1)
+                : (float) $baseDefense,
+            'effective_speed' => self::effectiveSpeed($baseSpeed, $currentMida),
+            'attack_boost' => $captured ? $attackBoost : 0,
+            'defense_boost' => $captured ? $defenseBoost : 0,
+            'captured' => $isAuthenticated ? $captured : null,
+            'count' => $count,
+            'level' => $level,
+            'experience' => $experience,
+            'experience_for_next_level' => $xpForNext,
+            'experience_progress' => self::progressPercent($experience, $xpForNext),
+            'current_hp' => $currentHp,
+            'max_hp' => $maxHp,
+            'hp_percent' => self::progressPercent($currentHp, $maxHp),
+            'created_at' => $chuchemon->created_at,
+            'updated_at' => $chuchemon->updated_at,
+        ];
+    }
+
     /**
      * Obtiene todos los Chuchemons
      * Si el usuario está autenticado, incluye información de qué ha capturado
@@ -46,65 +114,43 @@ class ChuchemonController extends Controller
             ->when($request->query('mida'), fn($q, $v) => $q->where('mida', $v))
             ->get();
 
-        $capturedCounts = [];
+        $userChuchemons = collect();
         $infectionMap = collect();
         if ($user) {
-            $capturedCounts = DB::table('user_chuchemons')
+            $userChuchemons = DB::table('user_chuchemons')
                 ->where('user_id', $user->id)
-                ->pluck('count', 'chuchemon_id')
-                ->all();
-
-            $infectionMap = DB::table('user_infections')
-                ->join('malalties', 'user_infections.malaltia_id', '=', 'malalties.id')
-                ->where('user_infections.user_id', $user->id)
-                ->where('user_infections.is_active', true)
                 ->select(
-                    'user_infections.chuchemon_id',
-                    'user_infections.infection_percentage',
-                    'malalties.id as malaltia_id',
-                    'malalties.name',
-                    'malalties.type',
-                    'malalties.severity'
+                    'chuchemon_id',
+                    'count',
+                    'level',
+                    'experience',
+                    'experience_for_next_level',
+                    'current_mida',
+                    'current_hp',
+                    'max_hp',
+                    'attack_boost',
+                    'defense_boost'
                 )
                 ->get()
-                ->groupBy('chuchemon_id');
+                ->keyBy('chuchemon_id');
+
+            $infectionMap = LevelingController::mapActiveInfections($user->id, $userChuchemons->keys()->all());
         }
 
-        $chuchemons = $allChuchemons->map(function ($chuchemon) use ($capturedCounts, $infectionMap, $user) {
-            $count = (int) ($capturedCounts[$chuchemon->id] ?? 0);
-            $captured = $user ? $count > 0 : null;
-            $activeInfections = collect($infectionMap->get($chuchemon->id, []))
-                ->map(function ($infection) {
-                    return [
-                        'id' => $infection->malaltia_id,
-                        'name' => $infection->name,
-                        'type' => $infection->type,
-                        'severity' => $infection->severity,
-                        'infection_percentage' => $infection->infection_percentage,
-                    ];
-                })->values();
+        $chuchemons = $allChuchemons->map(function ($chuchemon) use ($userChuchemons, $infectionMap, $user) {
+            $pivot = $user ? $userChuchemons->get($chuchemon->id) : null;
+            $payload = self::buildUserChuchemonPayload($chuchemon, $pivot, $user !== null);
+            $activeInfections = collect($infectionMap->get($chuchemon->id, []));
             $cannotEat = $activeInfections->contains(function ($infection) {
                 return self::normalizeMalaltiaName($infection['name'] ?? null) === 'atracon';
             });
 
-            return [
-                'id' => $chuchemon->id,
-                'name' => $chuchemon->name,
-                'element' => $chuchemon->element,
-                'mida' => $chuchemon->mida,
-                'image' => $chuchemon->image,
-                'attack' => $chuchemon->attack ?? 50,
-                'defense' => $chuchemon->defense ?? 50,
-                'speed' => $chuchemon->speed ?? 50,
-                'captured' => $captured,
-                'count' => $count,
+            return array_merge($payload, [
                 'active_infections' => $user ? $activeInfections->all() : [],
                 'has_active_infections' => $user ? $activeInfections->isNotEmpty() : false,
                 'cannot_eat' => $user ? $cannotEat : false,
                 'cannot_eat_reason' => $user && $cannotEat ? 'Atracón activo: este Xuxemon no puede comer más Xuxes por ahora.' : null,
-                'created_at' => $chuchemon->created_at,
-                'updated_at' => $chuchemon->updated_at,
-            ];
+            ]);
         });
         
         return response()->json($chuchemons);
@@ -167,59 +213,36 @@ class ChuchemonController extends Controller
             $userChuchemons = DB::table('user_chuchemons')
                 ->join('chuchemons', 'user_chuchemons.chuchemon_id', '=', 'chuchemons.id')
                 ->where('user_chuchemons.user_id', $user->id)
-                ->select('chuchemons.*', 'user_chuchemons.count')
+                ->select(
+                    'chuchemons.*',
+                    'user_chuchemons.count',
+                    'user_chuchemons.level',
+                    'user_chuchemons.experience',
+                    'user_chuchemons.experience_for_next_level',
+                    'user_chuchemons.current_mida',
+                    'user_chuchemons.current_hp',
+                    'user_chuchemons.max_hp',
+                    'user_chuchemons.attack_boost',
+                    'user_chuchemons.defense_boost'
+                )
                 ->get();
 
-            $infectionMap = DB::table('user_infections')
-                ->join('malalties', 'user_infections.malaltia_id', '=', 'malalties.id')
-                ->where('user_infections.user_id', $user->id)
-                ->where('user_infections.is_active', true)
-                ->whereIn('user_infections.chuchemon_id', $userChuchemons->pluck('id')->all())
-                ->select(
-                    'user_infections.chuchemon_id',
-                    'user_infections.infection_percentage',
-                    'malalties.id as malaltia_id',
-                    'malalties.name',
-                    'malalties.type',
-                    'malalties.severity'
-                )
-                ->get()
-                ->groupBy('chuchemon_id');
+            $infectionMap = LevelingController::mapActiveInfections($user->id, $userChuchemons->pluck('id')->all());
 
             $userChuchemons = $userChuchemons->map(function ($chuchemon) use ($infectionMap) {
-                    $activeInfections = collect($infectionMap->get($chuchemon->id, []))
-                        ->map(function ($infection) {
-                            return [
-                                'id' => $infection->malaltia_id,
-                                'name' => $infection->name,
-                                'type' => $infection->type,
-                                'severity' => $infection->severity,
-                                'infection_percentage' => $infection->infection_percentage,
-                            ];
-                        })->values();
+                    $payload = self::buildUserChuchemonPayload($chuchemon, $chuchemon, true);
+                    $activeInfections = collect($infectionMap->get($chuchemon->id, []));
 
                     $cannotEat = $activeInfections->contains(function ($infection) {
                         return self::normalizeMalaltiaName($infection['name'] ?? null) === 'atracon';
                     });
 
-                    return [
-                        'id' => $chuchemon->id,
-                        'name' => $chuchemon->name,
-                        'element' => $chuchemon->element,
-                        'mida' => $chuchemon->mida,
-                        'image' => $chuchemon->image,
-                        'attack' => $chuchemon->attack ?? 50,
-                        'defense' => $chuchemon->defense ?? 50,
-                        'speed' => $chuchemon->speed ?? 50,
-                        'count' => $chuchemon->count ?? 1,
-                        'captured' => true,
+                    return array_merge($payload, [
                         'active_infections' => $activeInfections->all(),
                         'has_active_infections' => $activeInfections->isNotEmpty(),
                         'cannot_eat' => $cannotEat,
                         'cannot_eat_reason' => $cannotEat ? 'Atracón activo: este Xuxemon no puede comer más Xuxes por ahora.' : null,
-                        'created_at' => $chuchemon->created_at,
-                        'updated_at' => $chuchemon->updated_at,
-                    ];
+                    ]);
                 });
 
             return response()->json($userChuchemons->values()->all());
@@ -259,9 +282,13 @@ class ChuchemonController extends Controller
                 // Agregar nuevo — inicialitzar HP basat en stats base + nivell 1
                 $maxHp = LevelingController::computeMaxHp($chuchemon->defense ?? 50, 1, 'Petit');
                 $user->capturedChuchemons()->attach($id, [
-                    'count'      => 1,
-                    'max_hp'     => $maxHp,
-                    'current_hp' => $maxHp,
+                    'count'                     => 1,
+                    'current_mida'              => 'Petit',
+                    'level'                     => 1,
+                    'experience'                => 0,
+                    'experience_for_next_level' => LevelingController::experienceForMida('Petit'),
+                    'max_hp'                    => $maxHp,
+                    'current_hp'                => $maxHp,
                 ]);
             }
 
@@ -308,7 +335,7 @@ class ChuchemonController extends Controller
                             ->first();
                         $maxHp  = $uc->max_hp    ?? LevelingController::computeMaxHp($c->defense ?? 50, $uc->level ?? 1, $uc->current_mida ?? 'Petit');
                         $currHp = $uc->current_hp ?? $maxHp;
-                        $xpForNext = $uc->experience_for_next_level ?? 150;
+                        $xpForNext = $uc->experience_for_next_level ?? LevelingController::experienceForMida($uc->current_mida ?? 'Petit');
                         $xp        = $uc->experience ?? 0;
                         $teamData[] = [
                             'id'                        => $c->id,
@@ -327,6 +354,9 @@ class ChuchemonController extends Controller
                             'experience'                => $xp,
                             'experience_for_next_level' => $xpForNext,
                             'xp_percent'                => $xpForNext > 0 ? round(($xp / $xpForNext) * 100, 1) : 0,
+                            'effective_attack'          => LevelingController::effectiveAttack($c->attack ?? 50, $uc->current_mida ?? 'Petit'),
+                            'effective_defense'         => LevelingController::effectiveDefense($c->defense ?? 50, $uc->current_mida ?? 'Petit'),
+                            'effective_speed'           => self::effectiveSpeed($c->speed ?? 50, $uc->current_mida ?? 'Petit'),
                         ];
                     }
                 }
@@ -516,9 +546,16 @@ class ChuchemonController extends Controller
                 $cost += 2;
             }
 
-            // Check Xux Exp (item_id=6) for evolution
+            $xuxExpItemId = Item::idByName(Item::NAME_XUX_EXP);
+            if (!$xuxExpItemId) {
+                return response()->json([
+                    'message' => 'No existe el item Xux Exp en la base de datos.',
+                ], 409);
+            }
+
+            // Check Xux Exp for evolution
             $totalXuxExp = MochilaXux::where('user_id', $user->id)
-                ->where('item_id', 6)
+                ->where('item_id', $xuxExpItemId)
                 ->sum('quantity');
 
             if ($totalXuxExp < $cost) {
@@ -530,7 +567,7 @@ class ChuchemonController extends Controller
             // Deduct Xux Exp
             $remaining = $cost;
             $xuxRows = MochilaXux::where('user_id', $user->id)
-                ->where('item_id', 6)
+                ->where('item_id', $xuxExpItemId)
                 ->where('quantity', '>', 0)
                 ->orderBy('quantity', 'asc')
                 ->get();
@@ -550,6 +587,7 @@ class ChuchemonController extends Controller
                 ->update([
                     'current_mida'   => $nextMida,
                     'evolution_count' => DB::raw('evolution_count + 1'),
+                    'experience_for_next_level' => LevelingController::experienceForMida($nextMida),
                 ]);
 
             // Recalculate max_hp and scale current_hp on evolution
