@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
+            UserSeeder::class,
             ChuchemonSeeder::class,
             ItemSeeder::class,
             MalaltiaSeeder::class,
