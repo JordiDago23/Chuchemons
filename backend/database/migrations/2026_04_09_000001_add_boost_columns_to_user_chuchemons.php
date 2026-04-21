@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('user_chuchemons', function (Blueprint $table) {
-            $table->integer('attack_boost')->default(0)->after('max_hp');
-            $table->integer('defense_boost')->default(0)->after('attack_boost');
+            if (!Schema::hasColumn('user_chuchemons', 'attack_boost')) {
+                $table->integer('attack_boost')->default(0)->after('max_hp');
+            }
+            if (!Schema::hasColumn('user_chuchemons', 'defense_boost')) {
+                $table->integer('defense_boost')->default(0)->after('attack_boost');
+            }
         });
     }
 
