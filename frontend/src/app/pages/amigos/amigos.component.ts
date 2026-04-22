@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,11 +7,12 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { FriendUser, FriendsOverviewResponse, FriendsService } from '../../core/services/friends.service';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
+import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
 
 @Component({
   selector: 'app-amigos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmDialogComponent, SidebarNavComponent],
   templateUrl: './amigos.component.html',
   styleUrls: ['./amigos.component.css']
 })
@@ -136,7 +137,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
         this.searching = false;
       },
       error: (err) => {
-        this.searchMessage = err.error?.message ?? 'No se ha podido completar la búsqueda.';
+        this.searchMessage = err.error?.message ?? 'No se ha podido completar la bÃºsqueda.';
         this.searching = false;
       }
     });
@@ -200,7 +201,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
 
     this.openConfirmDialog(
       'Eliminar solicitud',
-      `¿Seguro que quieres eliminar la solicitud de ${request.player_id}?`,
+      `Â¿Seguro que quieres eliminar la solicitud de ${request.player_id}?`,
       () => this.executeDeleteRequest(request)
     );
   }
@@ -231,7 +232,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
   removeFriend(friend: FriendUser): void {
     this.openConfirmDialog(
       'Eliminar amigo',
-      `¿Seguro que quieres eliminar a ${friend.player_id} de tu lista de amigos?`,
+      `Â¿Seguro que quieres eliminar a ${friend.player_id} de tu lista de amigos?`,
       () => this.executeRemoveFriend(friend)
     );
   }
@@ -321,3 +322,4 @@ export class AmigosComponent implements OnInit, OnDestroy {
     );
   }
 }
+

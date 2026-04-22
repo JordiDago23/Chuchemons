@@ -1,0 +1,260 @@
+:host {
+  width: 196px;
+  min-width: 196px;
+  display: block;
+  height: 100dvh;
+}
+
+.sidebar {
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  min-height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.sidebar-brand {
+  background: linear-gradient(135deg, #f26430, #e63b45);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-pokeball {
+  position: absolute;
+  right: -18px;
+  top: -18px;
+  width: 78px;
+  opacity: 0.22;
+}
+
+.brand-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.brand-sub {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  padding: 0.8rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  color: #20263a;
+  text-decoration: none;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.nav-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.nav-item:hover {
+  background: #fff1f1;
+  color: #e63b45;
+}
+
+.nav-item.active {
+  background: #f04444;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(240, 68, 68, 0.3);
+}
+
+.nav-item:focus-visible {
+  outline: 3px solid #e63946;
+  outline-offset: 2px;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  color: currentColor;
+}
+
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-badge {
+  margin-left: auto;
+  align-self: center;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #eef0f4;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  background: #fff;
+}
+
+.footer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e63b45, #f26430);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.footer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.footer-sub {
+  font-size: 0.68rem;
+  color: #788094;
+}
+
+.salir-btn {
+  border: none;
+  background: transparent;
+  color: #6c7487;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.2rem 0;
+}
+
+.salir-btn:hover {
+  color: #e63b45;
+}
+
+.salir-btn:focus-visible {
+  outline: 3px solid #e63946;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  :host {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+  }
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    width: 100%;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    height: auto;
+    min-height: 56px;
+  }
+
+  .sidebar-brand,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0.3rem 0.2rem;
+    gap: 0;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-item {
+    min-width: 44px;
+    padding: 0.4rem 0.2rem;
+    margin: 0;
+    justify-content: center;
+    border-radius: 0;
+    color: #555;
+  }
+
+  .nav-item:hover,
+  .nav-item.active {
+    background: transparent;
+  }
+
+  .nav-item.active .nav-icon {
+    color: #e63946;
+  }
+
+  .nav-item:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .nav-label {
+    display: none;
+  }
+
+  .nav-badge {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.1rem;
+    transform: scale(0.9);
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-nav {
+    justify-content: space-between;
+  }
+
+  .nav-item {
+    min-width: 38px;
+    padding: 0.35rem 0.15rem;
+  }
+}

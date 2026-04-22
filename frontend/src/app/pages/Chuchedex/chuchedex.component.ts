@@ -1,7 +1,6 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { Subject, Subscription, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
@@ -11,6 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonCardComponent } from '../../components/chuchemon-card/chuchemon-card.component';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 import { ChuchemonDetailsModalComponent } from '../../components/chuchemon-details-modal/chuchemon-details-modal.component';
+import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
 
 interface ChuchemonExtended extends Chuchemon {
   captured?: boolean;
@@ -22,7 +22,7 @@ type ElementFilter = 'Todos' | 'Terra' | 'Aire' | 'Aigua';
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ChuchemonCardComponent, ConfirmDialogComponent, ChuchemonDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ChuchemonCardComponent, ConfirmDialogComponent, ChuchemonDetailsModalComponent, SidebarNavComponent],
   templateUrl: './chuchedex.component.html',
   styleUrls: ['./chuchedex.component.css']
 })
@@ -169,7 +169,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     let filtered: ChuchemonExtended[] = [];
 
-    // Determinar qué lista usar según la pestaña
+    // Determinar quÃ© lista usar segÃºn la pestaÃ±a
     if (this.selectedTab === 'todos') {
       // En "Todos" mostrar TODOS los chuchemons
       filtered = [...this.chuchemons];
@@ -178,7 +178,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       filtered = [...this.myChuchemons];
     }
 
-    // Aplicar filtros de elemento y búsqueda
+    // Aplicar filtros de elemento y bÃºsqueda
     if (this.selectedElement !== 'Todos') {
       filtered = filtered.filter(c => this.normalizeElement(c.element) === this.selectedElement);
     }
@@ -245,7 +245,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
 
   getSizeLabel(size: string): string {
     switch (size) {
-      case 'Petit': return 'Pequeño';
+      case 'Petit': return 'PequeÃ±o';
       case 'Mitjà': return 'Mediano';
       case 'Gran': return 'Grande';
       default: return size;
@@ -261,7 +261,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   isBlockedForDisplay(chuchemon: ChuchemonExtended): boolean {
-    // Mostrar bloqueado si: es usuario normal, está en tab "Todos" y no lo ha capturado
+    // Mostrar bloqueado si: es usuario normal, estÃ¡ en tab "Todos" y no lo ha capturado
     if (this.isAdmin) return false;
     if (this.selectedTab === 'mis') return false;
     return !this.isCaptured(chuchemon);
@@ -316,12 +316,12 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
             this.evolvingChuchemonNextMida = info.next_mida || '';
             this.showEvolutionDialog = true;
           } else {
-            alert('Este Xuxemon ya está en su máxima evolución.');
+            alert('Este Xuxemon ya estÃ¡ en su mÃ¡xima evoluciÃ³n.');
           }
         },
         error: (error) => {
           console.error('Error getting evolution info:', error);
-          alert('Error al obtener la información de evolución');
+          alert('Error al obtener la informaciÃ³n de evoluciÃ³n');
         }
       });
   }
@@ -399,4 +399,5 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     this.authService.logout();
   }
 }
+
 

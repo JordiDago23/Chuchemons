@@ -84,8 +84,23 @@
 }
 
 .nav-icon {
-  width: 18px;
-  text-align: center;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  color: currentColor;
+}
+
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .sidebar-footer {
@@ -506,7 +521,8 @@ button:disabled {
   .nav-item:hover { background: transparent; color: transparent; }
   .nav-item.active { background: transparent; color: transparent; }
   .nav-item.active .nav-icon { color: #f04444; }
-  .nav-icon { font-size: 1.3rem; width: auto; color: #555; }
+  .nav-icon { width: 20px; height: 20px; color: #555; }
+  .nav-icon svg { width: 20px; height: 20px; }
   .main {
     width: 100%;
     padding: 1rem;

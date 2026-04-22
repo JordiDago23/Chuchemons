@@ -1,0 +1,127 @@
+<aside class="sidebar" aria-label="Barra lateral principal">
+  <div class="sidebar-brand">
+    @if (showPokeball) {
+      <div class="brand-pokeball" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
+          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
+        </svg>
+      </div>
+    }
+
+    <span class="brand-name">{{ brandName }}</span>
+    <span class="brand-sub">{{ brandSub }}</span>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Navegacion principal">
+    <a class="nav-item" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" #homeRla="routerLinkActive" [attr.aria-current]="homeRla.isActive ? 'page' : null">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.5V21h14V9.5" />
+        </svg>
+      </span>
+      <span class="nav-label">Inicio</span>
+    </a>
+
+    <a class="nav-item" routerLink="/chuchedex" routerLinkActive="active" #chuchedexRla="routerLinkActive" [attr.aria-current]="chuchedexRla.isActive ? 'page' : null">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16.5H6.5A2.5 2.5 0 0 0 4 22Z" />
+          <path d="M8 7h8" />
+          <path d="M8 11h8" />
+        </svg>
+      </span>
+      <span class="nav-label">Chuchedex</span>
+    </a>
+
+    <a class="nav-item" routerLink="/mochila" routerLinkActive="active" #mochilaRla="routerLinkActive" [attr.aria-current]="mochilaRla.isActive ? 'page' : null">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M8 8V6a4 4 0 0 1 8 0v2" />
+          <rect x="5" y="8" width="14" height="13" rx="3" />
+          <path d="M9 12h6" />
+        </svg>
+      </span>
+      <span class="nav-label">Mochila</span>
+    </a>
+
+    <a class="nav-item" routerLink="/amigos" routerLinkActive="active" #amigosRla="routerLinkActive" [attr.aria-current]="amigosRla.isActive ? 'page' : null">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle cx="8" cy="9" r="3" />
+          <circle cx="16.5" cy="8.5" r="2.5" />
+          <path d="M3.5 20a4.5 4.5 0 0 1 9 0" />
+          <path d="M13 19.5a3.5 3.5 0 0 1 7 0" />
+        </svg>
+      </span>
+      <span class="nav-label">Amigos</span>
+      @if (pendingRequestsCount > 0) {
+        <span class="badge rounded-pill text-bg-warning nav-badge">{{ pendingRequestsCount }}</span>
+      }
+    </a>
+
+    <a class="nav-item" routerLink="/batalla" routerLinkActive="active" #batallaRla="routerLinkActive" [attr.aria-current]="batallaRla.isActive ? 'page' : null">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="m14.5 4.5 5 5" />
+          <path d="m12.5 6.5 5 5" />
+          <path d="m3 21 6.5-6.5" />
+          <path d="m14 10-4 4" />
+          <path d="m6.5 8.5 3 3" />
+          <path d="m3.5 5.5 5 5" />
+        </svg>
+      </span>
+      <span class="nav-label">Batalla</span>
+    </a>
+
+    @if (showChat) {
+      <a class="nav-item" routerLink="/chat" routerLinkActive="active" #chatRla="routerLinkActive" [attr.aria-current]="chatRla.isActive ? 'page' : null">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M20 11.5a8 8 0 1 1-3.5-6.6A8 8 0 0 1 20 11.5Z" />
+            <path d="M8.5 19.2 5 21l1-3.6" />
+          </svg>
+        </span>
+        <span class="nav-label">Chat</span>
+      </a>
+    }
+
+    <a class="nav-item" routerLink="/profile" routerLinkActive="active" #profileRla="routerLinkActive" [attr.aria-current]="profileRla.isActive ? 'page' : null">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M4 20a8 8 0 0 1 16 0" />
+        </svg>
+      </span>
+      <span class="nav-label">Perfil</span>
+    </a>
+
+    @if (showAdmin) {
+      <a class="nav-item" routerLink="/admin" routerLinkActive="active" #adminRla="routerLinkActive" [attr.aria-current]="adminRla.isActive ? 'page' : null">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 3 5 6v5c0 4.5 2.7 7.8 7 10 4.3-2.2 7-5.5 7-10V6Z" />
+          </svg>
+        </span>
+        <span class="nav-label">Admin</span>
+      </a>
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    @if (showUserInfo && user) {
+      <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+      <div class="footer-info">
+        <span class="footer-name">{{ user.player_id }}</span>
+        <span class="footer-sub">{{ user.email }}</span>
+      </div>
+    }
+
+    <button class="salir-btn" type="button" (click)="onLogout()">
+      <span aria-hidden="true">↪</span> Salir
+    </button>
+  </div>
+</aside>

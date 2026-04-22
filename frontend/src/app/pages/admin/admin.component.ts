@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
+import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, SidebarNavComponent],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
@@ -18,14 +19,14 @@ export class AdminComponent implements OnInit {
   user: any = null;
   activeTab: 'jugadors' | 'recursos' | 'configuracio' | 'horaris' = 'jugadors';
 
-  // ── Stats ────────────────────────────────────────────────────────────────
+  // â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   stats = { jugadors: 0, totalUsuaris: 0, xuemons: 0 };
 
-  // ── Users list ───────────────────────────────────────────────────────────
+  // â”€â”€ Users list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   users: any[] = [];
   usersLoading = false;
 
-  // ── Añadir Xuxes ───────────────────────────────────────────────────────────
+  // â”€â”€ AÃ±adir Xuxes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   xuxPlayerId: number | null = null;
   xuxItemId: number = 1;
   xuxQty = 10;
@@ -34,19 +35,19 @@ export class AdminComponent implements OnInit {
   xuxFeedbackType: 'success' | 'error' | '' = '';
 
   readonly xuxTypes = [
-    { id: 1, name: 'Xux de Maduixa', emoji: '🍓' },
-    { id: 2, name: 'Xux de Llimona', emoji: '🍋' },
-    { id: 3, name: 'Xux de Cola', emoji: '🥤' },
-    { id: 4, name: 'Xux Exp', emoji: '⭐' },
+    { id: 1, name: 'Xux de Maduixa', emoji: 'ðŸ“' },
+    { id: 2, name: 'Xux de Llimona', emoji: 'ðŸ‹' },
+    { id: 3, name: 'Xux de Cola', emoji: 'ðŸ¥¤' },
+    { id: 4, name: 'Xux Exp', emoji: 'â­' },
   ];
 
-  // ── Afegir Xuxemon Aleatori ───────────────────────────────────────────────
+  // â”€â”€ Afegir Xuxemon Aleatori â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   aleatorioPlayerId: number | null = null;
   aleatorioLoading = false;
   aleatorioFeedback = '';
   aleatorioFeedbackType: 'success' | 'error' | '' = '';
 
-  // ── Añadir Vacunas ──────────────────────────────────────────────────────
+  // â”€â”€ AÃ±adir Vacunas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   vacunaPlayerId: number | null = null;
   vacunaId: number = 1;
   vacunaQty = 1;
@@ -55,13 +56,13 @@ export class AdminComponent implements OnInit {
   vacunaFeedbackType: 'success' | 'error' | '' = '';
 
   readonly vacunaTypes = [
-    { id: 1, name: 'Xocolatina', emoji: '🍫', desc: 'Cura Bajón de azúcar' },
-    { id: 2, name: 'Xal de fruits', emoji: '🍬', desc: 'Cura Atracón' },
-    { id: 3, name: 'Insulina', emoji: '💉', desc: 'Cura todas las enfermedades' },
-    { id: 4, name: 'Fruita fresca', emoji: '🍎', desc: 'Cura Sobredosis de sucre' },
+    { id: 1, name: 'Xocolatina', emoji: 'ðŸ«', desc: 'Cura BajÃ³n de azÃºcar' },
+    { id: 2, name: 'Xal de fruits', emoji: 'ðŸ¬', desc: 'Cura AtracÃ³n' },
+    { id: 3, name: 'Insulina', emoji: 'ðŸ’‰', desc: 'Cura todas las enfermedades' },
+    { id: 4, name: 'Fruita fresca', emoji: 'ðŸŽ', desc: 'Cura Sobredosis de sucre' },
   ];
 
-  // ── Configuració ─────────────────────────────────────────────────────────
+  // â”€â”€ ConfiguraciÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   cfg = { xuxPetitMitja: 3, xuxMitjaGran: 5 };
   cfgLoading = false;
   cfgFeedback = '';
@@ -87,7 +88,7 @@ export class AdminComponent implements OnInit {
         this.cfgLoading = false;
       },
       error: (err) => {
-        this.cfgFeedback = err.error?.message || 'Error guardando configuración.';
+        this.cfgFeedback = err.error?.message || 'Error guardando configuraciÃ³n.';
         this.cfgFeedbackType = 'error';
         this.cfgLoading = false;
       }
@@ -107,14 +108,14 @@ export class AdminComponent implements OnInit {
         this.taxaLoading = false;
       },
       error: (err) => {
-        this.taxaFeedback = err.error?.message || 'Error actualizando las tasas de infección.';
+        this.taxaFeedback = err.error?.message || 'Error actualizando las tasas de infecciÃ³n.';
         this.taxaFeedbackType = 'error';
         this.taxaLoading = false;
       }
     });
   }
 
-  // ── Horaris ────────────────────────────────────────────────────────────────
+  // â”€â”€ Horaris â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   horariXuxes    = { hora: '06:00', quantitat: 10 };
   horariXuxemon  = { hora: '08:00' };
   horariXuxesLoading   = false;
@@ -240,7 +241,7 @@ export class AdminComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.xuxFeedback     = err.error?.message || 'Error al añadir Xuxes.';
+        this.xuxFeedback     = err.error?.message || 'Error al aÃ±adir Xuxes.';
         this.xuxFeedbackType = 'error';
         this.xuxLoading      = false;
       }
@@ -259,7 +260,7 @@ export class AdminComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.aleatorioFeedback     = err.error?.message || 'Error al añadir el Xuxemon.';
+        this.aleatorioFeedback     = err.error?.message || 'Error al aÃ±adir el Xuxemon.';
         this.aleatorioFeedbackType = 'error';
         this.aleatorioLoading      = false;
       }
@@ -281,7 +282,7 @@ export class AdminComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.vacunaFeedback     = err.error?.message || 'Error al añadir vacuna.';
+        this.vacunaFeedback     = err.error?.message || 'Error al aÃ±adir vacuna.';
         this.vacunaFeedbackType = 'error';
         this.vacunaLoading      = false;
       }
@@ -298,4 +299,5 @@ export class AdminComponent implements OnInit {
     this.auth.logout();
   }
 }
+
 

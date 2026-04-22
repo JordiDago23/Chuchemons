@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -8,6 +8,7 @@ import { ChuchemonService } from '../../services/chuchemon.service';
 import { LevelingPanelComponent } from '../../components/leveling-panel/leveling-panel.component';
 import { InfectionsPanelComponent } from '../../components/infections-panel/infections-panel.component';
 import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewards.component';
+import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
 
 interface Chuchemon {
   id: number;
@@ -32,7 +33,8 @@ interface Chuchemon {
     RouterLink,
     LevelingPanelComponent,
     InfectionsPanelComponent,
-    DailyRewardsComponent
+    DailyRewardsComponent,
+    SidebarNavComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
@@ -44,7 +46,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   teamLoading = true;
   private destroy$ = new Subject<void>();
 
-  // Stats — por defecto en 0 para cuentas nuevas
+  // Stats â€” por defecto en 0 para cuentas nuevas
   stats = {
     level: 0,
     xp: 0,
@@ -64,7 +66,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     return Math.round((this.stats.xp / this.stats.xpMax) * 100);
   }
 
-  team: Chuchemon[] = []; // Se cargará desde la API
+  team: Chuchemon[] = []; // Se cargarÃ¡ desde la API
 
   typeColors: Record<string, string> = {
     Terra:  '#b8860b',
@@ -170,10 +172,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   getSizeLabel(size?: string): string {
     switch (size) {
-      case 'Petit': return 'Pequeño';
-      case 'Mitjà': return 'Mediano';
+      case 'Petit': return 'PequeÃ±o';
+      case 'MitjÃ ': return 'Mediano';
       case 'Gran': return 'Grande';
-      default: return size ?? 'Pequeño';
+      default: return size ?? 'PequeÃ±o';
     }
   }
 

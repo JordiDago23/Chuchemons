@@ -1,63 +1,10 @@
-<div class="layout">
+﻿<div class="layout">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-pokeball">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
-          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
-          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
-          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
-        </svg>
-      </div>
-      <span class="brand-name">Chuchemons</span>
-      <span class="brand-sub">Captúralos a todos</span>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a class="nav-item active" routerLink="/home">
-        <span class="nav-icon">⌂</span> Inicio
-      </a>
-      <a class="nav-item" routerLink="/chuchedex">
-        <span class="nav-icon">📖</span> Chuchedex
-      </a>
-      <a class="nav-item" routerLink="/mochila">
-        <span class="nav-icon">🎒</span> Mochila
-      </a>
-      <a class="nav-item" routerLink="/amigos">
-        <span class="nav-icon">👥</span> Amigos
-      </a>
-      <a class="nav-item" routerLink="/batalla">
-        <span class="nav-icon">⚔</span> Batalla
-      </a>
-      <a class="nav-item" routerLink="/chat">
-        <span class="nav-icon">💬</span> Chat
-      </a>
-      <a class="nav-item" routerLink="/profile">
-        <span class="nav-icon">👤</span> Perfil
-      </a>
-      @if (user?.is_admin) {
-        <a class="nav-item" routerLink="/admin">
-          <span class="nav-icon">🛡</span> Admin
-        </a>
-      }
-    </nav>
-
-    <div class="sidebar-footer">
-      @if (user) {
-        <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
-        <div class="footer-info">
-          <span class="footer-name">{{ user.player_id }}</span>
-          <span class="footer-sub">{{ user.email }}</span>
-        </div>
-        <button class="footer-dots" (click)="logout()" title="Salir">⋯</button>
-      }
-      <button class="salir-btn" (click)="logout()">
-        <span>↪</span> Salir
-      </button>
-    </div>
-  </aside>
+  <app-sidebar-nav
+    [user]="user"
+    [showAdmin]="!!user?.is_admin"
+    (logoutClick)="logout()"
+  ></app-sidebar-nav>
 
   <!-- MAIN -->
   @if (!loading) {
@@ -188,3 +135,4 @@
   }
 
 </div>
+

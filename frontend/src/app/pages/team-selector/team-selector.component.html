@@ -1,42 +1,16 @@
-<div class="layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-pokeball">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="48" fill="white" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
-          <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="rgba(255,255,255,0.3)"/>
-          <rect x="2" y="46" width="96" height="8" fill="rgba(255,255,255,0.5)"/>
-          <circle cx="50" cy="50" r="10" fill="rgba(255,255,255,0.6)"/>
-        </svg>
-      </div>
-      <span class="brand-name">Xuxemons</span>
-      <span class="brand-sub">Captúralos a todos</span>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
-      <a class="nav-item" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
-      <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
-      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
-      <a class="nav-item" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
-      <a class="nav-item" routerLink="/chat"><span class="nav-icon">💬</span> Chat</a>
-      <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <button class="salir-btn" (click)="logout()">
-        <span>↪</span> Salir
-      </button>
-    </div>
-  </aside>
+﻿<div class="layout">
+  <app-sidebar-nav
+    [brandName]="'Xuxemons'"
+    [showUserInfo]="false"
+    (logoutClick)="logout()"
+  ></app-sidebar-nav>
 
   <!-- MAIN -->
   <main class="main" id="main-content">
     <!-- Page header -->
     <header class="page-header">
       <h1>Selecciona tu Equipo</h1>
-      <p class="page-sub">Elige hasta 3 Chuchemons de tu colección</p>
+      <p class="page-sub">Elige hasta 3 Chuchemons de tu colecciÃ³n</p>
     </header>
 
     <div *ngIf="isLoading" class="loading">
@@ -56,7 +30,7 @@
       <div class="team-slots">
         <div class="team-slot" *ngFor="let position of [0, 1, 2]">
           <div class="slot-header">
-            <h3>Posición {{ position + 1 }}</h3>
+            <h3>PosiciÃ³n {{ position + 1 }}</h3>
             <span class="slot-multiplier" *ngIf="selectedChuchemons[position] !== null">
               x{{ getMultiplier(selectedChuchemons[position]) }}
             </span>
@@ -73,13 +47,13 @@
               </div>
               <div class="chuchemon-info">
                 <p class="chuchemon-name">{{ getSelectedChuchemonName(selectedChuchemons[position]) }}</p>
-                <p class="chuchemon-id">Nº. {{ selectedChuchemons[position] }}</p>
+                <p class="chuchemon-id">NÂº. {{ selectedChuchemons[position] }}</p>
                 <button class="change-btn" (click)="selectChuchemon(position, null)">Cambiar</button>
               </div>
             </div>
 
             <div class="slot-empty" *ngIf="selectedChuchemons[position] === null">
-              <p>Vacío</p>
+              <p>VacÃ­o</p>
               <div class="dropdown-trigger">
                 <select (change)="selectChuchemon(position, +$any($event.target).value)" class="slot-select">
                   <option value="">Selecciona un Chuchemon</option>
@@ -131,3 +105,4 @@
     </div>
   </main>
 </div>
+

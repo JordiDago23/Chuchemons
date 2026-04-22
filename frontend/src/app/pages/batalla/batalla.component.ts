@@ -1,6 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
@@ -13,11 +13,12 @@ import {
   BattleUser,
 } from '../../core/services/battle.service';
 import { AuthService } from '../../core/services/auth.service';
+import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
 
 @Component({
   selector: 'app-batalla',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, SidebarNavComponent],
   templateUrl: './batalla.component.html',
   styleUrls: ['./batalla.component.css'],
 })
@@ -150,7 +151,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
         this.clearQueryParams();
       },
       error: (err) => {
-        this.error = err.error?.message ?? 'No se pudo enviar el desafío.';
+        this.error = err.error?.message ?? 'No se pudo enviar el desafÃ­o.';
         this.actionLoading = '';
       },
     });
@@ -169,7 +170,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
         this.openBattle(response.battle_id);
       },
       error: (err) => {
-        this.error = err.error?.message ?? 'No se pudo aceptar el desafío.';
+        this.error = err.error?.message ?? 'No se pudo aceptar el desafÃ­o.';
         this.actionLoading = '';
       },
     });
@@ -233,7 +234,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
         this.loadOverview(true);
       },
       error: (err) => {
-        this.error = err.error?.message ?? 'No se pudo enviar la selección.';
+        this.error = err.error?.message ?? 'No se pudo enviar la selecciÃ³n.';
         this.actionLoading = '';
       },
     });
@@ -268,7 +269,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    return this.selectedBattle.status === 'completed' ? 'Resultado final' : 'Esperando selección';
+    return this.selectedBattle.status === 'completed' ? 'Resultado final' : 'Esperando selecciÃ³n';
   }
 
   get myFighter(): BattleRosterEntry | null {
@@ -303,7 +304,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
     }
 
     if (!battle.opponent_selection) {
-      lines.push('Tu selección está lista. Esperando al oponente.');
+      lines.push('Tu selecciÃ³n estÃ¡ lista. Esperando al oponente.');
       return lines;
     }
 
@@ -314,7 +315,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
     if (battle.status === 'completed') {
       lines.push(this.resultText);
       lines.push(
-        `Tu cálculo: ${this.myRoll() ?? '-'} + ${this.formatSigned(this.myTypeMod())} + ${this.formatSigned(this.mySizeMod())} = ${this.myTotal() ?? '-'}`
+        `Tu cÃ¡lculo: ${this.myRoll() ?? '-'} + ${this.formatSigned(this.myTypeMod())} + ${this.formatSigned(this.mySizeMod())} = ${this.myTotal() ?? '-'}`
       );
       lines.push(
         `Rival: ${this.opponentRoll() ?? '-'} + ${this.formatSigned(this.opponentTypeMod())} + ${this.formatSigned(this.opponentSizeMod())} = ${this.opponentTotal() ?? '-'}`
@@ -395,7 +396,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
   }
 
   actionUnavailable(action: string): void {
-    this.success = `La acción "${action}" está en vista previa. La resolución actual es automática al seleccionar ambos Xuxemons.`;
+    this.success = `La acciÃ³n "${action}" estÃ¡ en vista previa. La resoluciÃ³n actual es automÃ¡tica al seleccionar ambos Xuxemons.`;
     this.error = '';
   }
 
@@ -456,3 +457,4 @@ export class BatallaComponent implements OnInit, OnDestroy {
     });
   }
 }
+

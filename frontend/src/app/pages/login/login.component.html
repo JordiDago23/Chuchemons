@@ -1,7 +1,7 @@
-<div class="page">
+﻿<div class="page">
   <main class="card" aria-labelledby="login-title">
 
-    <!-- Pokéball logo (decorativa) -->
+    <!-- PokÃ©ball logo (decorativa) -->
     <header class="login-header">
       <div class="pokeball" aria-hidden="true">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
@@ -17,24 +17,24 @@
       <h1 id="login-title" class="title">Chuchemons</h1>
       <p class="subtitle">Comienza tu nueva aventura</p>
 
-      <!-- Tabs de navegació -->
-      <nav class="tabs" aria-label="Autenticación">
-        <button class="tab active" type="button" aria-current="page">Iniciar sesión</button>
-        <a class="tab" routerLink="/register">Regístrate</a>
+      <!-- Tabs de navegaciÃ³ -->
+      <nav class="tabs" aria-label="AutenticaciÃ³n">
+        <button class="tab active" type="button" aria-current="page">Iniciar sesiÃ³n</button>
+        <a class="tab" routerLink="/register">RegÃ­strate</a>
       </nav>
     </header>
 
-    <!-- Error general (aria-live per actualitzacions dinàmiques) -->
+    <!-- Error general (aria-live per actualitzacions dinÃ miques) -->
     <div aria-live="polite" aria-atomic="true">
       @if (error) {
         <div class="alert alert-danger error-msg fade-in" role="alert">
-          <span class="error-icon" aria-hidden="true">⚠</span>
+          <span class="error-icon" aria-hidden="true">âš </span>
           {{ error }}
         </div>
       }
     </div>
 
-    <section aria-label="Formulario de inicio de sesión">
+    <section aria-label="Formulario de inicio de sesiÃ³n">
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
         <div class="field">
@@ -53,7 +53,7 @@
             @if (playerId.invalid && playerId.touched) {
               @if (playerId.errors?.['required']) {
                 <span class="field-error">
-                  <span aria-hidden="true">✗</span> El ID es obligatorio
+                  <span aria-hidden="true">âœ—</span> El ID es obligatorio
                 </span>
               }
             }
@@ -61,13 +61,13 @@
         </div>
 
         <div class="field">
-          <label for="login-password" class="form-label">Contraseña</label>
+          <label for="login-password" class="form-label">ContraseÃ±a</label>
           <div class="password-input-wrap">
             <input
               id="login-password"
               [type]="showPassword ? 'text' : 'password'"
               class="form-control password-field"
-              placeholder="············"
+              placeholder="Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·"
               formControlName="password"
               autocomplete="current-password"
               [attr.aria-invalid]="password.invalid && password.touched ? 'true' : null"
@@ -77,7 +77,7 @@
               class="toggle-password"
               type="button"
               (click)="togglePasswordVisibility()"
-              [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-label]="showPassword ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a'"
               [attr.aria-pressed]="showPassword"
             >
               @if (!showPassword) {
@@ -99,12 +99,12 @@
             @if (password.invalid && password.touched) {
               @if (password.errors?.['required']) {
                 <span class="field-error">
-                  <span aria-hidden="true">✗</span> La contraseña es obligatoria
+                  <span aria-hidden="true">âœ—</span> La contraseÃ±a es obligatoria
                 </span>
               }
               @if (password.errors?.['minlength']) {
                 <span class="field-error">
-                  <span aria-hidden="true">✗</span> Mínimo 6 caracteres
+                  <span aria-hidden="true">âœ—</span> MÃ­nimo 6 caracteres
                 </span>
               }
             }
@@ -113,8 +113,8 @@
 
         <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading"
                 [attr.aria-busy]="loading ? 'true' : null">
-          <span class="bolt" aria-hidden="true">⚡</span>
-          {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+          <span class="bolt" aria-hidden="true">âš¡</span>
+          {{ loading ? 'Iniciando sesiÃ³n...' : 'Iniciar sesiÃ³n' }}
         </button>
 
       </form>
@@ -122,10 +122,11 @@
 
     <footer class="card-footer">
       <p class="forgot">
-        ¿Has olvidado la contraseña?
-        <a routerLink="/recover" class="recover-link">Recuperar contraseña</a>
+        Â¿Has olvidado la contraseÃ±a?
+        <a routerLink="/recover" class="recover-link">Recuperar contraseÃ±a</a>
       </p>
     </footer>
 
   </main>
 </div>
+
