@@ -4,7 +4,7 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: inherit;
   background: #f1f5f9;
 }
 
