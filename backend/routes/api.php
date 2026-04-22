@@ -11,6 +11,7 @@ use App\Http\Controllers\InfectionController;
 use App\Http\Controllers\LevelingController;
 use App\Http\Controllers\DailyRewardController;
 use App\Http\Controllers\FriendshipController;
+use App\Http\Controllers\BattleController;
 
 // ─── RUTAS PÚBLICAS ──────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register']);
@@ -41,6 +42,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/friends/requests/{friendship}/accept', [FriendshipController::class, 'acceptRequest']);
     Route::delete('/friends/requests/{friendship}', [FriendshipController::class, 'destroyRequest']);
     Route::delete('/friends/{friend}', [FriendshipController::class, 'removeFriend']);
+
+    // ─── BATALLA ────────────────────────────────────────────
+    Route::get('/battle', [BattleController::class, 'overview']);
+    Route::post('/battle/request', [BattleController::class, 'sendRequest']);
+    Route::post('/battle/requests/{battleRequest}/accept', [BattleController::class, 'acceptRequest']);
+    Route::delete('/battle/requests/{battleRequest}', [BattleController::class, 'destroyRequest']);
+    Route::get('/battle/{battle}', [BattleController::class, 'show']);
+    Route::post('/battle/{battle}/select', [BattleController::class, 'selectChuchemon']);
 
     // ─── USUARIO - CHUCHEMONS ──────────────────────────────
     Route::get('/user/chuchemons',          [ChuchemonController::class, 'getMyChuchemons']);

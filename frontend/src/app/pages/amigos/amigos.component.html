@@ -250,7 +250,7 @@
 
               <div class="friend-actions">
                 <button class="secondary-btn" disabled>Xat</button>
-                <button class="secondary-btn" disabled>Batalla</button>
+                <a class="secondary-btn" [routerLink]="['/batalla']" [queryParams]="{ friendId: friend.id }">Batalla</a>
                 <button class="danger-btn" (click)="removeFriend(friend)" [disabled]="isActionLoading('remove', friend.id)">
                   {{ isActionLoading('remove', friend.id) ? 'Eliminando...' : 'Eliminar' }}
                 </button>

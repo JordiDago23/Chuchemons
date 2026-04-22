@@ -1,0 +1,330 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-name">Chuchemons</span>
+      <span class="brand-sub">Arena de batalla</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/home"><span class="nav-icon">⌂</span> Inicio</a>
+      <a class="nav-item" routerLink="/chuchedex"><span class="nav-icon">📖</span> Chuchedex</a>
+      <a class="nav-item" routerLink="/mochila"><span class="nav-icon">🎒</span> Mochila</a>
+      <a class="nav-item" routerLink="/amigos"><span class="nav-icon">👥</span> Amigos</a>
+      <a class="nav-item active" routerLink="/batalla"><span class="nav-icon">⚔</span> Batalla</a>
+      <a class="nav-item" routerLink="/profile"><span class="nav-icon">👤</span> Perfil</a>
+    </nav>
+
+    <button class="salir-btn" (click)="logout()"><span>↪</span> Salir</button>
+  </aside>
+
+  <main class="main">
+    @if (!isCombatPage) {
+      <section class="hero">
+        <h1>Arena de Batalla</h1>
+        <p>Desafía a tus amigos, elige un Xuxemon y resuelve el duelo con tirada + modificadores.</p>
+      </section>
+    }
+
+    @if (success) {
+      <div class="feedback success">{{ success }}</div>
+    }
+    @if (error) {
+      <div class="feedback error">{{ error }}</div>
+    }
+
+    @if (!isCombatPage) {
+    <section class="grid two-cols">
+      <article class="card">
+        <div class="card-title-row">
+          <h2>Amigos en línea</h2>
+          <span class="badge">{{ onlineFriends.length }}</span>
+        </div>
+
+        @if (!loading && onlineFriends.length === 0) {
+          <p class="empty">No hay amigos conectados ahora.</p>
+        }
+
+        <div class="list">
+          @for (friend of onlineFriends; track trackById($index, friend)) {
+            <div class="list-item">
+              <div>
+                <strong>{{ friend.display_name || friend.player_id }}</strong>
+                <p>{{ friend.player_id }}</p>
+              </div>
+              <button
+                class="primary-btn"
+                (click)="sendChallenge(friend.id)"
+                [disabled]="isLoadingAction('challenge', friend.id)">
+                {{ isLoadingAction('challenge', friend.id) ? 'Enviando...' : 'Desafiar' }}
+              </button>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Solicitudes recibidas</h2>
+
+        @if (!loading && pendingReceived.length === 0) {
+          <p class="empty">No tienes desafíos pendientes.</p>
+        }
+
+        <div class="list">
+          @for (request of pendingReceived; track trackById($index, request)) {
+            <div class="list-item">
+              <div>
+                <strong>{{ request.user.display_name || request.user.player_id }}</strong>
+                <p>{{ request.user.player_id }}</p>
+              </div>
+              <div class="actions-inline">
+                <button
+                  class="primary-btn"
+                  (click)="acceptRequest(request.id)"
+                  [disabled]="isLoadingAction('accept', request.id)">
+                  {{ isLoadingAction('accept', request.id) ? 'Aceptando...' : 'Aceptar' }}
+                </button>
+                <button
+                  class="ghost-btn"
+                  (click)="deleteRequest(request.id)"
+                  [disabled]="isLoadingAction('delete', request.id)">
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </article>
+    </section>
+
+    <section class="grid two-cols">
+      <article class="card">
+        <h2>Solicitudes enviadas</h2>
+        @if (!loading && pendingSent.length === 0) {
+          <p class="empty">No has enviado desafíos.</p>
+        }
+
+        <div class="list">
+          @for (request of pendingSent; track trackById($index, request)) {
+            <div class="list-item">
+              <div>
+                <strong>{{ request.user.display_name || request.user.player_id }}</strong>
+                <p>{{ request.user.player_id }}</p>
+              </div>
+              <button
+                class="ghost-btn"
+                (click)="deleteRequest(request.id)"
+                [disabled]="isLoadingAction('delete', request.id)">
+                Cancelar
+              </button>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Batallas activas</h2>
+
+        @if (!loading && activeBattles.length === 0) {
+          <p class="empty">Aún no hay batallas activas.</p>
+        }
+
+        <div class="list">
+          @for (battle of activeBattles; track trackById($index, battle)) {
+            <div class="list-item">
+              <div>
+                <strong>vs {{ battle.opponent?.display_name || battle.opponent?.player_id || 'Rival' }}</strong>
+                <p>{{ battle.status === 'pending_selection' ? 'Pendiente de selección' : 'Completada' }}</p>
+              </div>
+              <button class="primary-btn" (click)="openBattle(battle.id)">Abrir</button>
+            </div>
+          }
+        </div>
+      </article>
+    </section>
+
+    <section class="card stats">
+      <h2>Tus estadísticas</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span>Victorias</span>
+          <strong>{{ stats.victories }}</strong>
+        </div>
+        <div class="stat-box">
+          <span>Derrotas</span>
+          <strong>{{ stats.defeats }}</strong>
+        </div>
+        <div class="stat-box">
+          <span>Tasa</span>
+          <strong>{{ stats.win_rate }}%</strong>
+        </div>
+        <div class="stat-box">
+          <span>Racha</span>
+          <strong>{{ stats.streak }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Historial reciente</h2>
+
+      @if (!loading && recentBattles.length === 0) {
+        <p class="empty">Todavía no hay batallas completadas.</p>
+      }
+
+      <div class="list">
+        @for (battle of recentBattles; track trackById($index, battle)) {
+          <div class="list-item">
+            <div>
+              <strong>vs {{ battle.opponent?.display_name || battle.opponent?.player_id || 'Rival' }}</strong>
+              <p>{{ battleOutcomeLabel(battle) }} · {{ battle.resolved_at ? (battle.resolved_at | date:'short') : 'Sin fecha' }}</p>
+            </div>
+            <button class="ghost-btn" (click)="openBattle(battle.id)">Ver detalle</button>
+          </div>
+        }
+      </div>
+    </section>
+    }
+
+    @if (isCombatPage) {
+      @if (battleLoading && !selectedBattle) {
+        <section class="card">
+          <p class="empty">Cargando batalla...</p>
+        </section>
+      }
+
+      @if (selectedBattle) {
+      <section class="battle-live">
+        <div class="battle-live-head">
+          <div>
+            <h2>Batalla en Curs</h2>
+            <p>Batalla #{{ selectedBattle.id }} · {{ battlePhaseLabel }}</p>
+          </div>
+          <button class="ghost-btn" (click)="closeBattlePanel()">Retirar-se</button>
+        </div>
+
+        <div class="battle-fighters-grid">
+          <article class="fighter-card">
+            <div class="fighter-tag">El teu Xuxemon</div>
+            <img class="fighter-image" [src]="imageFor(myFighter)" [alt]="myFighter?.name || 'Tu Xuxemon'" />
+            <div class="fighter-name-row">
+              <h3>{{ myFighter?.name || 'Selecciona un Xuxemon' }}</h3>
+              <span class="fighter-level">Nv. {{ myFighter?.level || '-' }}</span>
+            </div>
+            <p class="fighter-hp-text">Punts de Vida: {{ myFighter?.current_hp ?? '-' }} / {{ myFighter?.max_hp ?? '-' }}</p>
+            <div class="hp-track">
+              <span class="hp-fill" [style.width.%]="myFighter?.hp_percent || 0"></span>
+            </div>
+            <div class="fighter-stats-row">
+              <div><small>Atac</small><strong>{{ myFighter?.attack ?? '-' }}</strong></div>
+              <div><small>Defensa</small><strong>{{ myFighter?.defense ?? '-' }}</strong></div>
+              <div><small>Velocitat</small><strong>{{ myFighter?.speed ?? '-' }}</strong></div>
+            </div>
+          </article>
+
+          <article class="fighter-card rival">
+            <div class="fighter-tag">Oponent</div>
+            <img class="fighter-image" [src]="imageFor(opponentFighter)" [alt]="opponentFighter?.name || 'Xuxemon rival'" />
+            <div class="fighter-name-row">
+              <h3>{{ opponentFighter?.name || 'Esperando selección rival' }}</h3>
+              <span class="fighter-level">Nv. {{ opponentFighter?.level || '-' }}</span>
+            </div>
+            <p class="fighter-hp-text">Punts de Vida: {{ opponentFighter?.current_hp ?? '-' }} / {{ opponentFighter?.max_hp ?? '-' }}</p>
+            <div class="hp-track">
+              <span class="hp-fill" [style.width.%]="opponentFighter?.hp_percent || 0"></span>
+            </div>
+            <div class="fighter-stats-row">
+              <div><small>Atac</small><strong>{{ opponentFighter?.attack ?? '-' }}</strong></div>
+              <div><small>Defensa</small><strong>{{ opponentFighter?.defense ?? '-' }}</strong></div>
+              <div><small>Velocitat</small><strong>{{ opponentFighter?.speed ?? '-' }}</strong></div>
+            </div>
+          </article>
+        </div>
+
+        @if (!battleLoading && canSelect) {
+          <section class="card">
+            <h3>Selecciona tu Xuxemon</h3>
+            <div class="roster-grid">
+              @for (entry of myRoster; track trackById($index, entry)) {
+                <button
+                  class="roster-card"
+                  (click)="selectForBattle(entry.id)"
+                  [disabled]="isLoadingAction('select', entry.id)">
+                  <div>
+                    <strong>{{ entry.name }}</strong>
+                    <p>Nv.{{ entry.level }} · {{ entry.current_mida }} · {{ entry.element }}</p>
+                    <small>HP {{ entry.current_hp }}/{{ entry.max_hp }} · x{{ entry.count }}</small>
+                  </div>
+                  <span>{{ isLoadingAction('select', entry.id) ? '...' : 'Seleccionar' }}</span>
+                </button>
+              }
+            </div>
+          </section>
+        }
+
+        <section class="card">
+          <h3>Accions de Batalla</h3>
+          <div class="battle-actions-grid">
+            <button class="primary-btn" (click)="actionUnavailable('Atac Bàsic')">Atac Bàsic</button>
+            <button class="primary-btn alt" (click)="actionUnavailable('Atac Especial')">Atac Especial</button>
+            <button class="ghost-btn" (click)="actionUnavailable('Defensar')">Defensar</button>
+            <button class="ghost-btn" (click)="actionUnavailable('Canviar')">Canviar</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Registre de Batalla</h3>
+          <div class="battle-log">
+            @for (line of battleLogLines; track $index) {
+              <p>• {{ line }}</p>
+            }
+          </div>
+        </section>
+
+        @if (!battleLoading && hasResult) {
+          <div class="result-box" [class.win]="didIWin" [class.lose]="!didIWin">
+            <h3>{{ didIWin ? 'Victoria' : 'Derrota' }}</h3>
+            <p>{{ resultText }}</p>
+
+            @if (selectedBattle.result_payload) {
+              <div class="result-grid">
+                <div>
+                  <span>Tu tirada</span>
+                  <strong>{{ myRoll() ?? '-' }}</strong>
+                </div>
+                <div>
+                  <span>Rival tirada</span>
+                  <strong>{{ opponentRoll() ?? '-' }}</strong>
+                </div>
+                <div>
+                  <span>Tipo (tu)</span>
+                  <strong>{{ formatSigned(myTypeMod()) }}</strong>
+                </div>
+                <div>
+                  <span>Tipo (rival)</span>
+                  <strong>{{ formatSigned(opponentTypeMod()) }}</strong>
+                </div>
+                <div>
+                  <span>Tamaño (tu)</span>
+                  <strong>{{ formatSigned(mySizeMod()) }}</strong>
+                </div>
+                <div>
+                  <span>Tamaño (rival)</span>
+                  <strong>{{ formatSigned(opponentSizeMod()) }}</strong>
+                </div>
+                <div>
+                  <span>Tu total</span>
+                  <strong>{{ myTotal() ?? '-' }}</strong>
+                </div>
+                <div>
+                  <span>Rival total</span>
+                  <strong>{{ opponentTotal() ?? '-' }}</strong>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+      }
+    }
+  </main>
+</div>

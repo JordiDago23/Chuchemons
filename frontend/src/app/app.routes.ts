@@ -8,6 +8,7 @@ export const routes: Routes = [
   { path: 'xuxedex',   redirectTo: 'chuchedex', pathMatch: 'full' },
   { path: 'inventory', redirectTo: 'mochila',   pathMatch: 'full' },
   { path: 'friends',   redirectTo: 'amigos',    pathMatch: 'full' },
+  { path: 'battles',   redirectTo: 'batalla',   pathMatch: 'full' },
   {
     path: 'register',
     title: 'Registro | Chuchemons',
@@ -85,6 +86,26 @@ export const routes: Routes = [
       keywords: 'amigos, social, solicitudes, friends'
     },
     loadComponent: () => import('./pages/amigos/amigos.component').then(m => m.AmigosComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'batalla',
+    title: 'Batalla | Chuchemons',
+    data: {
+      description: 'Arena de batalla entre amigos: desafios, seleccion de Xuxemons y resolucion de duelos.',
+      keywords: 'batalla, arena, pvp, amigos, duelo'
+    },
+    loadComponent: () => import('./pages/batalla/batalla.component').then(m => m.BatallaComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'batalla/:battleId',
+    title: 'Combate | Chuchemons',
+    data: {
+      description: 'Combate en curso entre dos entrenadores en la Arena de Batalla.',
+      keywords: 'combate, batalla, duelo, xuxemon'
+    },
+    loadComponent: () => import('./pages/batalla/batalla.component').then(m => m.BatallaComponent),
     canActivate: [authGuard]
   },
   {

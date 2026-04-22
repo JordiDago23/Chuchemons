@@ -86,4 +86,24 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Friendship::class, 'receiver_id');
     }
+
+    public function sentBattleRequests()
+    {
+        return $this->hasMany(BattleRequest::class, 'challenger_id');
+    }
+
+    public function receivedBattleRequests()
+    {
+        return $this->hasMany(BattleRequest::class, 'challenged_id');
+    }
+
+    public function challengedBattles()
+    {
+        return $this->hasMany(Battle::class, 'challenger_id');
+    }
+
+    public function opponentBattles()
+    {
+        return $this->hasMany(Battle::class, 'challenged_id');
+    }
 }
