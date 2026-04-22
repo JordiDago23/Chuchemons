@@ -1,3 +1,44 @@
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('./app/fonts/Manrope/static/Manrope-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('./app/fonts/Manrope/static/Manrope-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('./app/fonts/Manrope/static/Manrope-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('./app/fonts/Manrope/static/Manrope-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('./app/fonts/Manrope/static/Manrope-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* You can add global styles to this file, and also import other style files */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -7,8 +48,16 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family: 'Manrope', 'Segoe UI', Roboto, Arial, sans-serif;
   font-size: 16px; /* Tipografia mínima WCAG: 16px */
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* Assegurar focus visible per navegació amb teclat (WCAG 2.4.7) */

@@ -25,6 +25,8 @@ export class RegisterComponent {
   error = '';
   loading = false;
   registeredId = '';  // ID real generat pel backend
+  showPassword = false;
+  showPasswordConfirmation = false;
 
   constructor(private fb: FormBuilder, private auth: AuthService, public router: Router) {
     this.form = this.fb.group({
@@ -41,6 +43,14 @@ export class RegisterComponent {
   get email()                { return this.form.get('email')!; }
   get password()             { return this.form.get('password')!; }
   get passwordConfirmation() { return this.form.get('password_confirmation')!; }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
+
+  togglePasswordConfirmationVisibility() {
+    this.showPasswordConfirmation = !this.showPasswordConfirmation;
+  }
 
   get previewPlayerId(): string {
     const rawName = (this.nombre.value ?? '').toString().trim();

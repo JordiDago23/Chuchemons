@@ -20,7 +20,7 @@
   border-radius: 20px;
   padding: 2.5rem 2rem;
   width: 100%;
-  max-width: 360px;
+  max-width: 440px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
@@ -88,6 +88,7 @@
   border: none !important;
   border-radius: 8px !important;
   padding: 0.7rem 0.9rem !important;
+  height: 46px;
   font-size: 1rem !important;
   color: #1a1a1a !important;
   box-shadow: none !important;
@@ -112,6 +113,66 @@
 
 form {
   width: 100%;
+}
+
+section {
+  width: 100%;
+}
+
+.field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.password-field {
+  padding-right: 2.75rem !important;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: #e63946;
+}
+
+.toggle-password:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.eye-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.toggle-password:focus-visible {
+  outline: 3px solid #e63946;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .card .submit-btn {
