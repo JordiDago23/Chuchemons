@@ -15,6 +15,7 @@ export class LoginComponent {
   form: FormGroup;
   error = '';
   loading = false;
+  showPassword = false;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.form = this.fb.group({
@@ -25,6 +26,10 @@ export class LoginComponent {
 
   get playerId() { return this.form.get('player_id')!; }
   get password() { return this.form.get('password')!; }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
 
   onSubmit() {
     this.error = '';
