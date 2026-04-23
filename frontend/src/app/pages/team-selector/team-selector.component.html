@@ -1,4 +1,4 @@
-﻿<div class="layout">
+<div class="layout">
   <app-sidebar-nav
     [brandName]="'Xuxemons'"
     [showUserInfo]="false"
@@ -10,7 +10,7 @@
     <!-- Page header -->
     <header class="page-header">
       <h1>Selecciona tu Equipo</h1>
-      <p class="page-sub">Elige hasta 3 Chuchemons de tu colecciÃ³n</p>
+      <p class="page-sub">Elige hasta 3 Chuchemons de tu colección</p>
     </header>
 
     <div *ngIf="isLoading" class="loading">
@@ -30,7 +30,7 @@
       <div class="team-slots">
         <div class="team-slot" *ngFor="let position of [0, 1, 2]">
           <div class="slot-header">
-            <h3>PosiciÃ³n {{ position + 1 }}</h3>
+            <h3>Posición {{ position + 1 }}</h3>
             <span class="slot-multiplier" *ngIf="selectedChuchemons[position] !== null">
               x{{ getMultiplier(selectedChuchemons[position]) }}
             </span>
@@ -47,13 +47,13 @@
               </div>
               <div class="chuchemon-info">
                 <p class="chuchemon-name">{{ getSelectedChuchemonName(selectedChuchemons[position]) }}</p>
-                <p class="chuchemon-id">NÂº. {{ selectedChuchemons[position] }}</p>
+                <p class="chuchemon-id">Nº. {{ selectedChuchemons[position] }}</p>
                 <button class="change-btn" (click)="selectChuchemon(position, null)">Cambiar</button>
               </div>
             </div>
 
             <div class="slot-empty" *ngIf="selectedChuchemons[position] === null">
-              <p>VacÃ­o</p>
+              <p>Vacío</p>
               <div class="dropdown-trigger">
                 <select (change)="selectChuchemon(position, +$any($event.target).value)" class="slot-select">
                   <option value="">Selecciona un Chuchemon</option>

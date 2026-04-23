@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -35,7 +35,7 @@ export class ProfileComponent implements OnInit {
   showConfirm = false;
   showDeleteConfirm = false;
 
-  // Stats mock â€” por defecto en 0 para cuentas nuevas
+  // Stats mock — por defecto en 0 para cuentas nuevas
   stats = { level: 0, xp: 0, xpMax: 100, wins: 0, losses: 0, streak: 0, captured: 0 };
 
   typeStats = [
@@ -45,12 +45,12 @@ export class ProfileComponent implements OnInit {
   ];
 
   logros = [
-    { icon: 'ðŸ†', title: 'Primer Xuxemon',       desc: 'Captura el primer Xuxemon',      status: 'locked',   progress: null },
-    { icon: 'ðŸ”¥', title: 'Primera Victoria',      desc: 'Gana tu primera partida',        status: 'locked',   progress: null },
-    { icon: 'ðŸŽ¯', title: 'Coleccionista',          desc: 'Captura 50 Xuxemons diferentes', status: 'locked',   progress: null },
-    { icon: 'ðŸ†', title: 'Maestro del Combate',   desc: 'Consigue 100 victorias',         status: 'locked',   progress: null },
-    { icon: 'ðŸ“–', title: 'Xuxedex Completada',    desc: 'Captura todos los Xuxemons',     status: 'locked',   progress: null },
-    { icon: 'â†—',  title: 'Invencible',            desc: 'Gana 10 partidas seguidas',      status: 'locked',   progress: null },
+    { icon: '🏆', title: 'Primer Xuxemon',       desc: 'Captura el primer Xuxemon',      status: 'locked',   progress: null },
+    { icon: '🔥', title: 'Primera Victoria',      desc: 'Gana tu primera partida',        status: 'locked',   progress: null },
+    { icon: '🎯', title: 'Coleccionista',          desc: 'Captura 50 Xuxemons diferentes', status: 'locked',   progress: null },
+    { icon: '🏆', title: 'Maestro del Combate',   desc: 'Consigue 100 victorias',         status: 'locked',   progress: null },
+    { icon: '📖', title: 'Xuxedex Completada',    desc: 'Captura todos los Xuxemons',     status: 'locked',   progress: null },
+    { icon: '↗',  title: 'Invencible',            desc: 'Gana 10 partidas seguidas',      status: 'locked',   progress: null },
   ];
 
   get winRatio(): string {

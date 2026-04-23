@@ -1,4 +1,4 @@
-﻿<div class="layout">
+<div class="layout">
 
   <app-sidebar-nav
     [user]="user"
@@ -7,11 +7,11 @@
     (logoutClick)="logout()"
   ></app-sidebar-nav>
 
-  <!-- â•â• MAIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- MAIN -->
   <main class="main" id="main-content">
 
     @if (loading) {
-      <div class="loading-state" role="status" aria-live="polite">Cargando mochilaâ€¦</div>
+      <div class="loading-state" role="status" aria-live="polite">Cargando mochila…</div>
     } @else {
 
     <!-- Page header -->
@@ -26,7 +26,7 @@
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-title">Total Xuxes</span>
-          <span class="stat-icon candy">ðŸ¬</span>
+          <span class="stat-icon candy">🍬</span>
         </div>
         <div class="stat-value">{{ totalXuxQuantity }}</div>
         <div class="stat-desc">{{ xuxTypeCount }} tipos diferentes</div>
@@ -35,7 +35,7 @@
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-title">Total Vacunas</span>
-          <span class="stat-icon vaccine">ðŸ’‰</span>
+          <span class="stat-icon vaccine">💉</span>
         </div>
         <div class="stat-value">{{ totalVacunaQuantity }}</div>
         <div class="stat-desc">{{ vacunaTypeCount }} tipos diferentes</div>
@@ -44,7 +44,7 @@
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-title">Espacio Utilizado</span>
-          <span class="stat-icon bag">ðŸŽ’</span>
+          <span class="stat-icon bag">🎒</span>
         </div>
         <div class="stat-value">{{ usedSpaces }} / {{ MAX_SPACES }}</div>
         <div class="stat-desc">{{ freeSpaces }} espacios libres</div>
@@ -59,67 +59,67 @@
 
     </div>
 
-    <!-- â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-    <div class="tabs" role="tablist" aria-label="PestaÃ±as de inventario">
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Pestañas de inventario">
       <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'all'" (click)="setInventoryFilter('all')">
-        <span aria-hidden="true">ðŸŽ</span> Items
+        <span aria-hidden="true">🎁</span> Items
       </button>
       <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'xux'" (click)="setInventoryFilter('xux')">
-        <span aria-hidden="true">ðŸ¬</span> Xuxes
+        <span aria-hidden="true">🍬</span> Xuxes
       </button>
       <button class="tab-btn" role="tab" [attr.aria-selected]="inventoryFilter === 'vacuna'" (click)="setInventoryFilter('vacuna')">
-        <span aria-hidden="true">ðŸ’‰</span> Vacunas
+        <span aria-hidden="true">💉</span> Vacunas
       </button>
     </div>
 
-    <!-- â”€â”€ Inventari fix 4x5 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- Inventari fix 4x5 -->
     <section class="inventory-fixed-panel card shadow-sm" aria-label="Inventario 4x5">
       <div class="inventory-fixed-head">
-        <h2>Inventario Fijo (4Ã—5 â€” 20 slots)</h2>
+        <h2>Inventario Fijo (4×5 — 20 slots)</h2>
         <span class="inventory-counter">{{ usedSpaces }}/{{ MAX_SPACES }} ocupados</span>
       </div>
 
       <div class="inventory-cards-grid">
         @for (slot of filteredInventorySlots; track slot.index) {
 
-          <!-- â”€â”€ Slot Xux â”€â”€ -->
+          <!-- Slot Xux -->
           @if (slot.kind === 'xux' && slot.xuxItem) {
             <div class="inv-card inv-card-xux">
               <span class="card-slot-num">#{{ slot.index }}</span>
               <span class="card-qty">x{{ slot.slotQty }}</span>
               <div class="card-icon">
-                @if (slot.xuxItem.item?.name === 'Xux de Maduixa') { <span>ðŸ“</span> }
-                @else if (slot.xuxItem.item?.name === 'Xux de Llimona') { <span>ðŸ‹</span> }
-                @else if (slot.xuxItem.item?.name === 'Xux de Cola') { <span>ðŸ¥¤</span> }
-                @else if (slot.xuxItem.item?.name === 'Xux Exp') { <span>â­</span> }
-                @else { <span>ðŸ¬</span> }
+                @if (slot.xuxItem.item?.name === 'Xux de Maduixa') { <span>🍓</span> }
+                @else if (slot.xuxItem.item?.name === 'Xux de Llimona') { <span>🍋</span> }
+                @else if (slot.xuxItem.item?.name === 'Xux de Cola') { <span>🥤</span> }
+                @else if (slot.xuxItem.item?.name === 'Xux Exp') { <span>⭐</span> }
+                @else { <span>🍬</span> }
               </div>
               <h3 class="card-name">{{ slot.xuxItem.item?.name ?? 'Xux' }}</h3>
               <button class="card-btn card-btn-xux" (click)="openPopup(slot)">Aplicar</button>
             </div>
           }
 
-          <!-- â”€â”€ Slot Vacuna â”€â”€ -->
+          <!-- Slot Vacuna -->
           @if (slot.kind === 'vacuna' && slot.vacunaItem) {
             <div class="inv-card inv-card-vacuna">
               <span class="card-slot-num">#{{ slot.index }}</span>
               <span class="card-qty">x1</span>
               <div class="card-icon">
-                @if (slot.vacunaItem.name === 'Xocolatina') { <span>ðŸ«</span> }
-                @else if (slot.vacunaItem.name === 'Xal de fruits') { <span>ðŸ¬</span> }
-                @else { <span>ðŸ’‰</span> }
+                @if (slot.vacunaItem.name === 'Xocolatina') { <span>🍫</span> }
+                @else if (slot.vacunaItem.name === 'Xal de fruits') { <span>🍬</span> }
+                @else { <span>💉</span> }
               </div>
               <h3 class="card-name">{{ slot.vacunaItem.name }}</h3>
               <button class="card-btn card-btn-vacuna" (click)="openPopup(slot)">Aplicar</button>
             </div>
           }
 
-          <!-- â”€â”€ Slot VacÃ­o â”€â”€ -->
+          <!-- Slot Vacío -->
           @if (slot.kind === 'empty') {
             <div class="inv-card inv-card-empty">
               <span class="card-slot-num">#{{ slot.index }}</span>
-              <span class="slot-empty-icon">ï¼‹</span>
-              <span class="inv-empty-label">VacÃ­o</span>
+              <span class="slot-empty-icon">＋</span>
+              <span class="inv-empty-label">Vacío</span>
             </div>
           }
 
@@ -127,13 +127,13 @@
       </div>
     </section>
 
-    <!-- â”€â”€ CHUCHEMONS tab (admin only, hidden from tabs) â”€â”€ -->
+    <!-- CHUCHEMONS tab (admin only, hidden from tabs) -->
     @if (false) {
       <section role="tabpanel" aria-label="Chuchemons capturados">
 
       <div class="space-info">
         <span class="space-label">
-          ðŸ—‚ï¸ Espacio libre en la mochila: <strong>{{ backendFreeSpaces }}</strong> / {{ MAX_SPACES }} espacios.
+          🗂️ Espacio libre en la mochila: <strong>{{ backendFreeSpaces }}</strong> / {{ MAX_SPACES }} espacios.
           @if (backendFreeSpaces === 0) {
             <span class="full-badge">MOCHILA LLENA</span>
           }
@@ -142,12 +142,12 @@
 
       @if (user?.is_admin) {
         <div class="admin-banner">
-          <span class="admin-icon">ðŸ› ï¸</span>
-          Modo administrador â€” puedes aÃ±adir Xuxes a la mochila desde la lista de Chuchemons.
+          <span class="admin-icon">🛠️</span>
+          Modo administrador — puedes añadir Xuxes a la mochila desde la lista de Chuchemons.
         </div>
 
         @if (chucemonsLoading) {
-          <div class="chuchemons-loading">Cargando Chuchemonsâ€¦</div>
+          <div class="chuchemons-loading">Cargando Chuchemons…</div>
         } @else if (chuchemons.length > 0) {
           <div class="chuchemons-grid">
             @for (c of chuchemons; track c.id) {
@@ -156,7 +156,7 @@
                   @if (c.image) {
                     <img [src]="'http://localhost:8000/chuchemons/' + c.image" [alt]="c.name" class="chuchemon-img" />
                   } @else {
-                    <div class="chuchemon-img-placeholder">ðŸ¾</div>
+                    <div class="chuchemon-img-placeholder">🐾</div>
                   }
                 </div>
               <div class="chuchemon-info">
@@ -186,8 +186,8 @@
                     (click)="addXuxes(c)"
                     [disabled]="backendFreeSpaces === 0 || addingMap[c.id] || addQtyMap[c.id] < 1"
                   >
-                    @if (!addingMap[c.id]) { + AÃ±adir Xuxes }
-                    @else { AÃ±adiendoâ€¦ }
+                    @if (!addingMap[c.id]) { + Añadir Xuxes }
+                    @else { Añadiendo… }
                   </button>
                 </div>
                 @if (feedbackMap[c.id]) {
@@ -204,11 +204,11 @@
             }
           </div>
         } @else {
-          <div class="empty-state"><span>ðŸ¾</span><p>No hay Chuchemons en la base de datos.</p></div>
+          <div class="empty-state"><span>🐾</span><p>No hay Chuchemons en la base de datos.</p></div>
         }
       } @else {
         @if (chucemonsLoading) {
-          <div class="chuchemons-loading">Cargando Chuchemonsâ€¦</div>
+          <div class="chuchemons-loading">Cargando Chuchemons…</div>
         } @else if (chuchemons.length > 0) {
           <div class="chuchemons-grid">
             @for (c of chuchemons; track c.id) {
@@ -217,7 +217,7 @@
                   @if (c.image) {
                     <img [src]="'http://localhost:8000/chuchemons/' + c.image" [alt]="c.name" class="chuchemon-img" />
                   } @else {
-                    <div class="chuchemon-img-placeholder">ðŸ¾</div>
+                    <div class="chuchemon-img-placeholder">🐾</div>
                   }
                 </div>
                 <div class="chuchemon-info">
@@ -247,11 +247,11 @@
       <section role="tabpanel" aria-label="Objetos">
         <div class="panel-header">
           <h2>Objetos disponibles</h2>
-          <span class="panel-subtitle">AÃ±adir objetos a tu mochila</span>
+          <span class="panel-subtitle">Añadir objetos a tu mochila</span>
         </div>
 
         @if (itemsLoading) {
-          <div class="items-loading">Cargando objetosâ€¦</div>
+          <div class="items-loading">Cargando objetos…</div>
         }
         @if (!itemsLoading && items.length > 0) {
           <ul class="items-grid" role="list" aria-label="Lista de objetos">
@@ -259,7 +259,7 @@
               <li class="item-card card shadow-sm" [ngClass]="'card-' + item.type">
                 <div class="item-header">
                   <span class="item-tag" [ngClass]="'tag-' + item.type">
-                    {{ item.type === 'apilable' ? 'ðŸ”' : 'ðŸ“¦' }} {{ item.type === 'apilable' ? 'Apilable' : 'No apilable' }}
+                    {{ item.type === 'apilable' ? '🔁' : '📦' }} {{ item.type === 'apilable' ? 'Apilable' : 'No apilable' }}
                   </span>
                 </div>
                 <div class="item-content">
@@ -280,7 +280,7 @@
                     [disabled]="addingItemMap[item.id]"
                     class="btn btn-primary"
                   >
-                    {{ addingItemMap[item.id] ? 'AÃ±adiendoâ€¦' : 'AÃ±adir' }}
+                    {{ addingItemMap[item.id] ? 'Añadiendo…' : 'Añadir' }}
                   </button>
                 </div>
                 @if (itemFeedbackMap[item.id]) {
@@ -301,13 +301,13 @@
     } <!-- end @else -->
   </main>
 
-  <!-- â”€â”€ POPUP MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- POPUP MODAL -->
   @if (showPopup && popupItem) {
     <div class="popup-overlay" (click)="closePopup()" role="dialog" aria-modal="true" [attr.aria-label]="popupItem.name">
       <div class="popup-box" (click)="$event.stopPropagation()">
 
         @if (popupStep === 'info') {
-          <!-- â”€â”€ INFO STEP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+          <!-- INFO STEP -->
           <div class="popup-header">
             <div class="popup-header-left">
               <div class="popup-icon-wrap" [class.popup-icon-xux]="popupItem.kind === 'xux'" [class.popup-icon-vacuna]="popupItem.kind === 'vacuna'">
@@ -316,11 +316,11 @@
               <div class="popup-header-text">
                 <h3 class="popup-title">{{ popupItem.name }}</h3>
                 <span class="popup-subtitle">
-                  {{ popupItem.kind === 'vacuna' ? 'Vacuna' : 'Xux' }} â€¢ Cantidad disponible: {{ popupItem.quantity }}
+                  {{ popupItem.kind === 'vacuna' ? 'Vacuna' : 'Xux' }} • Cantidad disponible: {{ popupItem.quantity }}
                 </span>
               </div>
             </div>
-            <button class="popup-close-x" (click)="closePopup()" aria-label="Cerrar">âœ•</button>
+            <button class="popup-close-x" (click)="closePopup()" aria-label="Cerrar">✕</button>
           </div>
 
           @if (popupItem.imageUrl) {
@@ -335,8 +335,8 @@
 
           <div class="popup-desc-box">
             <div class="popup-desc-header">
-              <span class="popup-desc-icon">â„¹</span>
-              <span class="popup-desc-label">DescripciÃ³n</span>
+              <span class="popup-desc-icon">ℹ</span>
+              <span class="popup-desc-label">Descripción</span>
             </div>
             <p class="popup-desc-text">{{ popupItem.description }}</p>
           </div>
@@ -358,25 +358,25 @@
           </div>
 
         } @else {
-          <!-- â”€â”€ SELECT TEAM STEP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+          <!-- SELECT TEAM STEP -->
           <div class="popup-header">
             <div class="popup-header-left">
               <div class="popup-icon-wrap popup-icon-team">
-                <span class="popup-icon-emoji">ðŸŽ¯</span>
+                <span class="popup-icon-emoji">🎯</span>
               </div>
               <div class="popup-header-text">
                 <h3 class="popup-title">Elige un Xuxemon</h3>
                 <span class="popup-subtitle">Aplica {{ popupItem.name }} a un miembro de tu equipo</span>
               </div>
             </div>
-            <button class="popup-close-x" (click)="closePopup()" aria-label="Cerrar">âœ•</button>
+            <button class="popup-close-x" (click)="closePopup()" aria-label="Cerrar">✕</button>
           </div>
 
           <div class="popup-team-list">
             @if (teamLoading) {
               <p class="popup-team-loading">Cargando equipo...</p>
             } @else if (teamChuchemons.length === 0) {
-              <p class="popup-team-empty">No tienes ningÃºn Xuxemon en el equipo.</p>
+              <p class="popup-team-empty">No tienes ningún Xuxemon en el equipo.</p>
             } @else {
               @for (member of teamChuchemons; track member.id) {
                 <div class="popup-team-card"
@@ -386,19 +386,19 @@
                     @if (member.image) {
                       <img [src]="'http://localhost:8000/chuchemons/' + member.image" [alt]="member.name" class="popup-team-img" />
                     } @else {
-                      <span class="popup-team-emoji">ðŸ¾</span>
+                      <span class="popup-team-emoji">🐾</span>
                     }
                   </div>
                   <div class="popup-team-info">
                     <span class="popup-team-name">{{ member.name }}</span>
                     <span class="popup-team-size">{{ member.current_mida }}</span>
                     @if (infectionsFor(member.id).length > 0) {
-                      <span class="popup-team-sick">ðŸ¤’ {{ infectionsFor(member.id).length }} infecciÃ³n(es)</span>
+                      <span class="popup-team-sick">🤒 {{ infectionsFor(member.id).length }} infección(es)</span>
                     }
                   </div>
                   <div class="popup-team-check">
                     @if (selectedTeamMember?.id === member.id) {
-                      <span>âœ”</span>
+                      <span>✔</span>
                     }
                   </div>
                 </div>
@@ -416,7 +416,7 @@
             <button class="popup-btn-apply" [disabled]="!selectedTeamMember || applying" (click)="applyItem()">
               {{ applying ? 'Aplicando...' : 'Confirmar' }}
             </button>
-            <button class="popup-btn-close" (click)="popupStep = 'info'">AtrÃ¡s</button>
+            <button class="popup-btn-close" (click)="popupStep = 'info'">Atrás</button>
           </div>
         }
 

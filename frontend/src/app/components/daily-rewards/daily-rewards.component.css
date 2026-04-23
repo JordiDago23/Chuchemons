@@ -198,7 +198,7 @@
   border-left: 4px solid #f44336;
 }
 
-/* ─── RESPONSIVE ─────────────────────────────────────────── */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .daily-rewards { padding: 14px; }
   .daily-rewards h2 { font-size: 1.3rem; }

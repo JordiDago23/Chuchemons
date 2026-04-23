@@ -1,4 +1,4 @@
-﻿import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -137,7 +137,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
         this.searching = false;
       },
       error: (err) => {
-        this.searchMessage = err.error?.message ?? 'No se ha podido completar la bÃºsqueda.';
+        this.searchMessage = err.error?.message ?? 'No se ha podido completar la búsqueda.';
         this.searching = false;
       }
     });
@@ -201,7 +201,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
 
     this.openConfirmDialog(
       'Eliminar solicitud',
-      `Â¿Seguro que quieres eliminar la solicitud de ${request.player_id}?`,
+      `¿Seguro que quieres eliminar la solicitud de ${request.player_id}?`,
       () => this.executeDeleteRequest(request)
     );
   }
@@ -232,7 +232,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
   removeFriend(friend: FriendUser): void {
     this.openConfirmDialog(
       'Eliminar amigo',
-      `Â¿Seguro que quieres eliminar a ${friend.player_id} de tu lista de amigos?`,
+      `¿Seguro que quieres eliminar a ${friend.player_id} de tu lista de amigos?`,
       () => this.executeRemoveFriend(friend)
     );
   }

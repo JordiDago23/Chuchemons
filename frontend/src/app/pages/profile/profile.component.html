@@ -1,4 +1,4 @@
-﻿<div class="layout">
+<div class="layout">
 
   <app-sidebar-nav
     [user]="user"
@@ -12,7 +12,7 @@
     <!-- PAGE TITLE -->
     <header class="page-title">
       <h1 id="profile-title">Mi Perfil</h1>
-      <p>Gestiona tu informaciÃ³n personal y estadÃ­sticas</p>
+      <p>Gestiona tu información personal y estadísticas</p>
     </header>
 
     <!-- PROFILE BANNER -->
@@ -21,17 +21,17 @@
         <div class="banner-left">
           <div class="avatar-wrap">
             <div class="avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
-            <button class="avatar-edit" (click)="editMode = !editMode">âœ</button>
+            <button class="avatar-edit" (click)="editMode = !editMode">✏</button>
           </div>
           <div class="banner-info">
             <span class="banner-name">{{ user.player_id }}</span>
             <span class="banner-email">{{ user.email }}</span>
             <div class="banner-tags">
-              <span class="tag red">â¤ Nivel {{ stats.level }}</span>
-              <span class="tag yellow">ðŸ“… Miembro desde el {{ memberSince }}</span>
-              <span class="tag gray">ðŸ“¦ {{ stats.captured }} Chuchemons atrapados</span>
+              <span class="tag red">❤ Nivel {{ stats.level }}</span>
+              <span class="tag yellow">📅 Miembro desde el {{ memberSince }}</span>
+              <span class="tag gray">📦 {{ stats.captured }} Chuchemons atrapados</span>
               @if (user.is_admin) {
-                <span class="tag admin">â­ Admin</span>
+                <span class="tag admin">⭐ Admin</span>
               }
             </div>
             <div class="xp-row">
@@ -41,15 +41,15 @@
             <div class="xp-track"><div class="xp-fill" [style.width.%]="xpPercent"></div></div>
           </div>
         </div>
-        <button class="edit-btn" (click)="editMode = !editMode">âœ Editar Perfil</button>
+        <button class="edit-btn" (click)="editMode = !editMode">✏ Editar Perfil</button>
       </div>
     }
 
     <!-- TABS -->
     <div class="tabs">
-      <button [class.active]="activeTab === 'info'"   (click)="activeTab = 'info'">ðŸ‘¤ Informacion</button>
-      <button [class.active]="activeTab === 'stats'"  (click)="activeTab = 'stats'">â†— EstadÃ­sticas</button>
-      <button [class.active]="activeTab === 'logros'" (click)="activeTab = 'logros'">ðŸ† Logros</button>
+      <button [class.active]="activeTab === 'info'"   (click)="activeTab = 'info'">👤 Informacion</button>
+      <button [class.active]="activeTab === 'stats'"  (click)="activeTab = 'stats'">↗ Estadísticas</button>
+      <button [class.active]="activeTab === 'logros'" (click)="activeTab = 'logros'">🏆 Logros</button>
     </div>
 
     <!-- ALERTS -->
@@ -62,11 +62,11 @@
       }
     </div>
 
-    <!-- TAB: INFORMACIÃ“N -->
+    <!-- TAB: INFORMACIÓN -->
     @if (activeTab === 'info') {
       <div class="tab-content">
         <div class="info-card">
-          <h2>InformaciÃ³n personal</h2>
+          <h2>Información personal</h2>
           <p class="section-sub">Actualiza tus datos personales</p>
 
           @if (!editMode) {
@@ -75,12 +75,12 @@
               <div class="info-value">{{ user?.nombre }} {{ user?.apellidos }}</div>
             </div>
             <div class="info-field">
-              <label>Correo electrÃ³nico</label>
-              <div class="info-value email-val">âœ‰ {{ user?.email }}</div>
+              <label>Correo electrónico</label>
+              <div class="info-value email-val">✉ {{ user?.email }}</div>
             </div>
             <div class="info-field">
-              <label>BiografÃ­a</label>
-              <div class="info-value">{{ bioCtrl.value || 'Sin biografÃ­a' }}</div>
+              <label>Biografía</label>
+              <div class="info-value">{{ bioCtrl.value || 'Sin biografía' }}</div>
             </div>
             <div class="info-field">
               <label>Fecha de registro</label>
@@ -104,7 +104,7 @@
                 <div id="profile-nombre-error" aria-live="polite" aria-atomic="true">
                   @if (nombre.invalid && nombre.touched) {
                     @if (nombre.errors?.['required']) {
-                      <span class="field-error"><span aria-hidden="true">âœ—</span> El nombre es obligatorio</span>
+                      <span class="field-error"><span aria-hidden="true">✗</span> El nombre es obligatorio</span>
                     }
                   }
                 </div>
@@ -123,7 +123,7 @@
                 <div id="profile-apellidos-error" aria-live="polite" aria-atomic="true">
                   @if (apellidos.invalid && apellidos.touched) {
                     @if (apellidos.errors?.['required']) {
-                      <span class="field-error"><span aria-hidden="true">âœ—</span> Los apellidos son obligatorios</span>
+                      <span class="field-error"><span aria-hidden="true">✗</span> Los apellidos son obligatorios</span>
                     }
                   }
                 </div>
@@ -142,26 +142,26 @@
                 <div id="profile-email-error" aria-live="polite" aria-atomic="true">
                   @if (emailCtrl.invalid && emailCtrl.touched) {
                     @if (emailCtrl.errors?.['required']) {
-                      <span class="field-error"><span aria-hidden="true">âœ—</span> El email es obligatorio</span>
+                      <span class="field-error"><span aria-hidden="true">✗</span> El email es obligatorio</span>
                     }
                     @if (emailCtrl.errors?.['email']) {
-                      <span class="field-error"><span aria-hidden="true">âœ—</span> Introduce un email vÃ¡lido</span>
+                      <span class="field-error"><span aria-hidden="true">✗</span> Introduce un email válido</span>
                     }
                   }
                 </div>
               </div>
               <div class="info-field">
-                <label for="profile-bio" class="info-label">BiografÃ­a</label>
+                <label for="profile-bio" class="info-label">Biografía</label>
                 <textarea
                   id="profile-bio"
                   formControlName="bio"
                   class="input textarea"
                   rows="3"
-                  placeholder="CuÃ©ntanos algo sobre ti..."
+                  placeholder="Cuéntanos algo sobre ti..."
                 ></textarea>
               </div>
               <div class="info-field">
-                <label for="profile-password" class="info-label">Nueva contraseÃ±a (vacÃ­o = sin cambio)</label>
+                <label for="profile-password" class="info-label">Nueva contraseña (vacío = sin cambio)</label>
                 <input
                   id="profile-password"
                   type="password"
@@ -174,13 +174,13 @@
                 <div id="profile-password-error" aria-live="polite" aria-atomic="true">
                   @if (password.invalid && password.touched) {
                     @if (password.errors?.['minlength']) {
-                      <span class="field-error"><span aria-hidden="true">âœ—</span> MÃ­nimo 6 caracteres</span>
+                      <span class="field-error"><span aria-hidden="true">✗</span> Mínimo 6 caracteres</span>
                     }
                   }
                 </div>
               </div>
               <div class="info-field">
-                <label for="profile-password-confirm" class="info-label">Repetir contraseÃ±a</label>
+                <label for="profile-password-confirm" class="info-label">Repetir contraseña</label>
                 <input
                   id="profile-password-confirm"
                   type="password"
@@ -192,7 +192,7 @@
                 />
                 <div id="profile-password-confirm-error" aria-live="polite" aria-atomic="true">
                   @if (editForm.errors?.['passwordMatch'] && editForm.get('password_confirmation')?.touched) {
-                    <span class="field-error"><span aria-hidden="true">âœ—</span> Las contraseÃ±as no coinciden</span>
+                    <span class="field-error"><span aria-hidden="true">✗</span> Las contraseñas no coinciden</span>
                   }
                 </div>
               </div>
@@ -209,7 +209,7 @@
       </div>
     }
 
-    <!-- TAB: ESTADÃSTICAS -->
+    <!-- TAB: ESTADÍSTICAS -->
     @if (activeTab === 'stats') {
       <div class="tab-content">
         <div class="stats-row">
@@ -277,8 +277,8 @@
   <app-confirm-dialog
     [isVisible]="showDeleteConfirm"
     title="Darse de baja"
-    message="Â¿EstÃ¡s seguro? Esta acciÃ³n es irreversible. Tu cuenta serÃ¡ eliminada permanentemente."
-    [confirmLabel]="loading ? 'Eliminando...' : 'SÃ­, darme de baja'"
+    message="¿Estás seguro? Esta acción es irreversible. Tu cuenta será eliminada permanentemente."
+    [confirmLabel]="loading ? 'Eliminando...' : 'Sí, darme de baja'"
     cancelLabel="Cancelar"
     (confirm)="confirmDelete()"
     (cancel)="cancelDelete()"

@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -46,7 +46,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   teamLoading = true;
   private destroy$ = new Subject<void>();
 
-  // Stats â€” por defecto en 0 para cuentas nuevas
+  // Stats — por defecto en 0 para cuentas nuevas
   stats = {
     level: 0,
     xp: 0,
@@ -66,7 +66,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     return Math.round((this.stats.xp / this.stats.xpMax) * 100);
   }
 
-  team: Chuchemon[] = []; // Se cargarÃ¡ desde la API
+  team: Chuchemon[] = []; // Se cargará desde la API
 
   typeColors: Record<string, string> = {
     Terra:  '#b8860b',
@@ -172,10 +172,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   getSizeLabel(size?: string): string {
     switch (size) {
-      case 'Petit': return 'PequeÃ±o';
-      case 'MitjÃ ': return 'Mediano';
+      case 'Petit': return 'Pequeño';
+      case 'Mitjà': return 'Mediano';
       case 'Gran': return 'Grande';
-      default: return size ?? 'PequeÃ±o';
+      default: return size ?? 'Pequeño';
     }
   }
 

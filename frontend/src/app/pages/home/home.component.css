@@ -1,4 +1,4 @@
-/* ─── LAYOUT ─────────────────────────────────────────── */
+/* LAYOUT */
 .layout {
   display: flex;
   height: 100vh;
@@ -8,7 +8,7 @@
   background: #f5f5f5;
 }
 
-/* ─── SIDEBAR ────────────────────────────────────────── */
+/* SIDEBAR */
 .sidebar {
   width: 180px;
   min-width: 180px;
@@ -164,7 +164,7 @@
 
 .salir-btn:hover { color: #e63946; }
 
-/* ─── MAIN ───────────────────────────────────────────── */
+/* MAIN */
 .main {
   flex: 1;
   overflow-y: auto;
@@ -174,7 +174,7 @@
   gap: 1.2rem;
 }
 
-/* ─── BANNER ─────────────────────────────────────────── */
+/* BANNER */
 .banner {
   background: linear-gradient(135deg, #f4722b, #e63946);
   border-radius: 16px;
@@ -246,7 +246,7 @@
   opacity: 0.85;
 }
 
-/* ─── STATS ──────────────────────────────────────────── */
+/* STATS */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -290,7 +290,7 @@
   color: #aaa;
 }
 
-/* ─── TEAM ───────────────────────────────────────────── */
+/* TEAM */
 .team-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -436,7 +436,7 @@
   color: #bbb;
 }
 
-/* ─── TEAM LOADING ───────────────────────────────────── */
+/* TEAM LOADING */
 .team-loading-skeleton {
   background: #fff;
   border-radius: 14px;
@@ -457,7 +457,7 @@
   100% { background-position: -200% 0; }
 }
 
-/* ─── TEAM EMPTY ─────────────────────────────────────── */
+/* TEAM EMPTY */
 .team-empty {
   background: #fff;
   border-radius: 14px;
@@ -633,7 +633,7 @@
 }
 
 
-/* ─── ACTION CARDS ───────────────────────────────────── */
+/* ACTION CARDS */
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -691,7 +691,7 @@
   cursor: pointer;
 }
 
-/* ─── DAILY REWARDS SECTION ──────────────────────────── */
+/* DAILY REWARDS SECTION */
 .daily-rewards-section {
   background: #fff;
   border-radius: 12px;
@@ -699,7 +699,7 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.07);
 }
 
-/* ─── LEVELING SECTION ───────────────────────────────── */
+/* LEVELING SECTION */
 .leveling-section {
   margin-top: 1rem;
 }
@@ -711,7 +711,7 @@
   font-weight: 700;
 }
 
-/* ─── INFECTIONS SECTION ─────────────────────────────── */
+/* INFECTIONS SECTION */
 .infections-section {
   margin-top: 1rem;
 }
@@ -729,7 +729,7 @@
   color: #888;
 }
 
-/* ─── RESPONSIVE ─────────────────────────────────────────── */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .layout {
     flex-direction: column;

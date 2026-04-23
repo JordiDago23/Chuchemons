@@ -52,7 +52,7 @@
         </div>
       }
 
-      <!-- ── BARRA DE VIDA ───────────────────────────────── -->
+      <!-- BARRA DE VIDA -->
       @if (!compact) {
       <div class="stat-block">
         <div class="stat-label-row">
@@ -83,7 +83,7 @@
       </div>
       }
 
-      <!-- ── STATS ──────────────────────────────────────── -->
+      <!-- STATS -->
       <div class="stat-block">
         <p><strong>Tamaño:</strong> {{ getSizeLabel(selectedChuchemon.current_mida) }}</p>
         <p>
@@ -95,7 +95,7 @@
         </p>
       </div>
 
-      <!-- ── EVOLVE ─────────────────────────────────────── -->
+      <!-- EVOLVE -->
       @if (selectedChuchemon.cannot_eat) {
         <div class="stat-block infection-block">
           <p class="infection-warning">🚫 {{ selectedChuchemon.cannot_eat_reason }}</p>
@@ -128,7 +128,7 @@
         </div>
       }
 
-      <!-- ── STATS PER SIZE TABLE ───────────────────────── -->
+      <!-- STATS PER SIZE TABLE -->
       @if (!compact) {
       <div class="stat-block">
         <p class="stats-table-title">📊 Estadísticas por tamaño</p>

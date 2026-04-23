@@ -317,7 +317,7 @@ section {
   font-style: italic;
 }
 
-/* ── Pantalla confirmació ID real ── */
+/* Pantalla confirmació ID real */
 .id-confirm {
   display: flex;
   flex-direction: column;

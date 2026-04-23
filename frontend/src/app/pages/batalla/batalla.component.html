@@ -1,4 +1,4 @@
-﻿<div class="layout">
+<div class="layout">
   <app-sidebar-nav
     [user]="user"
     [showChat]="false"
@@ -12,7 +12,7 @@
     @if (!isCombatPage) {
       <section class="hero">
         <h1>Arena de Batalla</h1>
-        <p>DesafÃ­a a tus amigos, elige un Xuxemon y resuelve el duelo con tirada + modificadores.</p>
+        <p>Desafía a tus amigos, elige un Xuxemon y resuelve el duelo con tirada + modificadores.</p>
       </section>
     }
 
@@ -27,7 +27,7 @@
     <section class="grid two-cols">
       <article class="card">
         <div class="card-title-row">
-          <h2>Amigos en lÃ­nea</h2>
+          <h2>Amigos en línea</h2>
           <span class="badge">{{ onlineFriends.length }}</span>
         </div>
 
@@ -57,7 +57,7 @@
         <h2>Solicitudes recibidas</h2>
 
         @if (!loading && pendingReceived.length === 0) {
-          <p class="empty">No tienes desafÃ­os pendientes.</p>
+          <p class="empty">No tienes desafíos pendientes.</p>
         }
 
         <div class="list">
@@ -91,7 +91,7 @@
       <article class="card">
         <h2>Solicitudes enviadas</h2>
         @if (!loading && pendingSent.length === 0) {
-          <p class="empty">No has enviado desafÃ­os.</p>
+          <p class="empty">No has enviado desafíos.</p>
         }
 
         <div class="list">
@@ -116,7 +116,7 @@
         <h2>Batallas activas</h2>
 
         @if (!loading && activeBattles.length === 0) {
-          <p class="empty">AÃºn no hay batallas activas.</p>
+          <p class="empty">Aún no hay batallas activas.</p>
         }
 
         <div class="list">
@@ -124,7 +124,7 @@
             <div class="list-item">
               <div>
                 <strong>vs {{ battle.opponent?.display_name || battle.opponent?.player_id || 'Rival' }}</strong>
-                <p>{{ battle.status === 'pending_selection' ? 'Pendiente de selecciÃ³n' : 'Completada' }}</p>
+                <p>{{ battle.status === 'pending_selection' ? 'Pendiente de selección' : 'Completada' }}</p>
               </div>
               <button class="primary-btn" (click)="openBattle(battle.id)">Abrir</button>
             </div>
@@ -134,7 +134,7 @@
     </section>
 
     <section class="card stats">
-      <h2>Tus estadÃ­sticas</h2>
+      <h2>Tus estadísticas</h2>
       <div class="stats-grid">
         <div class="stat-box">
           <span>Victorias</span>
@@ -159,7 +159,7 @@
       <h2>Historial reciente</h2>
 
       @if (!loading && recentBattles.length === 0) {
-        <p class="empty">TodavÃ­a no hay batallas completadas.</p>
+        <p class="empty">Todavía no hay batallas completadas.</p>
       }
 
       <div class="list">
@@ -167,7 +167,7 @@
           <div class="list-item">
             <div>
               <strong>vs {{ battle.opponent?.display_name || battle.opponent?.player_id || 'Rival' }}</strong>
-              <p>{{ battleOutcomeLabel(battle) }} Â· {{ battle.resolved_at ? (battle.resolved_at | date:'short') : 'Sin fecha' }}</p>
+              <p>{{ battleOutcomeLabel(battle) }} · {{ battle.resolved_at ? (battle.resolved_at | date:'short') : 'Sin fecha' }}</p>
             </div>
             <button class="ghost-btn" (click)="openBattle(battle.id)">Ver detalle</button>
           </div>
@@ -188,7 +188,7 @@
         <div class="battle-live-head">
           <div>
             <h2>Batalla en Curs</h2>
-            <p>Batalla #{{ selectedBattle.id }} Â· {{ battlePhaseLabel }}</p>
+            <p>Batalla #{{ selectedBattle.id }} · {{ battlePhaseLabel }}</p>
           </div>
           <button class="ghost-btn" (click)="closeBattlePanel()">Retirar-se</button>
         </div>
@@ -216,7 +216,7 @@
             <div class="fighter-tag">Oponent</div>
             <img class="fighter-image" [src]="imageFor(opponentFighter)" [alt]="opponentFighter?.name || 'Xuxemon rival'" />
             <div class="fighter-name-row">
-              <h3>{{ opponentFighter?.name || 'Esperando selecciÃ³n rival' }}</h3>
+              <h3>{{ opponentFighter?.name || 'Esperando selección rival' }}</h3>
               <span class="fighter-level">Nv. {{ opponentFighter?.level || '-' }}</span>
             </div>
             <p class="fighter-hp-text">Punts de Vida: {{ opponentFighter?.current_hp ?? '-' }} / {{ opponentFighter?.max_hp ?? '-' }}</p>
@@ -242,8 +242,8 @@
                   [disabled]="isLoadingAction('select', entry.id)">
                   <div>
                     <strong>{{ entry.name }}</strong>
-                    <p>Nv.{{ entry.level }} Â· {{ entry.current_mida }} Â· {{ entry.element }}</p>
-                    <small>HP {{ entry.current_hp }}/{{ entry.max_hp }} Â· x{{ entry.count }}</small>
+                    <p>Nv.{{ entry.level }} · {{ entry.current_mida }} · {{ entry.element }}</p>
+                    <small>HP {{ entry.current_hp }}/{{ entry.max_hp }} · x{{ entry.count }}</small>
                   </div>
                   <span>{{ isLoadingAction('select', entry.id) ? '...' : 'Seleccionar' }}</span>
                 </button>
@@ -255,7 +255,7 @@
         <section class="card">
           <h3>Accions de Batalla</h3>
           <div class="battle-actions-grid">
-            <button class="primary-btn" (click)="actionUnavailable('Atac BÃ sic')">Atac BÃ sic</button>
+            <button class="primary-btn" (click)="actionUnavailable('Atac Bàsic')">Atac Bàsic</button>
             <button class="primary-btn alt" (click)="actionUnavailable('Atac Especial')">Atac Especial</button>
             <button class="ghost-btn" (click)="actionUnavailable('Defensar')">Defensar</button>
             <button class="ghost-btn" (click)="actionUnavailable('Canviar')">Canviar</button>
@@ -266,7 +266,7 @@
           <h3>Registre de Batalla</h3>
           <div class="battle-log">
             @for (line of battleLogLines; track $index) {
-              <p>â€¢ {{ line }}</p>
+              <p>• {{ line }}</p>
             }
           </div>
         </section>
@@ -295,11 +295,11 @@
                   <strong>{{ formatSigned(opponentTypeMod()) }}</strong>
                 </div>
                 <div>
-                  <span>TamaÃ±o (tu)</span>
+                  <span>Tamaño (tu)</span>
                   <strong>{{ formatSigned(mySizeMod()) }}</strong>
                 </div>
                 <div>
-                  <span>TamaÃ±o (rival)</span>
+                  <span>Tamaño (rival)</span>
                   <strong>{{ formatSigned(opponentSizeMod()) }}</strong>
                 </div>
                 <div>

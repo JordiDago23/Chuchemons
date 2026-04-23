@@ -125,7 +125,7 @@
   font-weight: 600;
 }
 
-/* ── HP bar ───────────────────────────────────────── */
+/* HP bar */
 .stat-block {
   margin-bottom: 18px;
 }
@@ -172,7 +172,7 @@
   border-radius: 2px;
 }
 
-/* ── Action rows (heal / use-xux) ─────────────────── */
+/* Action rows (heal / use-xux) */
 .action-row {
   display: flex;
   align-items: center;
@@ -284,7 +284,7 @@
   margin-left: 6px;
 }
 
-/* ── Feedback message ─────────────────────────────── */
+/* Feedback message */
 .action-msg {
   background: #e8f5e9;
   border-left: 4px solid #4caf50;
@@ -305,7 +305,7 @@
   margin-bottom: 16px;
 }
 
-/* ── Boost badge ───────────────────────────────────── */
+/* Boost badge */
 .boost-badge {
   display: inline-block;
   background: #e3f2fd;
@@ -317,7 +317,7 @@
   margin-left: 4px;
 }
 
-/* ── Evolve block ──────────────────────────────────── */
+/* Evolve block */
 .evolve-block {
   background: #fff8e1;
   border: 1px solid #ffe082;
@@ -359,7 +359,7 @@
   cursor: not-allowed;
 }
 
-/* ── Evolve preview ────────────────────────────────── */
+/* Evolve preview */
 .evolve-preview {
   display: flex;
   flex-direction: column;
@@ -387,7 +387,7 @@
   font-weight: 600;
 }
 
-/* ── Stats per size table ──────────────────────────── */
+/* Stats per size table */
 .stats-table-title {
   font-weight: 700;
   margin: 0 0 10px;
@@ -454,7 +454,7 @@
   margin-bottom: 15px;
 }
 
-/* ─── RESPONSIVE ─────────────────────────────────────────── */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .leveling-panel { padding: 14px; }
   .leveling-panel h2 { font-size: 1.3rem; }

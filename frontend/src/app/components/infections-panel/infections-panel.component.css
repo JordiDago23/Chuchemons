@@ -98,7 +98,7 @@
   font-weight: 600;
 }
 
-/* ─── LOW HP WARNINGS ───────────────────────────────────────────────────── */
+/* LOW HP WARNINGS */
 .low-hp-section {
   margin-top: 16px;
 }
@@ -238,7 +238,7 @@
 .fb-success { background: #e8f5e9; color: #2e7d32; }
 .fb-error { background: #ffeaea; color: #c62828; }
 
-/* ─── EVOLVE SECTION ────────────────────────────────────────────────────── */
+/* EVOLVE SECTION */
 .team-evolve-section {
   margin-top: 16px;
 }
@@ -399,7 +399,7 @@
   background: linear-gradient(135deg, #fff3e0, #ffcc02);
 }
 
-/* ─── RESPONSIVE ─────────────────────────────────────────── */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .infections-panel { padding: 14px; }
   .infections-panel h2 { font-size: 1.3rem; }

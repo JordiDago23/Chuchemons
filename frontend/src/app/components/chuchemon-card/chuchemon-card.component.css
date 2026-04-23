@@ -93,14 +93,14 @@
 /* locked card */
 .cc-locked { opacity: .85; }
 
-/* ── Accessible sr-only utility ─────────────────────────────────────── */
+/* Accessible sr-only utility */
 .sr-only {
   position: absolute; width: 1px; height: 1px;
   padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 
-/* ── Focus visual — distint de hover ────────────────────────────────── */
+/* Focus visual — distint de hover */
 .cc-card:focus-visible {
   outline: 3px solid #3b5bdb;
   outline-offset: 3px;

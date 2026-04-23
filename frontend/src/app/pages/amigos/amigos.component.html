@@ -1,4 +1,4 @@
-﻿<div class="layout">
+<div class="layout">
   <app-sidebar-nav
     [user]="user"
     [brandName]="'Xuxemons'"
@@ -12,10 +12,10 @@
     <header class="page-header">
       <div>
         <h1>Amigos</h1>
-        <p>{{ stats.online }} en lÃ­nea â€¢ {{ stats.total }} amigos totales</p>
+        <p>{{ stats.online }} en línea • {{ stats.total }} amigos totales</p>
       </div>
       <button class="add-btn" (click)="toggleSearchPanel()">
-        {{ showSearchPanel ? 'Cerrar' : 'AÃ±adir amigo' }}
+        {{ showSearchPanel ? 'Cerrar' : 'Añadir amigo' }}
       </button>
     </header>
 
@@ -31,7 +31,7 @@
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-title">Total de amigos</span>
-          <span class="stat-icon red">ðŸ‘¥</span>
+          <span class="stat-icon red">👥</span>
         </div>
         <div class="stat-value">{{ stats.total }}</div>
         <div class="stat-desc">Red de entrenadores</div>
@@ -39,8 +39,8 @@
 
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-title">En lÃ­nea ahora</span>
-          <span class="stat-icon green">ðŸŸ¢</span>
+          <span class="stat-title">En línea ahora</span>
+          <span class="stat-icon green">🟢</span>
         </div>
         <div class="stat-value">{{ stats.online }}</div>
         <div class="stat-desc">Disponibles para jugar</div>
@@ -49,10 +49,10 @@
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-title">Desconectados</span>
-          <span class="stat-icon gray">âšª</span>
+          <span class="stat-icon gray">⚪</span>
         </div>
         <div class="stat-value">{{ stats.offline }}</div>
-        <div class="stat-desc">Fuera de lÃ­nea</div>
+        <div class="stat-desc">Fuera de línea</div>
       </div>
     </section>
 
@@ -87,7 +87,7 @@
                 <div class="result-info">
                   <h3>{{ result.display_name || result.player_id }}</h3>
                   <p>{{ result.player_id }}</p>
-                  <small>{{ result.bio || 'Sin biografÃ­a disponible.' }}</small>
+                  <small>{{ result.bio || 'Sin biografía disponible.' }}</small>
                 </div>
 
                 <div class="result-actions">
@@ -189,8 +189,8 @@
 
       @if (!loading && friends.length === 0) {
         <div class="empty-state">
-          <span>ðŸ‘¯</span>
-          <p>AÃºn no tienes amigos. Haz clic en <strong>AÃ±adir amigo</strong> para buscar uno por ID.</p>
+          <span>👯</span>
+          <p>Aún no tienes amigos. Haz clic en <strong>Añadir amigo</strong> para buscar uno por ID.</p>
         </div>
       }
 
@@ -207,7 +207,7 @@
                 <div class="friend-meta">
                   <h3>{{ friend.display_name || friend.player_id }}</h3>
                   <p>{{ friend.player_id }}</p>
-                  <small>{{ friend.is_online ? 'En lÃ­nea ahora' : 'Desconectado' }}</small>
+                  <small>{{ friend.is_online ? 'En línea ahora' : 'Desconectado' }}</small>
                 </div>
               </div>
 

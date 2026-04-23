@@ -1,7 +1,7 @@
-﻿<div class="page">
+<div class="page">
   <main class="card" aria-labelledby="register-title">
 
-    <!-- PokÃ©ball logo (decorativa) -->
+    <!-- Pokéball logo (decorativa) -->
     <header class="register-header">
       <div class="pokeball" aria-hidden="true">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
@@ -17,23 +17,23 @@
       <h1 id="register-title" class="title">Chuchemons</h1>
       <p class="subtitle">Comienza tu nueva aventura</p>
 
-      <!-- Tabs de navegaciÃ³ -->
-      <nav class="tabs" aria-label="AutenticaciÃ³n">
-        <a class="tab" routerLink="/login">Iniciar sesiÃ³n</a>
-        <button class="tab active" type="button" aria-current="page">RegÃ­strate</button>
+      <!-- Tabs de navegació -->
+      <nav class="tabs" aria-label="Autenticación">
+        <a class="tab" routerLink="/login">Iniciar sesión</a>
+        <button class="tab active" type="button" aria-current="page">Regístrate</button>
       </nav>
     </header>
 
-    <!-- ConfirmaciÃ³ de registre -->
+    <!-- Confirmació de registre -->
     @if (registeredId) {
       <section class="id-confirm" aria-live="polite" aria-label="Cuenta creada correctamente">
-        <div class="id-confirm-icon" aria-hidden="true">âœ”ï¸</div>
-        <p class="id-confirm-title">Â¡Cuenta creada!</p>
+        <div class="id-confirm-icon" aria-hidden="true">✔️</div>
+        <p class="id-confirm-title">¡Cuenta creada!</p>
         <p class="id-confirm-sub">Tu ID es:</p>
         <div class="id-confirm-id">{{ registeredId }}</div>
-        <p class="id-confirm-hint"><span aria-hidden="true">ðŸ“Œ</span> Â¡GuÃ¡rdalo! TendrÃ¡s que usarlo para iniciar sesiÃ³n.</p>
+        <p class="id-confirm-hint"><span aria-hidden="true">📌</span> ¡Guárdalo! Tendrás que usarlo para iniciar sesión.</p>
         <button class="btn btn-danger w-100 submit-btn" (click)="router.navigate(['/home'])">
-          Continuar <span aria-hidden="true">âž¡</span>
+          Continuar <span aria-hidden="true">➡</span>
         </button>
       </section>
     }
@@ -49,7 +49,7 @@
     <section aria-label="Formulario de registro">
       <div class="id-preview" aria-live="polite">
         <div>Vista previa de tu ID de jugador: <strong>{{ previewPlayerId }}</strong></div>
-        <div class="preview-note">El backend generarÃ¡ el sufijo final automÃ¡ticamente.</div>
+        <div class="preview-note">El backend generará el sufijo final automáticamente.</div>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -70,7 +70,7 @@
             @if (nombre.invalid && nombre.touched) {
               @if (nombre.errors?.['required']) {
                 <span class="field-error">
-                  <span aria-hidden="true">âœ—</span> El nombre es obligatorio
+                  <span aria-hidden="true">✗</span> El nombre es obligatorio
                 </span>
               }
             }
@@ -93,7 +93,7 @@
             @if (apellidos.invalid && apellidos.touched) {
               @if (apellidos.errors?.['required']) {
                 <span class="field-error">
-                  <span aria-hidden="true">âœ—</span> Los apellidos son obligatorios
+                  <span aria-hidden="true">✗</span> Los apellidos son obligatorios
                 </span>
               }
             }
@@ -101,7 +101,7 @@
         </div>
 
         <div class="field">
-          <label for="reg-email" class="form-label">Correo ElectrÃ³nico</label>
+          <label for="reg-email" class="form-label">Correo Electrónico</label>
           <input
             id="reg-email"
             type="email"
@@ -116,12 +116,12 @@
             @if (email.invalid && email.touched) {
               @if (email.errors?.['required']) {
                 <span class="field-error">
-                  <span aria-hidden="true">âœ—</span> El email es obligatorio
+                  <span aria-hidden="true">✗</span> El email es obligatorio
                 </span>
               }
               @if (email.errors?.['email']) {
                 <span class="field-error">
-                  <span aria-hidden="true">âœ—</span> Introduce un email vÃ¡lido
+                  <span aria-hidden="true">✗</span> Introduce un email válido
                 </span>
               }
             }
@@ -129,13 +129,13 @@
         </div>
 
         <div class="field">
-          <label for="reg-password" class="form-label">ContraseÃ±a</label>
+          <label for="reg-password" class="form-label">Contraseña</label>
           <div class="password-input-wrap">
             <input
               id="reg-password"
               [type]="showPassword ? 'text' : 'password'"
               class="form-control password-field"
-              placeholder="Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·"
+              placeholder="············"
               formControlName="password"
               autocomplete="new-password"
               [attr.aria-invalid]="password.invalid && password.touched ? 'true' : null"
@@ -145,7 +145,7 @@
               class="toggle-password"
               type="button"
               (click)="togglePasswordVisibility()"
-              [attr.aria-label]="showPassword ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a'"
+              [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
               [attr.aria-pressed]="showPassword"
             >
               @if (!showPassword) {
@@ -167,12 +167,12 @@
             @if (password.invalid && password.touched) {
               @if (password.errors?.['required']) {
                 <span class="field-error">
-                  <span aria-hidden="true">âœ—</span> La contraseÃ±a es obligatoria
+                  <span aria-hidden="true">✗</span> La contraseña es obligatoria
                 </span>
               }
               @if (password.errors?.['minlength']) {
                 <span class="field-error">
-                  <span aria-hidden="true">âœ—</span> MÃ­nimo 6 caracteres
+                  <span aria-hidden="true">✗</span> Mínimo 6 caracteres
                 </span>
               }
             }
@@ -180,13 +180,13 @@
         </div>
 
         <div class="field">
-          <label for="reg-password-confirm" class="form-label">Repetir ContraseÃ±a</label>
+          <label for="reg-password-confirm" class="form-label">Repetir Contraseña</label>
           <div class="password-input-wrap">
             <input
               id="reg-password-confirm"
               [type]="showPasswordConfirmation ? 'text' : 'password'"
               class="form-control password-field"
-              placeholder="Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·"
+              placeholder="············"
               formControlName="password_confirmation"
               autocomplete="new-password"
               [attr.aria-invalid]="passwordConfirmation.touched && form.errors?.['passwordMatch'] ? 'true' : null"
@@ -196,7 +196,7 @@
               class="toggle-password"
               type="button"
               (click)="togglePasswordConfirmationVisibility()"
-              [attr.aria-label]="showPasswordConfirmation ? 'Ocultar confirmaciÃ³n de contraseÃ±a' : 'Mostrar confirmaciÃ³n de contraseÃ±a'"
+              [attr.aria-label]="showPasswordConfirmation ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'"
               [attr.aria-pressed]="showPasswordConfirmation"
             >
               @if (!showPasswordConfirmation) {
@@ -217,7 +217,7 @@
           <div id="reg-password-confirm-error" aria-live="polite" aria-atomic="true">
             @if (passwordConfirmation.touched && form.errors?.['passwordMatch']) {
               <span class="field-error">
-                <span aria-hidden="true">âœ—</span> Las contraseÃ±as no coinciden
+                <span aria-hidden="true">✗</span> Las contraseñas no coinciden
               </span>
             }
           </div>
@@ -225,7 +225,7 @@
 
         <button class="btn btn-danger w-100 submit-btn" type="submit" [disabled]="loading"
                 [attr.aria-busy]="loading ? 'true' : null">
-          <span class="bolt" aria-hidden="true">âš¡</span>
+          <span class="bolt" aria-hidden="true">⚡</span>
           {{ loading ? 'Registrando...' : 'Registrarse' }}
         </button>
 

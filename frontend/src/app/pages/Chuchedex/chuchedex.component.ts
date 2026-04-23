@@ -31,7 +31,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   myChuchemons: ChuchemonExtended[] = [];
   filteredChuchemons: ChuchemonExtended[] = [];
   selectedElement: ElementFilter = 'Todos';
-  selectedSize: 'Todas' | 'Petit' | 'Mitjà' | 'Gran' = 'Todas';
+  selectedSize: 'Todas' | 'Petit' | 'Mitja' | 'Gran' = 'Todas';
   selectedTab: 'todos' | 'mis' = 'todos';
   searchQuery: string = '';
   isLoading: boolean = true;
@@ -169,7 +169,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     let filtered: ChuchemonExtended[] = [];
 
-    // Determinar quÃ© lista usar segÃºn la pestaÃ±a
+    // Determinar qué lista usar según la pestaña
     if (this.selectedTab === 'todos') {
       // En "Todos" mostrar TODOS los chuchemons
       filtered = [...this.chuchemons];
@@ -178,7 +178,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       filtered = [...this.myChuchemons];
     }
 
-    // Aplicar filtros de elemento y bÃºsqueda
+    // Aplicar filtros de elemento y búsqueda
     if (this.selectedElement !== 'Todos') {
       filtered = filtered.filter(c => this.normalizeElement(c.element) === this.selectedElement);
     }
@@ -245,7 +245,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
 
   getSizeLabel(size: string): string {
     switch (size) {
-      case 'Petit': return 'PequeÃ±o';
+      case 'Petit': return 'Pequeño';
       case 'Mitjà': return 'Mediano';
       case 'Gran': return 'Grande';
       default: return size;
@@ -261,7 +261,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   }
 
   isBlockedForDisplay(chuchemon: ChuchemonExtended): boolean {
-    // Mostrar bloqueado si: es usuario normal, estÃ¡ en tab "Todos" y no lo ha capturado
+    // Mostrar bloqueado si: es usuario normal, está en tab "Todos" y no lo ha capturado
     if (this.isAdmin) return false;
     if (this.selectedTab === 'mis') return false;
     return !this.isCaptured(chuchemon);
@@ -316,12 +316,12 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
             this.evolvingChuchemonNextMida = info.next_mida || '';
             this.showEvolutionDialog = true;
           } else {
-            alert('Este Xuxemon ya estÃ¡ en su mÃ¡xima evoluciÃ³n.');
+            alert('Este Xuxemon ya está en su máxima evolución.');
           }
         },
         error: (error) => {
           console.error('Error getting evolution info:', error);
-          alert('Error al obtener la informaciÃ³n de evoluciÃ³n');
+          alert('Error al obtener la información de evolución');
         }
       });
   }

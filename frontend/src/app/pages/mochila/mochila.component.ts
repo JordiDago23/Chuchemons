@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -9,7 +9,7 @@ import { ItemService, MochilaItem } from '../../services/item.service';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
 
-// â”€â”€ Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Models
 export interface ItemBase {
   id: number;
   name: string;
@@ -39,7 +39,7 @@ interface InventorySlot {
   slotQty?: number;
 }
 
-// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Component
 @Component({
   selector: 'app-mochila',
   standalone: true,
@@ -56,35 +56,35 @@ export class MochilaComponent implements OnInit {
   readonly MAX_SPACES = 20;
   readonly MAX_STACK = 5;
 
-  // â”€â”€ Items from backend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Items from backend
   items: InventoryItem[] = [];
   itemsLoading = false;
-  /** Per-item quantity input map { itemId â†’ qty } */
+  /** Per-item quantity input map { itemId → qty } */
   addItemQtyMap: { [id: number]: number } = {};
-  /** Per-item feedback { itemId â†’ { type, msg } } */
+  /** Per-item feedback { itemId → { type, msg } } */
   itemFeedbackMap: { [id: number]: { type: 'success' | 'warn' | 'error'; msg: string } } = {};
   addingItemMap: { [id: number]: boolean } = {};
 
-  // â”€â”€ Xuxes from backend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Xuxes from backend
   mochilaXuxes: MochilaXuxItem[] = [];
   backendUsedSpaces = 0;
   backendFreeSpaces = 20;
   mochilaLoading = false;
 
-  // â”€â”€ Vacunes (carregades del backend) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Vacunes (carregades del backend)
   vacunaItems: VacunaItem[] = [];
 
-  // â”€â”€ Team (for apply popup) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Team (for apply popup)
   teamChuchemons: any[] = [];
   teamLoading = false;
   activeInfections: any[] = [];
 
-  // â”€â”€ Chuchemons â€“ for the "Afegir Xuxes" panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Chuchemons – for the "Afegir Xuxes" panel
   chuchemons: Chuchemon[] = [];
   chucemonsLoading = false;
-  /** Per-chuchemon quantity input map { chuchemonId â†’ qty } */
+  /** Per-chuchemon quantity input map { chuchemonId → qty } */
   addQtyMap: { [id: number]: number } = {};
-  /** Per-chuchemon feedback { chuchemonId â†’ { type, msg } } */
+  /** Per-chuchemon feedback { chuchemonId → { type, msg } } */
   feedbackMap: { [id: number]: { type: 'success' | 'warn' | 'error'; msg: string } } = {};
   addingMap: { [id: number]: boolean } = {};
 
@@ -202,7 +202,7 @@ export class MochilaComponent implements OnInit {
     });
   }
 
-  // â”€â”€ Admin: add Xuxes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Admin: add Xuxes
   addXuxes(chuchemon: Chuchemon) {
     const qty = this.addQtyMap[chuchemon.id] ?? 1;
     if (qty < 1) return;
@@ -228,14 +228,14 @@ export class MochilaComponent implements OnInit {
         this.addingMap[chuchemon.id] = false;
       },
       error: (err) => {
-        const msg = err?.error?.message ?? 'Error al aÃ±adir Xuxes.';
+        const msg = err?.error?.message ?? 'Error al añadir Xuxes.';
         this.feedbackMap[chuchemon.id] = { type: 'error', msg };
         this.addingMap[chuchemon.id] = false;
       }
     });
   }
 
-  // â”€â”€ Space calculations (backend data) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Space calculations (backend data)
   get usedSpaces(): number {
     return this.backendUsedSpaces;
   }
@@ -315,7 +315,7 @@ export class MochilaComponent implements OnInit {
     return slots;
   }
 
-  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Helpers
   get spriteUrl(): string {
     return 'assets/pokemon-sprites/';
   }
@@ -329,7 +329,7 @@ export class MochilaComponent implements OnInit {
     }
   }
 
-  // â”€â”€ Add items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Add items
   addItems(item: InventoryItem) {
     const qty = this.addItemQtyMap[item.id] ?? 1;
     if (qty < 1) return;
@@ -348,14 +348,14 @@ export class MochilaComponent implements OnInit {
         this.addingItemMap[item.id] = false;
       },
       error: (err) => {
-        const msg = err?.error?.message ?? 'Error al aÃ±adir objetos.';
+        const msg = err?.error?.message ?? 'Error al añadir objetos.';
         this.itemFeedbackMap[item.id] = { type: 'error', msg };
         this.addingItemMap[item.id] = false;
       }
     });
   }
 
-  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Helpers
   getMochilaItem(chuchemonId: number): MochilaXuxItem | undefined {
     return this.mochilaXuxes.find(i => i.chuchemon_id === chuchemonId);
   }
@@ -383,7 +383,7 @@ export class MochilaComponent implements OnInit {
     return this.inventorySlots.filter(s => s.kind === this.inventoryFilter || s.kind === 'empty');
   }
 
-  // â”€â”€ Popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Popup
   showPopup = false;
   popupStep: 'info' | 'select-team' = 'info';
   selectedTeamMember: any = null;
@@ -403,17 +403,17 @@ export class MochilaComponent implements OnInit {
   } | null = null;
 
   private readonly XUX_DESCRIPTIONS: { [name: string]: { description: string; emoji: string; applyLabel: string } } = {
-    'Xux de Maduixa': { description: 'Recupera 20 puntos de salud (PS) por unidad.', emoji: 'ðŸ“', applyLabel: 'Curar' },
-    'Xux de Llimona': { description: 'Aumenta el ataque temporalmente (+10% por unidad, mÃ¡x 50%).', emoji: 'ðŸ‹', applyLabel: 'Potenciar Ataque' },
-    'Xux de Cola':    { description: 'Aumenta la defensa temporalmente (+10% por unidad, mÃ¡x 50%).', emoji: 'ðŸ¥¤', applyLabel: 'Potenciar Defensa' },
-    'Xux Exp':        { description: 'Aporta 50 XP al Xuxemon y se guarda al usarlo.', emoji: 'â­', applyLabel: 'Dar XP' },
+    'Xux de Maduixa': { description: 'Recupera 20 puntos de salud (PS) por unidad.', emoji: '🍓', applyLabel: 'Curar' },
+    'Xux de Llimona': { description: 'Aumenta el ataque temporalmente (+10% por unidad, máx 50%).', emoji: '🍋', applyLabel: 'Potenciar Ataque' },
+    'Xux de Cola':    { description: 'Aumenta la defensa temporalmente (+10% por unidad, máx 50%).', emoji: '🥤', applyLabel: 'Potenciar Defensa' },
+    'Xux Exp':        { description: 'Aporta 50 XP al Xuxemon y se guarda al usarlo.', emoji: '⭐', applyLabel: 'Dar XP' },
   };
 
   private readonly VACUNA_META: { [name: string]: { description: string; diseases: string[]; emoji: string } } = {
-    'Xocolatina':     { description: 'Al usarla en un Xuxemon elimina "BajÃ³n de azÃºcar".',       diseases: ['BajÃ³n de azÃºcar'], emoji: 'ðŸ«' },
-    'Xal de fruits':  { description: 'Al usarla en un Xuxemon elimina "AtracÃ³n".',               diseases: ['AtracÃ³n'],          emoji: 'ðŸ¬' },
-    'Insulina':       { description: 'Cura todas las enfermedades del Xuxemon.',                  diseases: ['Todas las enfermedades'], emoji: 'ðŸ’‰' },
-    'Fruita fresca':  { description: 'Al usarla en un Xuxemon elimina "Sobredosis de sucre".',   diseases: ['Sobredosis de sucre'], emoji: 'ðŸŽ' },
+    'Xocolatina':     { description: 'Al usarla en un Xuxemon elimina "Bajón de azúcar".',       diseases: ['Bajón de azúcar'], emoji: '🍫' },
+    'Xal de fruits':  { description: 'Al usarla en un Xuxemon elimina "Atracón".',               diseases: ['Atracón'],          emoji: '🍬' },
+    'Insulina':       { description: 'Cura todas las enfermedades del Xuxemon.',                  diseases: ['Todas las enfermedades'], emoji: '💉' },
+    'Fruita fresca':  { description: 'Al usarla en un Xuxemon elimina "Sobredosis de sucre".',   diseases: ['Sobredosis de sucre'], emoji: '🍎' },
   };
 
   openPopup(slot: InventorySlot) {
@@ -432,7 +432,7 @@ export class MochilaComponent implements OnInit {
         kind: 'xux',
         quantity: slot.slotQty ?? 0,
         imageUrl: undefined,
-        imageEmoji: meta?.emoji ?? 'ðŸ¬',
+        imageEmoji: meta?.emoji ?? '🍬',
         applyLabel: meta?.applyLabel ?? 'Aplicar',
       };
     } else if (slot.kind === 'vacuna' && slot.vacunaItem) {
@@ -442,7 +442,7 @@ export class MochilaComponent implements OnInit {
         description: meta?.description ?? slot.vacunaItem.description,
         kind: 'vacuna',
         quantity: slot.vacunaItem.quantity,
-        imageEmoji: meta?.emoji ?? 'ðŸ’‰',
+        imageEmoji: meta?.emoji ?? '💉',
         diseases: meta?.diseases,
         applyLabel: 'Aplicar Vacuna',
         vaccineId: slot.vacunaItem.id,
@@ -508,8 +508,8 @@ export class MochilaComponent implements OnInit {
       this.http.post<any>(endpoint, body, { headers: this.authHeaders }).subscribe({
         next: (res) => {
           const successMsg = itemName === 'Xux Exp'
-            ? (res.message ?? `+${res.xp_gained ?? 50} XP aÃ±adidos y guardados.`)
-            : (res.message ?? 'Â¡Aplicado!');
+            ? (res.message ?? `+${res.xp_gained ?? 50} XP añadidos y guardados.`)
+            : (res.message ?? '¡Aplicado!');
           this.applyFeedback = { type: 'success', msg: successMsg };
           this.applying = false;
           this.loadMochila();
@@ -523,7 +523,7 @@ export class MochilaComponent implements OnInit {
     } else if (this.popupItem.kind === 'vacuna') {
       const infections = this.infectionsFor(memberId);
       if (infections.length === 0) {
-        this.applyFeedback = { type: 'error', msg: 'Este Xuxemon no tiene ninguna infecciÃ³n activa.' };
+        this.applyFeedback = { type: 'error', msg: 'Este Xuxemon no tiene ninguna infección activa.' };
         this.applying = false;
         return;
       }
@@ -535,7 +535,7 @@ export class MochilaComponent implements OnInit {
         { headers: this.authHeaders }
       ).subscribe({
         next: (res) => {
-          this.applyFeedback = { type: 'success', msg: res.message ?? 'Â¡InfecciÃ³n curada!' };
+          this.applyFeedback = { type: 'success', msg: res.message ?? '¡Infección curada!' };
           this.applying = false;
           this.loadMochila();
           this.loadInfections();
