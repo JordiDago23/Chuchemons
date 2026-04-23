@@ -1,6 +1,7 @@
 <div class="layout">
   <app-sidebar-nav
     [user]="user"
+    [showAdmin]="!!user?.is_admin"
     [brandSub]="'Arena de batalla'"
     [showPokeball]="false"
     (logoutClick)="logout()"
