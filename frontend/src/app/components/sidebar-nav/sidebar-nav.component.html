@@ -113,10 +113,12 @@
 
   <div class="sidebar-footer">
     @if (showUserInfo && user) {
-      <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
-      <div class="footer-info">
-        <span class="footer-name">{{ user.player_id }}</span>
-        <span class="footer-sub">{{ user.email }}</span>
+      <div class="footer-user">
+        <div class="footer-avatar">{{ user.nombre?.charAt(0) | uppercase }}</div>
+        <div class="footer-info">
+          <span class="footer-name">{{ user.player_id }}</span>
+          <span class="footer-sub">{{ user.email }}</span>
+        </div>
       </div>
     }
 

@@ -1,8 +1,8 @@
 ﻿<div class="layout">
   <app-sidebar-nav
+    [user]="user"
     [brandName]="'Xuxemons'"
     [showAdmin]="isAdmin"
-    [showUserInfo]="false"
     (logoutClick)="logout()"
   ></app-sidebar-nav>
 

@@ -31,7 +31,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   myChuchemons: ChuchemonExtended[] = [];
   filteredChuchemons: ChuchemonExtended[] = [];
   selectedElement: ElementFilter = 'Todos';
-  selectedSize: 'Todas' | 'Petit' | 'Mitja' | 'Gran' = 'Todas';
+  selectedSize: 'Todas' | 'Petit' | 'Mitjà' | 'Gran' = 'Todas';
   selectedTab: 'todos' | 'mis' = 'todos';
   searchQuery: string = '';
   isLoading: boolean = true;
@@ -40,6 +40,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   totalCaptured: number = 0;
   completionPercentage: number = 0;
   isAdmin: boolean = false;
+  user: any = null;
   private destroy$ = new Subject<void>();
   private teamChuchemons: Set<number> = new Set();
 
@@ -123,6 +124,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (user) => {
+          this.user = user;
           this.isAdmin = user?.is_admin ?? false;
         },
         error: (error) => {

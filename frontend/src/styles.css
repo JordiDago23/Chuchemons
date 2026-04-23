@@ -97,3 +97,94 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Design tokens ─────────────────────────────────── */
+:root {
+  --color-primary:       #e63946;
+  --color-primary-dark:  #c0313d;
+  --color-primary-light: #fee2e2;
+  --color-orange:        #f26430;
+  --color-surface:       #ffffff;
+  --color-bg:            #f6f7fb;
+  --color-border:        #e5e7eb;
+  --color-ink:           #111827;
+  --color-ink-muted:     #6b7280;
+  --color-ink-subtle:    #9ca3af;
+  --radius-card:         16px;
+  --radius-btn:          10px;
+  --shadow-card:         0 3px 12px rgba(15, 23, 42, 0.06);
+  --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+/* ── Global heading scale ───────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Manrope', sans-serif;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ── Shared layout shell ────────────────────────────── */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--color-bg);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* ── Page header / title utilities ─────────────────── */
+.page-header,
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-header h1,
+.page-title h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  line-height: 1.15;
+}
+
+.page-header p,
+.page-title p,
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-ink-muted);
+  font-weight: 500;
+  margin: 0.2rem 0 0;
+}
+
+.section-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* ── Card base ──────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Badge base ─────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}

@@ -14,72 +14,6 @@
     radial-gradient(circle at 15% 20%, #fee2e2 0%, transparent 35%),
     radial-gradient(circle at 80% 10%, #ffedd5 0%, transparent 35%),
     linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
-}
-
-.sidebar {
-  width: 190px;
-  min-width: 190px;
-  background: #fff;
-  border-right: 1px solid var(--battle-border);
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-brand {
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--battle-red), var(--battle-orange));
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-}
-
-.brand-name {
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-
-.brand-sub {
-  font-size: 0.78rem;
-  opacity: 0.95;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.7rem;
-}
-
-.nav-item {
-  text-decoration: none;
-  color: #334155;
-  border-radius: 0.6rem;
-  padding: 0.6rem 0.7rem;
-  font-size: 0.9rem;
-}
-
-.nav-item:hover {
-  background: #fff1f2;
-}
-
-.nav-item.active {
-  background: #fee2e2;
-  color: #991b1b;
-  font-weight: 700;
-}
-
-.nav-icon {
-  margin-right: 0.45rem;
-}
-
-.salir-btn {
-  margin: auto 0.7rem 0.7rem;
-  border: 1px solid var(--battle-border);
-  background: #fff;
-  border-radius: 0.6rem;
-  padding: 0.55rem;
-  cursor: pointer;
 }
 
 .main {
@@ -98,13 +32,15 @@
 }
 
 .hero h1 {
-  margin: 0;
+  margin: 0 0 0.2rem;
   font-size: 1.6rem;
+  font-weight: 800;
 }
 
 .hero p {
-  margin: 0.4rem 0 0;
-  opacity: 0.95;
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .feedback {

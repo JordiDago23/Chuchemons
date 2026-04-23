@@ -23,6 +23,7 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
   myChuchemons: ChuchemonExtended[] = [];
   selectedChuchemons: (number | null)[] = [null, null, null];
   isLoading: boolean = true;
+  user: any = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
   private destroy$ = new Subject<void>();
@@ -36,6 +37,7 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(u => this.user = u);
     this.loadMyChuchemons();
     this.loadCurrentTeam();
     this.startPolling();
