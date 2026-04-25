@@ -13,12 +13,12 @@ import {
   BattleUser,
 } from '../../core/services/battle.service';
 import { AuthService } from '../../core/services/auth.service';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 @Component({
   selector: 'app-batalla',
   standalone: true,
-  imports: [CommonModule, SidebarNavComponent],
+  imports: [CommonModule, MainLayoutComponent],
   templateUrl: './batalla.component.html',
   styleUrls: ['./batalla.component.css'],
 })

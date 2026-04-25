@@ -1,15 +1,12 @@
-<div class="layout">
+<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Panel de administración'"
+  [showAdmin]="true"
+  (logoutClick)="logout()"
+>
 
-  <app-sidebar-nav
-    [user]="user"
-    [showAdmin]="true"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
-
-  <!-- MAIN -->
-  <main class="main" id="main-content">
-
-    <!-- BANNER -->
+  <!-- BANNER -->
     <div class="admin-banner">
       <div class="banner-shield">🛡</div>
       <div>
@@ -444,7 +441,6 @@
       </div>
     }
 
-  </main>
-</div>
+</app-main-layout>
 
 

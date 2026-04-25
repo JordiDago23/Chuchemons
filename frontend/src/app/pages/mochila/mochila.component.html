@@ -1,16 +1,12 @@
-<div class="layout">
+<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Tu inventario'"
+  [showAdmin]="!!user?.is_admin"
+  (logoutClick)="logout()"
+>
 
-  <app-sidebar-nav
-    [user]="user"
-    [brandName]="'Xuxemons'"
-    [showAdmin]="!!user?.is_admin"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
-
-  <!-- MAIN -->
-  <main class="main" id="main-content">
-
-    @if (loading) {
+  @if (loading) {
       <div class="loading-state" role="status" aria-live="polite">Cargando mochila…</div>
     } @else {
 
@@ -299,7 +295,6 @@
     }
 
     } <!-- end @else -->
-  </main>
 
   <!-- POPUP MODAL -->
   @if (showPopup && popupItem) {
@@ -424,5 +419,5 @@
     </div>
   }
 
-</div>
+</app-main-layout>
 

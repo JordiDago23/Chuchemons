@@ -7,12 +7,12 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { FriendUser, FriendsOverviewResponse, FriendsService } from '../../core/services/friends.service';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 @Component({
   selector: 'app-amigos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmDialogComponent, SidebarNavComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmDialogComponent, MainLayoutComponent],
   templateUrl: './amigos.component.html',
   styleUrls: ['./amigos.component.css']
 })

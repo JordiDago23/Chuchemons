@@ -1,14 +1,12 @@
-﻿<div class="layout">
-  <app-sidebar-nav
-    [user]="user"
-    [brandName]="'Xuxemons'"
-    [showAdmin]="isAdmin"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
+﻿<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Capturalos a todos'"
+  [showAdmin]="isAdmin"
+  (logoutClick)="logout()"
+>
 
-  <!-- MAIN -->
-  <main class="main" id="main-content">
-    <!-- Page header -->
+  <!-- Page header -->
     <header class="page-header">
       <h1>Chuchedex</h1>
       <p class="page-sub">Colección de chuchemons {{ totalCaptured }}/{{ totalChuchemons }}</p>
@@ -150,6 +148,6 @@
       [isVisible]="showDetailsModal"
       (close)="closeDetailsModal()"
     ></app-chuchemon-details-modal>
-  </main>
-</div>
+
+</app-main-layout>
 

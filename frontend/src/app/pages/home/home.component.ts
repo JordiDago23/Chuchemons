@@ -8,7 +8,7 @@ import { ChuchemonService } from '../../services/chuchemon.service';
 import { LevelingPanelComponent } from '../../components/leveling-panel/leveling-panel.component';
 import { InfectionsPanelComponent } from '../../components/infections-panel/infections-panel.component';
 import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewards.component';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 interface Chuchemon {
   id: number;
@@ -34,7 +34,7 @@ interface Chuchemon {
     LevelingPanelComponent,
     InfectionsPanelComponent,
     DailyRewardsComponent,
-    SidebarNavComponent
+    MainLayoutComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']

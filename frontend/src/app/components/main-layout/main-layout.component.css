@@ -1,0 +1,96 @@
+/**
+ * MainLayoutComponent Styles
+ * 
+ * Variables CSS centralizadas para control responsive
+ * Layout limpio con spacing automático
+ */
+
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ========================================
+   DESKTOP LAYOUT
+   ======================================== */
+.main-layout {
+  /* Variables de altura para control centralizado */
+  --mobile-topbar-height: 56px;
+  --mobile-bottomnav-height: 56px;
+  --spacing-unit: 16px;
+  
+  /* Padding calculado automáticamente */
+  --mobile-padding-top: calc(var(--mobile-topbar-height) + var(--spacing-unit));
+  --mobile-padding-bottom: calc(var(--mobile-bottomnav-height) + var(--spacing-unit));
+  
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  padding: 2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ========================================
+   MOBILE / TABLET LAYOUT
+   ======================================== */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+    position: relative;
+  }
+
+  .main-content {
+    /* Usa variables CSS para spacing automático */
+    padding: 1rem;
+    padding-top: var(--mobile-padding-top); /* 56px + 16px = 72px */
+    padding-bottom: var(--mobile-padding-bottom); /* 56px + 16px = 72px */
+    min-height: 100vh;
+    width: 100%;
+  }
+}
+
+/* ========================================
+   MOBILE PEQUEÑO (≤480px)
+   ======================================== */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem;
+    padding-top: var(--mobile-padding-top);
+    padding-bottom: var(--mobile-padding-bottom);
+  }
+}
+
+/* ========================================
+   MOBILE MUY PEQUEÑO (≤390px)
+   ======================================== */
+@media (max-width: 390px) {
+  .main-content {
+    padding: 0.5rem;
+    padding-top: var(--mobile-padding-top);
+    padding-bottom: var(--mobile-padding-bottom);
+  }
+}
+
+/* ========================================
+   MOBILE ANDROID PEQUEÑO (≤360px)
+   ======================================== */
+@media (max-width: 360px) {
+  .main-layout {
+    /* Reduce ligeramente spacing en pantallas muy pequeñas */
+    --spacing-unit: 12px;
+  }
+  
+  .main-content {
+    padding: 0.5rem;
+    padding-top: var(--mobile-padding-top);
+    padding-bottom: var(--mobile-padding-bottom);
+  }
+}

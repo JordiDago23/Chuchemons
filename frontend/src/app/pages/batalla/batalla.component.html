@@ -1,13 +1,10 @@
-<div class="layout">
-  <app-sidebar-nav
-    [user]="user"
-    [showAdmin]="!!user?.is_admin"
-    [brandSub]="'Arena de batalla'"
-    [showPokeball]="false"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
-
-  <main class="main">
+<app-main-layout
+  [user]="user"
+  [showAdmin]="!!user?.is_admin"
+  [brandSub]="'Arena de batalla'"
+  [showPokeball]="false"
+  (logoutClick)="logout()"
+>
     @if (!isCombatPage) {
       <section class="hero">
         <h1>Arena de Batalla</h1>
@@ -316,6 +313,6 @@
       </section>
       }
     }
-  </main>
-</div>
+
+</app-main-layout>
 

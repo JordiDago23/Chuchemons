@@ -7,7 +7,7 @@ import { ChuchemonService } from '../../services/chuchemon.service';
 import { MochilaService, MochilaXuxItem } from '../../services/mochila.service';
 import { ItemService, MochilaItem } from '../../services/item.service';
 import { Chuchemon } from '../../models/chuchemon.model';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 // Models
 export interface ItemBase {
@@ -43,7 +43,7 @@ interface InventorySlot {
 @Component({
   selector: 'app-mochila',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarNavComponent],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './mochila.component.html',
   styleUrls: ['./mochila.component.css']
 })

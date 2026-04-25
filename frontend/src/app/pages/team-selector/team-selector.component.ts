@@ -6,7 +6,7 @@ import { takeUntil, finalize } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { AuthService } from '../../core/services/auth.service';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 interface ChuchemonExtended extends Chuchemon {
   count?: number;
@@ -15,7 +15,7 @@ interface ChuchemonExtended extends Chuchemon {
 @Component({
   selector: 'app-team-selector',
   standalone: true,
-  imports: [CommonModule, SidebarNavComponent],
+  imports: [CommonModule, MainLayoutComponent],
   templateUrl: './team-selector.component.html',
   styleUrls: ['./team-selector.component.css']
 })

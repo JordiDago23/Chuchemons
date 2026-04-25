@@ -1,0 +1,24 @@
+<div class="main-layout">
+  
+  <!-- Mobile Topbar - Solo visible en móvil/tablet -->
+  <app-mobile-topbar
+    [user]="user"
+    [brandName]="brandName"
+    (logoutClick)="onLogout()"
+  ></app-mobile-topbar>
+
+  <!-- Sidebar Desktop / Bottom Nav Mobile -->
+  <app-sidebar-nav
+    [user]="user"
+    [showAdmin]="showAdmin"
+    [brandSub]="brandSub"
+    [showPokeball]="showPokeball"
+    (logoutClick)="onLogout()"
+  ></app-sidebar-nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <ng-content></ng-content>
+  </main>
+
+</div>

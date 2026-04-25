@@ -10,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonCardComponent } from '../../components/chuchemon-card/chuchemon-card.component';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 import { ChuchemonDetailsModalComponent } from '../../components/chuchemon-details-modal/chuchemon-details-modal.component';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 interface ChuchemonExtended extends Chuchemon {
   captured?: boolean;
@@ -22,7 +22,7 @@ type ElementFilter = 'Todos' | 'Terra' | 'Aire' | 'Aigua';
 @Component({
   selector: 'app-chuchedex',
   standalone: true,
-  imports: [CommonModule, FormsModule, ChuchemonCardComponent, ConfirmDialogComponent, ChuchemonDetailsModalComponent, SidebarNavComponent],
+  imports: [CommonModule, FormsModule, ChuchemonCardComponent, ConfirmDialogComponent, ChuchemonDetailsModalComponent, MainLayoutComponent],
   templateUrl: './chuchedex.component.html',
   styleUrls: ['./chuchedex.component.css']
 })

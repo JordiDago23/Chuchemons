@@ -1,14 +1,12 @@
-﻿<div class="layout">
+﻿<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Dashboard'"
+  [showAdmin]="!!user?.is_admin"
+  (logoutClick)="logout()"
+>
 
-  <app-sidebar-nav
-    [user]="user"
-    [showAdmin]="!!user?.is_admin"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
-
-  <!-- MAIN -->
   @if (!loading) {
-  <main class="main" id="main-content">
 
     <!-- BANNER -->
     <div class="banner">
@@ -127,12 +125,11 @@
       <app-daily-rewards></app-daily-rewards>
     </div>
 
-  </main>
   }
 
   @if (loading) {
     <div class="loading-overlay">Cargando...</div>
   }
 
-</div>
+</app-main-layout>
 

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
-import { SidebarNavComponent } from '../../components/sidebar-nav/sidebar-nav.component';
+import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
+import { Router } from '@angular/router';
 
 function optionalPasswordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const password = group.get('password')?.value;
@@ -19,7 +20,7 @@ function optionalPasswordMatchValidator(group: AbstractControl): ValidationError
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ConfirmDialogComponent, SidebarNavComponent],
+  imports: [CommonModule, ReactiveFormsModule, ConfirmDialogComponent, MainLayoutComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -75,7 +76,7 @@ export class ProfileComponent implements OnInit {
   get password()  { return this.editForm.get('password')!; }
   get bioCtrl()   { return this.editForm.get('bio')!; }
 
-  constructor(private fb: FormBuilder, private auth: AuthService) {
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.editForm = this.fb.group({
       nombre:                ['', [Validators.required]],
       apellidos:             ['', [Validators.required]],
@@ -110,6 +111,11 @@ export class ProfileComponent implements OnInit {
         this.fillForm(u);
       }
     });
+  }
+
+  logout() {
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 
   onUpdate() {
@@ -161,10 +167,6 @@ export class ProfileComponent implements OnInit {
 
   cancelDelete() {
     this.showDeleteConfirm = false;
-  }
-
-  logout() {
-    this.auth.logout();
   }
 }
 

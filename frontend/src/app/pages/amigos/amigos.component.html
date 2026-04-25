@@ -1,15 +1,12 @@
-<div class="layout">
-  <app-sidebar-nav
-    [user]="user"
-    [brandName]="'Xuxemons'"
-    [brandSub]="'Capturalos a todos!'"
-    [showAdmin]="!!user?.is_admin"
-    [pendingRequestsCount]="pendingRequestsCount"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
+<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Amigos'"
+  [showAdmin]="!!user?.is_admin"
+  (logoutClick)="logout()"
+>
 
-  <main class="main" id="main-content">
-    <header class="page-header">
+  <header class="page-header">
       <div>
         <h1>Amigos</h1>
         <p>{{ stats.online }} en línea • {{ stats.total }} amigos totales</p>
@@ -225,8 +222,8 @@
         </div>
       }
     </section>
-  </main>
-</div>
+
+</app-main-layout>
 
 <app-confirm-dialog
   [isVisible]="showConfirmDialog"

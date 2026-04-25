@@ -1,19 +1,16 @@
-<div class="layout">
+<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Tus datos'"
+  [showAdmin]="!!user?.is_admin"
+  (logoutClick)="logout()"
+>
 
-  <app-sidebar-nav
-    [user]="user"
-    [showAdmin]="!!user?.is_admin"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
-
-  <!-- MAIN -->
-  <main class="main" id="main-content">
-
-    <!-- PAGE TITLE -->
-    <header class="page-header">
-      <h1 id="profile-title">Mi Perfil</h1>
-      <p class="page-sub">Gestiona tu información personal y estadísticas</p>
-    </header>
+  <!-- PAGE TITLE -->
+  <header class="page-header">
+    <h1 id="profile-title">Mi Perfil</h1>
+    <p class="page-sub">Gestiona tu información personal y estadísticas</p>
+  </header>
 
     <!-- PROFILE BANNER -->
     @if (user) {
@@ -271,8 +268,6 @@
       </div>
     }
 
-  </main>
-
   <!-- DELETE CONFIRM DIALOG -->
   <app-confirm-dialog
     [isVisible]="showDeleteConfirm"
@@ -284,5 +279,5 @@
     (cancel)="cancelDelete()"
   ></app-confirm-dialog>
 
-</div>
+</app-main-layout>
 

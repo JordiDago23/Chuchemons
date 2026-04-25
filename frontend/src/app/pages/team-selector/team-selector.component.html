@@ -1,13 +1,12 @@
-<div class="layout">
-  <app-sidebar-nav
-    [user]="user"
-    [brandName]="'Xuxemons'"
-    (logoutClick)="logout()"
-  ></app-sidebar-nav>
+<app-main-layout
+  [user]="user"
+  [brandName]="'Chuchemons'"
+  [brandSub]="'Selector de equipo'"
+  [showAdmin]="!!user?.is_admin"
+  (logoutClick)="logout()"
+>
 
-  <!-- MAIN -->
-  <main class="main" id="main-content">
-    <!-- Page header -->
+  <!-- Page header -->
     <header class="page-header">
       <h1>Selecciona tu Equipo</h1>
       <p class="page-sub">Elige hasta 3 Chuchemons de tu colección</p>
@@ -103,6 +102,6 @@
         <button class="btn-primary" (click)="saveTeam()">Guardar Equipo</button>
       </div>
     </div>
-  </main>
-</div>
+
+</app-main-layout>
 
