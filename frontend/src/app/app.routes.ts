@@ -118,5 +118,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
     canActivate: [authGuard, adminGuard]
   },
+  {
+    path: 'chat',
+    title: 'Chat | Chuchemons',
+    data: {
+      description: 'Chatea en tiempo real con tus amigos agregados.',
+      keywords: 'chat, mensajes, amigos, tiempo real'
+    },
+    loadComponent: () => import('./components/chat/chat.component').then(m => m.ChatComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: 'login' }
 ];

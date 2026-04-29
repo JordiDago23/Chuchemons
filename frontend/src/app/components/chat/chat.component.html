@@ -1,0 +1,53 @@
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-brand">Chuchemons</div>
+    <div class="sidebar-nav">
+      <a class="nav-item" routerLink="/home">Inicio</a>
+      <a class="nav-item" routerLink="/chuchedex">Chuchedex</a>
+      <a class="nav-item" routerLink="/mochila">Mochila</a>
+      <a class="nav-item" routerLink="/amigos">Amigos</a>
+      <a class="nav-item active" routerLink="/chat">Chat</a>
+      <a class="nav-item" routerLink="/batalla">Batalla</a>
+      <a class="nav-item" routerLink="/profile">Perfil</a>
+    </div>
+    <div class="sidebar-footer">
+      <div *ngIf="user">{{ user.nombre }}</div>
+      <button (click)="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="chat-container">
+      <div class="chat-contacts-panel">
+        <input class="search-input" [(ngModel)]="searchQuery" (input)="filterConversations()" placeholder="Buscar..." />
+        <div class="conversations-list">
+          <div *ngFor="let conversation of filteredConversations" class="conversation-item" (click)="selectConversation(conversation)" [class.active]="selectedFriendId === conversation.id">
+            <div class="conversation-name">ID: {{ conversation.id }}</div>
+            <div class="conversation-preview">{{ conversation.last_message }}</div>
+            <div class="conversation-time">{{ formatTime(conversation.last_message_time) }}</div>
+            <span *ngIf="conversation.unread_count > 0" class="unread-badge">{{ conversation.unread_count }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-area">
+        <div class="chat-header" *ngIf="selectedFriend">
+          <div class="header-name">Conversación con ID {{ selectedFriend.id }}</div>
+        </div>
+        <div class="messages-container" #messagesContainer>
+          <div *ngFor="let message of currentMessages" class="message" [class.sent]="isSentMessage(message.sender_id)" [class.received]="!isSentMessage(message.sender_id)">
+            <div class="message-content">
+              <span class="message-text">{{ message.content }}</span>
+              <span class="message-time">{{ formatTime(message.created_at || null) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="message-input-container" *ngIf="selectedFriend">
+          <input class="message-input" [(ngModel)]="messageText" (keyup.enter)="sendMessage()" placeholder="Escribe un mensaje..." />
+          <button class="send-button" (click)="sendMessage()">Enviar</button>
+        </div>
+        <div *ngIf="!selectedFriend" class="no-chat-content">
+          <h3>Selecciona una conversación</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

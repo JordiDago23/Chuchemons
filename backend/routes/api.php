@@ -116,4 +116,10 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/items/{id}',   [ItemController::class, 'update']);
         Route::delete('/items/{id}',[ItemController::class, 'destroy']);
     });
+    // ─── CHAT / MENSAJES ─────────────────────────────────────
+    Route::post('/messages/{friendId}/send', [App\Http\Controllers\MessageController::class, 'store']);
+    Route::get('/messages/{friendId}', [App\Http\Controllers\MessageController::class, 'getConversation']);
+    Route::get('/messages', [App\Http\Controllers\MessageController::class, 'getConversations']);
+    Route::patch('/messages/{id}/read', [App\Http\Controllers\MessageController::class, 'markAsRead']);
+    Route::patch('/messages/{friendId}/read-all', [App\Http\Controllers\MessageController::class, 'markConversationAsRead']);
 });
