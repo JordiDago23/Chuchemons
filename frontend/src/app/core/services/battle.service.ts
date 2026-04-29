@@ -63,6 +63,7 @@ export interface BattleSummary {
   loser_id: number | null;
   winner_chuchemon_id: number | null;
   loser_chuchemon_id: number | null;
+  can_claim?: boolean;
   result_payload?: BattleResultPayload | null;
 }
 
@@ -123,6 +124,12 @@ export class BattleService {
 
   selectChuchemon(battleId: number, chuchemonId: number): Observable<{ message: string; battle: BattleSummary; resolved: boolean }> {
     return this.http.post<{ message: string; battle: BattleSummary; resolved: boolean }>(`${this.apiUrl}/battle/${battleId}/select`, {
+      chuchemon_id: chuchemonId,
+    });
+  }
+
+  claimChuchemon(battleId: number, chuchemonId: number): Observable<{ message: string; battle: BattleSummary }> {
+    return this.http.post<{ message: string; battle: BattleSummary }>(`${this.apiUrl}/battle/${battleId}/claim`, {
       chuchemon_id: chuchemonId,
     });
   }

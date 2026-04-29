@@ -312,11 +312,13 @@
 
 .fighter-image {
   width: 100%;
-  height: 170px;
-  object-fit: cover;
+  height: 160px;
+  object-fit: contain;
   border-radius: 0.7rem;
   border: 1px solid var(--battle-border);
   background: #f1f5f9;
+  padding: 0.5rem;
+  box-sizing: border-box;
 }
 
 .fighter-name-row {
@@ -440,4 +442,12 @@
   .grid.two-cols {
     grid-template-columns: 1fr;
   }
+}
+
+.waiting-msg {
+  text-align: center;
+  color: var(--battle-muted);
+  font-size: 0.95rem;
+  padding: 0.5rem 0;
+  margin: 0;
 }

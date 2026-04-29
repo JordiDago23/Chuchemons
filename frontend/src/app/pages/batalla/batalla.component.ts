@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { EMPTY, interval, Subject, Subscription } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
 import {
   BattleDetailsResponse,
   BattleOverviewResponse,
@@ -51,6 +51,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
   currentBattleId: number | null = null;
 
   private readonly destroy$ = new Subject<void>();
+  private pollingSubscription: Subscription | null = null;
 
   constructor(
     private auth: AuthService,
@@ -102,6 +103,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPolling();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -209,12 +211,62 @@ export class BatallaComponent implements OnInit, OnDestroy {
         this.myRoster = response.my_roster ?? [];
         this.opponentRoster = response.opponent_roster ?? [];
         this.battleLoading = false;
+        this.startPollingIfNeeded();
       },
       error: (err) => {
         this.error = err.error?.message ?? 'No se pudo abrir la batalla.';
         this.battleLoading = false;
       },
     });
+  }
+
+  private startPollingIfNeeded(): void {
+    this.stopPolling();
+    const battle = this.selectedBattle;
+    const userId = this.user?.id;
+    if (!battle || !userId) {
+      return;
+    }
+
+    const waitingForOpponentSelect = battle.status === 'pending_selection' && !!battle.my_selection;
+    const loserWaitingForClaim = battle.status === 'completed' && !battle.winner_chuchemon_id && battle.winner_id !== userId;
+
+    if (!waitingForOpponentSelect && !loserWaitingForClaim) {
+      return;
+    }
+
+    this.pollingSubscription = interval(4000)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() =>
+          this.currentBattleId
+            ? this.battleService.getBattle(this.currentBattleId)
+            : EMPTY
+        )
+      )
+      .subscribe({
+        next: (response: BattleDetailsResponse) => {
+          this.selectedBattle = response.battle;
+          this.myRoster = response.my_roster ?? this.myRoster;
+          this.opponentRoster = response.opponent_roster ?? this.opponentRoster;
+
+          const done =
+            (response.battle.status === 'completed' && !!response.battle.winner_chuchemon_id) ||
+            (response.battle.status === 'completed' && response.battle.winner_id === userId);
+
+          if (done) {
+            this.stopPolling();
+            this.loadOverview(true);
+          }
+        },
+      });
+  }
+
+  private stopPolling(): void {
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+      this.pollingSubscription = null;
+    }
   }
 
   selectForBattle(chuchemonId: number): void {
@@ -228,10 +280,12 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
     this.battleService.selectChuchemon(this.selectedBattle.id, chuchemonId).subscribe({
       next: (response) => {
-        this.selectedBattle = response.battle;
         this.success = response.message;
         this.actionLoading = '';
         this.loadOverview(true);
+        if (this.currentBattleId) {
+          this.fetchBattle(this.currentBattleId);
+        }
       },
       error: (err) => {
         this.error = err.error?.message ?? 'No se pudo enviar la selección.';
@@ -241,6 +295,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
   }
 
   closeBattlePanel(): void {
+    this.stopPolling();
     this.router.navigate(['/batalla']);
   }
 
@@ -253,11 +308,45 @@ export class BatallaComponent implements OnInit, OnDestroy {
   }
 
   get canSelect(): boolean {
-    return !!this.selectedBattle && this.selectedBattle.status === 'pending_selection';
+    return !!this.selectedBattle
+      && this.selectedBattle.status === 'pending_selection'
+      && !this.selectedBattle.my_selection;
   }
 
   get hasResult(): boolean {
     return !!this.selectedBattle && this.selectedBattle.status === 'completed';
+  }
+
+  get canClaim(): boolean {
+    return !!this.selectedBattle?.can_claim;
+  }
+
+  get isWaitingForClaim(): boolean {
+    const b = this.selectedBattle;
+    return !!b && b.status === 'completed' && !b.winner_chuchemon_id && !b.can_claim;
+  }
+
+  claimFromBattle(chuchemonId: number): void {
+    if (!this.selectedBattle || !this.canClaim) {
+      return;
+    }
+
+    this.actionLoading = `claim-${chuchemonId}`;
+    this.success = '';
+    this.error = '';
+
+    this.battleService.claimChuchemon(this.selectedBattle.id, chuchemonId).subscribe({
+      next: (response) => {
+        this.success = response.message;
+        this.actionLoading = '';
+        this.selectedBattle = response.battle;
+        this.loadOverview(true);
+      },
+      error: (err: any) => {
+        this.error = err.error?.message ?? 'No se pudo reclamar el Xuxemon.';
+        this.actionLoading = '';
+      },
+    });
   }
 
   get hasBothSelections(): boolean {
@@ -395,17 +484,12 @@ export class BatallaComponent implements OnInit, OnDestroy {
     return value >= 0 ? `+${value}` : `${value}`;
   }
 
-  actionUnavailable(action: string): void {
-    this.success = `La acción "${action}" está en vista previa. La resolución actual es automática al seleccionar ambos Xuxemons.`;
-    this.error = '';
-  }
-
   imageFor(entry: BattleRosterEntry | null): string {
     if (!entry?.image) {
       return 'https://placehold.co/760x340?text=Xuxemon';
     }
 
-    return entry.image;
+    return 'http://localhost:8000/chuchemons/' + entry.image;
   }
 
   private battleMetric(

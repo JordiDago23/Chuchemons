@@ -50,6 +50,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/battle/requests/{battleRequest}', [BattleController::class, 'destroyRequest']);
     Route::get('/battle/{battle}', [BattleController::class, 'show']);
     Route::post('/battle/{battle}/select', [BattleController::class, 'selectChuchemon']);
+    Route::post('/battle/{battle}/claim', [BattleController::class, 'claimChuchemon']);
 
     // ─── USUARIO - CHUCHEMONS ──────────────────────────────
     Route::get('/user/chuchemons',          [ChuchemonController::class, 'getMyChuchemons']);

@@ -248,15 +248,11 @@
           </section>
         }
 
-        <section class="card">
-          <h3>Accions de Batalla</h3>
-          <div class="battle-actions-grid">
-            <button class="primary-btn" (click)="actionUnavailable('Atac Bàsic')">Atac Bàsic</button>
-            <button class="primary-btn alt" (click)="actionUnavailable('Atac Especial')">Atac Especial</button>
-            <button class="ghost-btn" (click)="actionUnavailable('Defensar')">Defensar</button>
-            <button class="ghost-btn" (click)="actionUnavailable('Canviar')">Canviar</button>
-          </div>
-        </section>
+        @if (!battleLoading && selectedBattle?.my_selection && selectedBattle?.status === 'pending_selection') {
+          <section class="card">
+            <p class="waiting-msg">Has seleccionat <strong>{{ myFighter?.name }}</strong>. Esperant que l'oponent triï...</p>
+          </section>
+        }
 
         <section class="card">
           <h3>Registre de Batalla</h3>

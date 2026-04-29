@@ -295,7 +295,7 @@ class BattleController extends Controller
             ]);
         }
 
-        $resolved = $this->resolveBattle($battle->id);
+        $resolved = $this->resolveBattle($battle->id, (int) $user->id);
 
         return response()->json([
             'message' => 'Batalla resuelta.',
@@ -304,9 +304,67 @@ class BattleController extends Controller
         ]);
     }
 
-    private function resolveBattle(int $battleId): array
+    public function claimChuchemon(Request $request, Battle $battle): JsonResponse
     {
-        return DB::transaction(function () use ($battleId) {
+        $user = JWTAuth::parseToken()->authenticate();
+
+        if ($battle->status !== 'completed') {
+            return response()->json(['message' => 'La batalla no ha sido resuelta todavía.'], 409);
+        }
+
+        if ((int) $battle->winner_id !== (int) $user->id) {
+            return response()->json(['message' => 'Solo el ganador puede reclamar un Xuxemon.'], 403);
+        }
+
+        if (!is_null($battle->winner_chuchemon_id)) {
+            return response()->json(['message' => 'Ya has reclamado tu recompensa de esta batalla.'], 409);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'chuchemon_id' => 'required|integer|exists:chuchemons,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $chuchemonId = (int) $request->input('chuchemon_id');
+        $loserUserId = (int) $battle->loser_id;
+
+        $owns = DB::table('user_chuchemons')
+            ->where('user_id', $loserUserId)
+            ->where('chuchemon_id', $chuchemonId)
+            ->where('count', '>', 0)
+            ->exists();
+
+        if (!$owns) {
+            return response()->json(['message' => 'El rival ya no tiene ese Xuxemon.'], 422);
+        }
+
+        $transferred = DB::transaction(function () use ($battle, $loserUserId, $user, $chuchemonId) {
+            $ok = $this->transferChuchemon($loserUserId, (int) $user->id, $chuchemonId);
+            if ($ok) {
+                $battle->update([
+                    'winner_chuchemon_id' => $chuchemonId,
+                    'loser_chuchemon_id' => $chuchemonId,
+                ]);
+            }
+            return $ok;
+        });
+
+        if (!$transferred) {
+            return response()->json(['message' => 'No se pudo transferir el Xuxemon. Intenta con otro.'], 422);
+        }
+
+        return response()->json([
+            'message' => '¡Has robado el Xuxemon seleccionado!',
+            'battle' => $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), (int) $user->id),
+        ]);
+    }
+
+    private function resolveBattle(int $battleId, int $viewerId): array
+    {
+        return DB::transaction(function () use ($battleId, $viewerId) {
             /** @var Battle $battle */
             $battle = Battle::query()
                 ->lockForUpdate()
@@ -314,7 +372,7 @@ class BattleController extends Controller
                 ->findOrFail($battleId);
 
             if ($battle->status === 'completed') {
-                return $this->formatBattleSummary($battle, $battle->challenger_id);
+                return $this->formatBattleSummary($battle, $viewerId);
             }
 
             $challengerSelection = $battle->selections->firstWhere('user_id', $battle->challenger_id);
@@ -365,14 +423,10 @@ class BattleController extends Controller
             $winnerChuchemonId = $winnerUserId === (int) $battle->challenger_id ? (int) $challengerSelection->chuchemon_id : (int) $challengedSelection->chuchemon_id;
             $loserChuchemonId = $loserUserId === (int) $battle->challenger_id ? (int) $challengerSelection->chuchemon_id : (int) $challengedSelection->chuchemon_id;
 
-            $stolen = $this->transferChuchemon($loserUserId, $winnerUserId, $loserChuchemonId);
-
             $battle->update([
                 'status' => 'completed',
                 'winner_id' => $winnerUserId,
                 'loser_id' => $loserUserId,
-                'winner_chuchemon_id' => $winnerChuchemonId,
-                'loser_chuchemon_id' => $loserChuchemonId,
                 'resolved_at' => now(),
                 'result_payload' => [
                     'rolls' => [
@@ -391,11 +445,10 @@ class BattleController extends Controller
                         'challenger' => $aScore,
                         'challenged' => $bScore,
                     ],
-                    'stolen' => $stolen,
                 ],
             ]);
 
-            return $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), $winnerUserId);
+            return $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), $viewerId);
         });
     }
 
@@ -549,6 +602,7 @@ class BattleController extends Controller
             'loser_id' => $battle->loser_id,
             'winner_chuchemon_id' => $battle->winner_chuchemon_id,
             'loser_chuchemon_id' => $battle->loser_chuchemon_id,
+            'can_claim' => $battle->status === 'completed' && (int) $battle->winner_id === $viewerId && is_null($battle->winner_chuchemon_id),
             'result_payload' => $battle->result_payload,
         ];
     }
