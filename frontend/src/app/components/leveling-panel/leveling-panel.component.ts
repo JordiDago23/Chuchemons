@@ -1,7 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { ChuchemonService } from '../../services/chuchemon.service';
 
@@ -12,7 +14,7 @@ import { ChuchemonService } from '../../services/chuchemon.service';
   templateUrl: './leveling-panel.component.html',
   styleUrls: ['./leveling-panel.component.css']
 })
-export class LevelingPanelComponent implements OnInit {
+export class LevelingPanelComponent implements OnInit, OnDestroy {
   @Input() compact = false;
   chuchemons: any[] = [];
   selectedChuchemon: any = null;
@@ -24,6 +26,13 @@ export class LevelingPanelComponent implements OnInit {
   confirmTitle = '';
   confirmMessage = '';
   private confirmAction: (() => void) | null = null;
+  private destroy$ = new Subject<void>();
+
+  // Configuración de costos de evolución desde el backend
+  evolveCostConfig = {
+    xux_petit_mitja: 3,  // Default fallback
+    xux_mitja_gran: 5    // Default fallback
+  };
 
   private readonly api = 'http://localhost:8000/api';
 
@@ -34,16 +43,38 @@ export class LevelingPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadChuchemons();
+    
+    // Suscribirse a cambios de estado para actualizar automáticamente
+    this.chuchemonService.stateChanges$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadChuchemons();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadChuchemons(): void {
     this.isLoading = true;
-    this.http.get<any[]>(`${this.api}/level/chuchemons`).subscribe({
-      next: (data) => {
+    this.http.get<any>(`${this.api}/level/chuchemons`).subscribe({
+      next: (response) => {
+        // El backend ahora devuelve { chuchemons: [...], config: {...} }
+        const data = response.chuchemons || response;  // Compatibilidad con respuesta antigua
+        const config = response.config;
+        
+        // Actualizar configuración si viene del backend
+        if (config) {
+          this.evolveCostConfig.xux_petit_mitja = config.xux_petit_mitja ?? 3;
+          this.evolveCostConfig.xux_mitja_gran = config.xux_mitja_gran ?? 5;
+        }
+        
         this.chuchemons = data;
         if (data.length > 0) {
           const prevId = this.selectedChuchemon?.id;
-          this.selectedChuchemon = data.find(c => c.id === prevId) ?? data[0];
+          this.selectedChuchemon = data.find((c: any) => c.id === prevId) ?? data[0];
         }
         this.isLoading = false;
       },
@@ -89,8 +120,8 @@ export class LevelingPanelComponent implements OnInit {
   getEvolveCost(): number {
     const mida = this.selectedChuchemon?.current_mida;
     let base = 0;
-    if (mida === 'Petit') base = 3;
-    else if (mida === 'Mitjà') base = 5;
+    if (mida === 'Petit') base = this.evolveCostConfig.xux_petit_mitja;
+    else if (mida === 'Mitjà') base = this.evolveCostConfig.xux_mitja_gran;
     return base + (this.selectedChuchemon?.evolve_cost_extra ?? 0);
   }
 

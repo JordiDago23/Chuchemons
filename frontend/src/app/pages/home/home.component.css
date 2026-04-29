@@ -208,6 +208,29 @@
   transition: width 0.4s ease;
 }
 
+.mon-details-btn {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #e63946, #f4722b);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mon-details-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+}
+
+.mon-details-btn:active {
+  transform: translateY(0);
+}
+
 .mon-xp-row {
   display: flex;
   justify-content: space-between;

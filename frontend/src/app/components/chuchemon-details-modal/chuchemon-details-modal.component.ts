@@ -65,15 +65,15 @@ export class ChuchemonDetailsModalComponent {
   }
 
   get displayAttack(): number {
-    return this.chuchemon?.effective_attack ?? this.chuchemon?.attack ?? 0;
+    return Math.round(this.chuchemon?.effective_attack ?? this.chuchemon?.attack ?? 0);
   }
 
   get displayDefense(): number {
-    return this.chuchemon?.effective_defense ?? this.chuchemon?.defense ?? 0;
+    return Math.round(this.chuchemon?.effective_defense ?? this.chuchemon?.defense ?? 0);
   }
 
   get displaySpeed(): number {
-    return this.chuchemon?.effective_speed ?? this.chuchemon?.speed ?? 0;
+    return Math.round(this.chuchemon?.effective_speed ?? this.chuchemon?.speed ?? 0);
   }
 
   get currentHp(): number | null {

@@ -9,21 +9,8 @@ import { LevelingPanelComponent } from '../../components/leveling-panel/leveling
 import { InfectionsPanelComponent } from '../../components/infections-panel/infections-panel.component';
 import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewards.component';
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
-
-interface Chuchemon {
-  id: number;
-  name: string;
-  element: string;
-  image: string;
-  current_hp?: number;
-  max_hp?: number;
-  hp_percent?: number;
-  level?: number;
-  current_mida?: string;
-  experience?: number;
-  experience_for_next_level?: number;
-  xp_percent?: number;
-}
+import { ChuchemonDetailsModalComponent } from '../../components/chuchemon-details-modal/chuchemon-details-modal.component';
+import { Chuchemon } from '../../models/chuchemon.model';
 
 @Component({
   selector: 'app-home',
@@ -34,7 +21,8 @@ interface Chuchemon {
     LevelingPanelComponent,
     InfectionsPanelComponent,
     DailyRewardsComponent,
-    MainLayoutComponent
+    MainLayoutComponent,
+    ChuchemonDetailsModalComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
@@ -45,6 +33,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   error = '';
   teamLoading = true;
   private destroy$ = new Subject<void>();
+
+  // Details modal properties
+  showDetailsModal = false;
+  selectedChuchemonForDetails: Chuchemon | null = null;
 
   // Stats — por defecto en 0 para cuentas nuevas
   stats = {
@@ -193,5 +185,15 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   logout() {
     this.auth.logout();
+  }
+
+  openDetailsModal(chuchemon: Chuchemon): void {
+    this.selectedChuchemonForDetails = chuchemon;
+    this.showDetailsModal = true;
+  }
+
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedChuchemonForDetails = null;
   }
 }

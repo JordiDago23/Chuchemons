@@ -60,9 +60,17 @@ class DailyRewardController extends Controller
                 $chuchemonReward = $this->createDailyChuchemonReward($user->id);
             }
 
+            // Incluir configuración actual de horarios y cantidades
+            $config = [
+                'daily_xux_quantity' => GameSetting::getInt('daily_xux_quantity', 10),
+                'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
+                'daily_chuchemon_hour' => GameSetting::getValue('daily_chuchemon_hour', '08:00'),
+            ];
+
             return response()->json([
                 'xux' => $xuxReward,
                 'chuchemon' => $chuchemonReward,
+                'config' => $config,
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error loading daily rewards', [
@@ -108,6 +116,23 @@ class DailyRewardController extends Controller
 
             if (!$reward->item_id) {
                 return response()->json(['message' => 'La recompensa diaria de Xux no está configurada correctamente.'], 409);
+            }
+
+            // Verificar espacio en la mochila antes de agregar items
+            $usedSpaces = MochilaXux::where('user_id', $user->id)
+                ->where('quantity', '>', 0)
+                ->get()
+                ->sum(fn($i) => (int) ceil($i->quantity / 5)); // STACK_SIZE = 5
+            
+            $freeSpaces = 20 - $usedSpaces; // MAX_SPACES = 20
+            $slotsNeeded = 2; // 10 items = 2 stacks de 5
+            
+            if ($freeSpaces < $slotsNeeded) {
+                return response()->json([
+                    'message' => 'Tu mochila está llena. Libera espacio antes de reclamar las Chuches.',
+                    'free_spaces' => $freeSpaces,
+                    'slots_needed' => $slotsNeeded
+                ], 400);
             }
 
             // Repartir 10 items: cantidad aleatoria de vacunas (1-3), el resto xuxes

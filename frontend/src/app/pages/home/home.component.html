@@ -12,7 +12,7 @@
     <div class="banner">
       <div class="banner-text">
         <h1>¡Bienvenido, Maestro {{ user?.nombre }}!</h1>
-        <p class="banner-sub">{{ stats.captured }} Xuxemons capturats de {{ stats.total }}</p>
+        <p class="banner-sub">{{ stats.captured }} Chuchemons capturados de {{ stats.total }}</p>
       </div>
     </div>
 
@@ -102,6 +102,10 @@
                   [style.background]="(mon.hp_percent ?? 100) > 60 ? '#4caf50' : (mon.hp_percent ?? 100) > 25 ? '#ff9800' : '#f44336'">
                 </div>
               </div>
+              <!-- Botón Ver Detalles -->
+              <button class="mon-details-btn" (click)="openDetailsModal(mon)">
+                  Ver Detalles
+              </button>
             </div>
           }
         </div>
@@ -130,6 +134,13 @@
   @if (loading) {
     <div class="loading-overlay">Cargando...</div>
   }
+
+  <!-- Details modal -->
+  <app-chuchemon-details-modal
+    [chuchemon]="selectedChuchemonForDetails"
+    [isVisible]="showDetailsModal"
+    (close)="closeDetailsModal()"
+  ></app-chuchemon-details-modal>
 
 </app-main-layout>
 

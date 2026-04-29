@@ -347,7 +347,16 @@ class LevelingController extends Controller
                     return $c;
                 });
 
-            return response()->json($chuchemons, 200);
+            // Incluir configuración de costos de evolución
+            $config = [
+                'xux_petit_mitja' => GameSetting::getInt('xux_petit_mitja', 3),
+                'xux_mitja_gran' => GameSetting::getInt('xux_mitja_gran', 5),
+            ];
+
+            return response()->json([
+                'chuchemons' => $chuchemons,
+                'config' => $config
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }

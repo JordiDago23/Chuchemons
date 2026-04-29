@@ -248,7 +248,7 @@
           </section>
         }
 
-        @if (!battleLoading && selectedBattle?.my_selection && selectedBattle?.status === 'pending_selection') {
+        @if (!battleLoading && selectedBattle.my_selection && selectedBattle.status === 'pending_selection') {
           <section class="card">
             <p class="waiting-msg">Has seleccionat <strong>{{ myFighter?.name }}</strong>. Esperant que l'oponent triï...</p>
           </section>

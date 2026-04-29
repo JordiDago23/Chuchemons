@@ -34,9 +34,9 @@
     <!-- Xux Daily Reward -->
     @if (xuxReward) {
       <div class="reward-card xux-reward">
-        <h3>Recompensa Diaria - Xuxes</h3>
+        <h3>Recompensa Diaria - Chuches</h3>
         <div class="reward-icon">🍬</div>
-        <p class="quantity">10 objetos: Xuxes + Vacunas aleatorias</p>
+        <p class="quantity">{{ rewardConfig.daily_xux_quantity }} objetos: Chuches + Vacunas aleatorias</p>
         
         <div class="availability-status">
           @if (isRewardAvailable(xuxReward)) {
@@ -51,7 +51,7 @@
           (click)="claimXuxReward()"
           [disabled]="!isRewardAvailable(xuxReward)"
         >
-          {{ simulationEnabled ? 'Simular reclamo de Xuxes' : 'Reclamar Xuxes' }}
+          {{ simulationEnabled ? 'Simular reclamo de Chuches' : 'Reclamar Chuches' }}
         </button>
       </div>
     }
@@ -59,9 +59,9 @@
     <!-- Chuchemon Daily Reward -->
     @if (chuchemonReward) {
       <div class="reward-card chuchemon-reward">
-        <h3>Recompensa Diaria - Xuxemon</h3>
+        <h3>Recompensa Diaria - Chuchemon</h3>
         <div class="reward-icon">🎁</div>
-        <p class="quantity">1 Xuxemon aleatorio (Petit)</p>
+        <p class="quantity">1 Chuchemon aleatorio (Pequeño)</p>
         
         <div class="availability-status">
           @if (isRewardAvailable(chuchemonReward)) {
@@ -76,7 +76,7 @@
           (click)="claimChuchemonReward()"
           [disabled]="!isRewardAvailable(chuchemonReward)"
         >
-          {{ simulationEnabled ? 'Simular reclamo de Xuxemon' : 'Reclamar Xuxemon' }}
+          {{ simulationEnabled ? 'Simular reclamo de Chuchemon' : 'Reclamar Chuchemon' }}
         </button>
       </div>
     }

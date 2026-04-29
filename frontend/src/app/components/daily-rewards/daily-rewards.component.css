@@ -110,6 +110,45 @@
   margin: 12px 0;
 }
 
+.team-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 10px 0;
+  border-radius: 6px;
+  background: #f0f0f0;
+}
+
+.team-status-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.team-status-value {
+  font-size: 0.9rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.team-status-value.team-full {
+  color: #d32f2f;
+}
+
+.warning-message {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  background: #fff3cd;
+  border-left: 4px solid #ff9800;
+  color: #856404;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .availability-status {
   text-align: center;
   margin: 15px 0;

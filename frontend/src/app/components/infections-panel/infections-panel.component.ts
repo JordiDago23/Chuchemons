@@ -147,16 +147,18 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
   }
 
   loadTeamHp(): void {
-    this.http.get<any[]>(`${this.api}/level/chuchemons`).subscribe({
-      next: (data) => {
+    this.http.get<any>(`${this.api}/level/chuchemons`).subscribe({
+      next: (response) => {
+        // El backend ahora devuelve { chuchemons: [...], config: {...} } o solo array
+        const data = response.chuchemons || response;
         this.teamChuchemons = data;
-        this.lowHpChuchemons = data.filter(c => {
+        this.lowHpChuchemons = data.filter((c: any) => {
           const curr = c.current_hp ?? c.max_hp;
           const max = c.max_hp ?? 1;
           return curr < max;
         });
         // Init heal qty map
-        data.forEach(c => {
+        data.forEach((c: any) => {
           if (this.healQtyMap[c.id] === undefined) this.healQtyMap[c.id] = 1;
         });
       },
