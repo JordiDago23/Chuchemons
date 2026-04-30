@@ -13,8 +13,9 @@ export interface Message {
 
 export interface Conversation {
   id: number;
-  last_message: string;
-  last_message_time: string;
+  friend_name: string;
+  last_message: string | null;
+  last_message_time: string | null;
   unread_count: number;
 }
 
@@ -23,8 +24,6 @@ export class ChatService {
   private apiUrl = `${window.location.protocol}//${window.location.hostname}:8000/api`;
   private messagesSubject = new BehaviorSubject<Message[]>([]);
   public messages$ = this.messagesSubject.asObservable();
-  private conversationsSubject = new BehaviorSubject<Conversation[]>([]);
-  public conversations$ = this.conversationsSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -34,6 +33,11 @@ export class ChatService {
 
   getConversation(friendId: number): Observable<{ data: Message[] }> {
     return this.http.get<{ data: Message[] }>(`${this.apiUrl}/messages/${friendId}`);
+  }
+
+  // Sólo mensajes con id > sinceId (para polling eficiente)
+  getNewMessages(friendId: number, sinceId: number): Observable<{ data: Message[] }> {
+    return this.http.get<{ data: Message[] }>(`${this.apiUrl}/messages/${friendId}?since_id=${sinceId}`);
   }
 
   sendMessage(friendId: number, content: string): Observable<any> {
@@ -46,9 +50,5 @@ export class ChatService {
 
   setMessages(messages: Message[]): void {
     this.messagesSubject.next(messages);
-  }
-
-  setConversations(conversations: Conversation[]): void {
-    this.conversationsSubject.next(conversations);
   }
 }
