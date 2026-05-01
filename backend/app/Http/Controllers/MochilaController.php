@@ -14,6 +14,116 @@ class MochilaController extends Controller
     private const STACK_SIZE = 5;
 
     /**
+     * Calcula cuántos slots ocupa un item de la mochila.
+     * - Vacunas: NO apilables (1 vacuna = 1 slot)
+     * - Items no_apilable: NO apilables (1 item = 1 slot)
+     * - Xuxes y otros: Apilables (5 por slot)
+     */
+    private static function calculateItemSlots($item): int
+    {
+        // Vacunas: NO apilables
+        if ($item->vaccine_id) {
+            return $item->quantity;
+        }
+        
+        // Items: verificar si es no_apilable
+        if ($item->item_id && $item->item && $item->item->type === 'no_apilable') {
+            return $item->quantity;
+        }
+        
+        // Xuxes y items apilables: 5 por slot
+        return (int) ceil($item->quantity / self::STACK_SIZE);
+    }
+
+    /**
+     * Valida si hay espacio en la mochila para añadir items,
+     * considerando que items apilables pueden ir a slots parcialmente llenos.
+     * 
+     * @param int $userId
+     * @param array $itemsToAdd Ejemplo: [['type' => 'xux'|'item'|'vaccine', 'chuchemon_id' => 1, 'quantity' => 7], ...]
+     * @return array ['can_fit' => bool, 'free_slots' => int, 'slots_needed' => int, 'currently_used' => int]
+     */
+    private function canFitItems(int $userId, array $itemsToAdd): array
+    {
+        // Obtener todos los items actuales de la mochila (con relaciones para calcular slots correctamente)
+        $currentItems = MochilaXux::with('item')
+            ->where('user_id', $userId)
+            ->where('quantity', '>', 0)
+            ->get();
+        
+        // Calcular slots actualmente ocupados usando el helper
+        $currentlyUsedSlots = $currentItems->sum(fn($item) => self::calculateItemSlots($item));
+        
+        $freeSlots = self::MAX_SPACES - $currentlyUsedSlots;
+        
+        // Calcular cuántos slots nuevos se necesitarían
+        $slotsNeeded = 0;
+        
+        foreach ($itemsToAdd as $newItem) {
+            $quantity = $newItem['quantity'];
+            
+            // Buscar si ya existe un registro del mismo tipo
+            $existingRow = null;
+            foreach ($currentItems as $item) {
+                // Xux type (chuchemon_id)
+                if ($newItem['type'] === 'xux' && 
+                    isset($newItem['chuchemon_id']) &&
+                    $item->chuchemon_id === $newItem['chuchemon_id'] && 
+                    !$item->vaccine_id &&
+                    !$item->item_id) {
+                    $existingRow = $item;
+                    break;
+                }
+                
+                // Item type (item_id)
+                if ($newItem['type'] === 'item' && 
+                    isset($newItem['item_id']) &&
+                    $item->item_id === $newItem['item_id'] && 
+                    !$item->chuchemon_id && 
+                    !$item->vaccine_id) {
+                    $existingRow = $item;
+                    break;
+                }
+                
+                // Vaccine type (vaccine_id)
+                if ($newItem['type'] === 'vaccine' && 
+                    isset($newItem['vaccine_id']) &&
+                    $item->vaccine_id === $newItem['vaccine_id'] && 
+                    !$item->chuchemon_id &&
+                    !$item->item_id) {
+                    $existingRow = $item;
+                    break;
+                }
+            }
+            
+            // Determinar el stack size según el tipo de item
+            // Vacunas NO son apilables (1 vacuna = 1 slot)
+            // Xuxes e Items SÍ son apilables (5 por slot)
+            $stackSize = ($newItem['type'] === 'vaccine') ? 1 : self::STACK_SIZE;
+            
+            if ($existingRow) {
+                // Ya existe - calcular slots antes y después de añadir
+                $currentSlots = (int) ceil($existingRow->quantity / $stackSize);
+                $newTotalQuantity = $existingRow->quantity + $quantity;
+                $newSlots = (int) ceil($newTotalQuantity / $stackSize);
+                
+                // Solo necesitamos la diferencia de slots
+                $slotsNeeded += ($newSlots - $currentSlots);
+            } else {
+                // No existe - necesita crear nuevos slots
+                $slotsNeeded += (int) ceil($quantity / $stackSize);
+            }
+        }
+        
+        return [
+            'can_fit' => $slotsNeeded <= $freeSlots,
+            'free_slots' => $freeSlots,
+            'slots_needed' => $slotsNeeded,
+            'currently_used' => $currentlyUsedSlots,
+        ];
+    }
+
+    /**
      * Returns the current user's mochila xuxes with space stats.
      */
     public function index(): JsonResponse
@@ -29,7 +139,7 @@ class MochilaController extends Controller
             ->where('quantity', '>', 0)
             ->get();
 
-        $usedSpaces = $items->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+        $usedSpaces = $items->sum(fn($i) => self::calculateItemSlots($i));
 
         return response()->json([
             'items'       => $items,
@@ -41,8 +151,8 @@ class MochilaController extends Controller
 
     /**
      * Admin adds a specific quantity of Xuxes (linked to a Chuchemon)
-     * to the current user's mochila. Excess Xuxes are discarded when the
-     * mochila is full.
+     * to the current user's mochila.
+     * Uses canFitItems() to validate space before adding.
      */
     public function addXux(Request $request): JsonResponse
     {
@@ -68,65 +178,51 @@ class MochilaController extends Controller
         $chuchemonId = (int) $request->chuchemon_id;
         $qtyToAdd    = (int) $request->quantity;
 
-        // Current mochila state
-        $items      = MochilaXux::where('user_id', $user->id)->get();
-        $usedSpaces = $items->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
-        $freeSpaces = self::MAX_SPACES - $usedSpaces;
-
-        if ($freeSpaces <= 0) {
+        // Validar espacio ANTES de añadir usando canFitItems()
+        $itemsToAdd = [
+            ['type' => 'xux', 'chuchemon_id' => $chuchemonId, 'quantity' => $qtyToAdd],
+        ];
+        
+        $spaceCheck = $this->canFitItems($user->id, $itemsToAdd);
+        
+        if (!$spaceCheck['can_fit']) {
             return response()->json([
-                'message'   => 'La mochila està plena. No s\'han afegit Xuxes.',
-                'added'     => 0,
+                'message' => 'La mochila no té prou espai per afegir aquests Xuxes.',
+                'added' => 0,
                 'discarded' => $qtyToAdd,
+                'free_spaces' => $spaceCheck['free_slots'],
+                'slots_needed' => $spaceCheck['slots_needed'],
+                'currently_used' => $spaceCheck['currently_used'],
             ], 422);
         }
 
-        // Max addable without exceeding MAX_SPACES:
-        // ceil((currentQty + actualAdded) / STACK_SIZE) <= currentSlots + freeSpaces
-        //  → actualAdded <= (currentSlots + freeSpaces) * STACK_SIZE − currentQty
-        $existingItem = $items->firstWhere('chuchemon_id', $chuchemonId);
-        $currentQty   = $existingItem ? (int) $existingItem->quantity : 0;
-        $currentSlots = $currentQty > 0 ? (int) ceil($currentQty / self::STACK_SIZE) : 0;
+        // Añadir items a la mochila
+        $existingItem = MochilaXux::where('user_id', $user->id)
+            ->where('chuchemon_id', $chuchemonId)
+            ->first();
 
-        $maxAddable  = ($currentSlots + $freeSpaces) * self::STACK_SIZE - $currentQty;
-        $actualAdded = min($qtyToAdd, $maxAddable);
-        $discarded   = $qtyToAdd - $actualAdded;
-
-        if ($actualAdded <= 0) {
-            return response()->json([
-                'message'   => 'La mochila està plena. No s\'han afegit Xuxes.',
-                'added'     => 0,
-                'discarded' => $qtyToAdd,
-            ], 422);
-        }
-
-        // Persist
         if ($existingItem) {
-            $existingItem->quantity += $actualAdded;
+            $existingItem->quantity += $qtyToAdd;
             $existingItem->save();
             $item = $existingItem;
         } else {
             $item = MochilaXux::create([
                 'user_id'      => $user->id,
                 'chuchemon_id' => $chuchemonId,
-                'quantity'     => $actualAdded,
+                'quantity'     => $qtyToAdd,
             ]);
         }
 
         $item->load('chuchemon');
 
-        // Recalculate after save
-        $newItems      = MochilaXux::where('user_id', $user->id)->get();
-        $newUsedSpaces = $newItems->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
-
-        $message = $discarded > 0
-            ? "S'han afegit {$actualAdded} Xuxes. {$discarded} descartades (mochila plena)."
-            : "S'han afegit {$actualAdded} Xuxes correctament.";
+        // Recalcular espacios después de guardar
+        $newItems      = MochilaXux::with('item')->where('user_id', $user->id)->where('quantity', '>', 0)->get();
+        $newUsedSpaces = $newItems->sum(fn($i) => self::calculateItemSlots($i));
 
         return response()->json([
-            'message'     => $message,
-            'added'       => $actualAdded,
-            'discarded'   => $discarded,
+            'message'     => "S'han afegit {$qtyToAdd} Xuxes correctament.",
+            'added'       => $qtyToAdd,
+            'discarded'   => 0,
             'item'        => $item,
             'used_spaces' => $newUsedSpaces,
             'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
@@ -145,7 +241,8 @@ class MochilaController extends Controller
             return response()->json(['message' => 'No autoritzat'], 401);
         }
 
-        $item = MochilaXux::where('id', $id)
+        $item = MochilaXux::with('item')
+            ->where('id', $id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -169,9 +266,17 @@ class MochilaController extends Controller
         }
 
         // Check space constraints: slots used by other items + new slots for this item
-        $others           = MochilaXux::where('user_id', $user->id)->where('id', '!=', $id)->get();
-        $usedByOthers     = $others->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
-        $slotsForNewQty   = (int) ceil($newQty / self::STACK_SIZE);
+        $others = MochilaXux::with('item')->where('user_id', $user->id)->where('id', '!=', $id)->get();
+        $usedByOthers = $others->sum(fn($i) => self::calculateItemSlots($i));
+        
+        // Calcular slots para la nueva cantidad según el tipo
+        if ($item->vaccine_id) {
+            $slotsForNewQty = $newQty; // Vacunas no apilables
+        } elseif ($item->item_id && $item->item && $item->item->type === 'no_apilable') {
+            $slotsForNewQty = $newQty; // Items no apilables
+        } else {
+            $slotsForNewQty = (int) ceil($newQty / self::STACK_SIZE); // Apilables
+        }
 
         if ($usedByOthers + $slotsForNewQty > self::MAX_SPACES) {
             return response()->json(['message' => 'La mochila no té prou espai per a aquesta quantitat'], 422);
@@ -181,8 +286,8 @@ class MochilaController extends Controller
         $item->save();
         $item->load('chuchemon');
 
-        $allItems      = MochilaXux::where('user_id', $user->id)->get();
-        $newUsedSpaces = $allItems->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+        $allItems = MochilaXux::with('item')->where('user_id', $user->id)->get();
+        $newUsedSpaces = $allItems->sum(fn($i) => self::calculateItemSlots($i));
 
         return response()->json([
             'message'     => 'Quantitat actualitzada correctament',
@@ -203,7 +308,7 @@ class MochilaController extends Controller
             return response()->json(['message' => 'No autoritzat'], 401);
         }
 
-        $item = MochilaXux::where('id', $id)
+        $item = MochilaXux::with(['item', 'vaccine'])->where('id', $id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -211,13 +316,23 @@ class MochilaController extends Controller
             return response()->json(['message' => 'Item no trobat'], 404);
         }
 
-        $item->delete();
+        $itemName = $item->item ? $item->item->name : ($item->vaccine ? $item->vaccine->name : 'Xux');
+        
+        // Para todos los items (incluidas vacunas): decrementar o eliminar
+        if ($item->quantity > 1) {
+            $item->quantity -= 1;
+            $item->save();
+            $message = "Se ha eliminado 1 {$itemName} de la mochila (quedan {$item->quantity})";
+        } else {
+            $item->delete();
+            $message = "Se ha eliminado {$itemName} de la mochila";
+        }
 
-        $allItems      = MochilaXux::where('user_id', $user->id)->get();
-        $newUsedSpaces = $allItems->sum(fn($i) => (int) ceil($i->quantity / self::STACK_SIZE));
+        $allItems = MochilaXux::with(['item', 'vaccine'])->where('user_id', $user->id)->get();
+        $newUsedSpaces = $allItems->sum(fn($i) => self::calculateItemSlots($i));
 
         return response()->json([
-            'message'     => 'Item eliminat de la mochila correctament',
+            'message'     => $message,
             'used_spaces' => $newUsedSpaces,
             'free_spaces' => self::MAX_SPACES - $newUsedSpaces,
         ]);
@@ -252,24 +367,20 @@ class MochilaController extends Controller
             return response()->json(['message' => 'Item no trobat'], 404);
         }
 
-        // For non-apilable items, each occupies 1 space regardless of quantity
-        $spacesNeeded = $item->type === 'no_apilable' ? $qtyToAdd : (int) ceil($qtyToAdd / self::STACK_SIZE);
-
-        // Current mochila state
-        $mochilaItems = MochilaXux::where('user_id', $user->id)->get();
-        $usedSpaces = $mochilaItems->sum(function($i) {
-            // Get the item type if it has item_id, otherwise assume apilable
-            $itemType = $i->item ? $i->item->type : 'apilable';
-            return $itemType === 'no_apilable' ? $i->quantity : (int) ceil($i->quantity / self::STACK_SIZE);
-        });
-        $freeSpaces = self::MAX_SPACES - $usedSpaces;
-
-        if ($freeSpaces < $spacesNeeded) {
-            $discarded = $qtyToAdd - ($freeSpaces * ($item->type === 'no_apilable' ? 1 : self::STACK_SIZE));
+        // Validar espacio ANTES de añadir items (considerando slots parcialmente llenos)
+        $itemsToAdd = [
+            ['type' => 'item', 'item_id' => $itemId, 'quantity' => $qtyToAdd],
+        ];
+        
+        $spaceCheck = $this->canFitItems($user->id, $itemsToAdd);
+        
+        if (!$spaceCheck['can_fit']) {
             return response()->json([
                 'message' => 'La mochila no té prou espai.',
                 'added' => 0,
-                'discarded' => max(0, $discarded),
+                'discarded' => $qtyToAdd,
+                'free_spaces' => $spaceCheck['free_slots'],
+                'slots_needed' => $spaceCheck['slots_needed'],
             ], 422);
         }
 
@@ -292,11 +403,8 @@ class MochilaController extends Controller
         $existingMochilaItem->load('item');
 
         // Recalculate
-        $newMochilaItems = MochilaXux::where('user_id', $user->id)->get();
-        $newUsedSpaces = $newMochilaItems->sum(function($i) {
-            $itemType = $i->item ? $i->item->type : 'apilable';
-            return $itemType === 'no_apilable' ? $i->quantity : (int) ceil($i->quantity / self::STACK_SIZE);
-        });
+        $newMochilaItems = MochilaXux::with('item')->where('user_id', $user->id)->get();
+        $newUsedSpaces = $newMochilaItems->sum(fn($i) => self::calculateItemSlots($i));
 
         return response()->json([
             'message' => "S'han afegit {$qtyToAdd} items correctament.",

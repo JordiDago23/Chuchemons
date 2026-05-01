@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { ConfigService, EvolutionConfig } from '../../services/config.service';
 
 @Component({
   selector: 'app-leveling-panel',
@@ -28,17 +29,18 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   private confirmAction: (() => void) | null = null;
   private destroy$ = new Subject<void>();
 
-  // Configuración de costos de evolución desde el backend
-  evolveCostConfig = {
-    xux_petit_mitja: 3,  // Default fallback
-    xux_mitja_gran: 5    // Default fallback
+  // Configuración de costos de evolución (actualizada reactivamente)
+  evolveCostConfig: EvolutionConfig = {
+    xux_petit_mitja: 3,
+    xux_mitja_gran: 5
   };
 
   private readonly api = 'http://localhost:8000/api';
 
   constructor(
     private http: HttpClient,
-    private chuchemonService: ChuchemonService
+    private chuchemonService: ChuchemonService,
+    private configService: ConfigService
   ) {}
 
   ngOnInit(): void {
@@ -49,6 +51,13 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.loadChuchemons();
+      });
+
+    // Suscribirse a actualizaciones reactivas de configuración de evolución
+    this.configService.evolutionConfig$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(config => {
+        this.evolveCostConfig = config;
       });
   }
 
@@ -63,13 +72,6 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
       next: (response) => {
         // El backend ahora devuelve { chuchemons: [...], config: {...} }
         const data = response.chuchemons || response;  // Compatibilidad con respuesta antigua
-        const config = response.config;
-        
-        // Actualizar configuración si viene del backend
-        if (config) {
-          this.evolveCostConfig.xux_petit_mitja = config.xux_petit_mitja ?? 3;
-          this.evolveCostConfig.xux_mitja_gran = config.xux_mitja_gran ?? 5;
-        }
         
         this.chuchemons = data;
         if (data.length > 0) {

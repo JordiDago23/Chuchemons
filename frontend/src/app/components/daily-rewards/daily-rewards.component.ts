@@ -2,6 +2,9 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { MochilaService } from '../../services/mochila.service';
+import { ConfigService, RewardConfig } from '../../services/config.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-daily-rewards',
@@ -20,10 +23,11 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   simulationOffsetHours = 0;
   mochilaInfo: any = null;
   teamInfo: any = null;
-  private refreshInterval: any = null;
   
-  // Configuración dinámica de recompensas
-  rewardConfig = {
+  private destroy$ = new Subject<void>();
+  
+  // Configuración dinámica de recompensas (actualizada reactivamente)
+  rewardConfig: RewardConfig = {
     daily_xux_quantity: 10,
     daily_xux_hour: '06:00',
     daily_chuchemon_hour: '08:00'
@@ -31,62 +35,56 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private mochilaService: MochilaService
+    private mochilaService: MochilaService,
+    private configService: ConfigService
   ) {}
 
   ngOnInit(): void {
-    this.loadDailyRewards();
+    // Suscribirse a las actualizaciones de configuración reactivas
+    this.configService.rewardConfig$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(config => {
+        this.rewardConfig = config;
+      });
+    
+    // Suscribirse a los datos de recompensas diarias
+    this.configService.dailyRewardsData$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data) {
+          this.xuxReward = data.xux;
+          this.chuchemonReward = data.chuchemon;
+          this.isLoading = false;
+        }
+      });
+    
+    // Suscribirse a actualizaciones reactivas de mochila
+    this.mochilaService.mochilaData$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data) {
+          this.mochilaInfo = data;
+        }
+      });
+    
+    // Cargar info adicional
     this.loadMochilaInfo();
     this.loadTeamInfo();
-    
-    // Refrescar cada 60 segundos para detectar cambios de horario por admin
-    this.refreshInterval = setInterval(() => {
-      this.loadDailyRewards();
-      this.loadMochilaInfo();
-      this.loadTeamInfo();
-    }, 60000);
   }
 
   ngOnDestroy(): void {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadDailyRewards(): void {
+    // Delegado al ConfigService
     this.isLoading = true;
-    this.errorMessage = null;
-    this.http.get<any>('http://localhost:8000/api/daily-rewards').subscribe({
-      next: (data) => {
-        this.xuxReward = data.xux;
-        this.chuchemonReward = data.chuchemon;
-        
-        // Actualizar configuración si viene del backend
-        if (data.config) {
-          this.rewardConfig.daily_xux_quantity = data.config.daily_xux_quantity ?? 10;
-          this.rewardConfig.daily_xux_hour = data.config.daily_xux_hour ?? '06:00';
-          this.rewardConfig.daily_chuchemon_hour = data.config.daily_chuchemon_hour ?? '08:00';
-        }
-        
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading daily rewards:', error);
-        this.errorMessage = 'Error cargando recompensas diarias';
-        this.isLoading = false;
-      }
-    });
+    this.configService.refreshDailyRewards();
   }
 
   loadMochilaInfo(): void {
-    this.mochilaService.getMochila().subscribe({
-      next: (data) => {
-        this.mochilaInfo = data;
-      },
-      error: (error) => {
-        console.error('Error loading mochila info:', error);
-      }
-    });
+    this.mochilaService.refreshMochila();
   }
 
   loadTeamInfo(): void {
@@ -111,14 +109,8 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Verificar espacio en mochila - necesitamos exactamente 2 slots libres (10 items = 2 stacks de 5)
-    const slotsNeeded = 2;
-    if (this.mochilaInfo && this.mochilaInfo.free_spaces < slotsNeeded) {
-      this.errorMessage = `Tu mochila está llena (${this.mochilaInfo.used_spaces}/${this.mochilaInfo.max_spaces}). Libera al menos ${slotsNeeded} espacios antes de reclamar las Chuches.`;
-      setTimeout(() => this.errorMessage = null, 5000);
-      return;
-    }
-
+    // El backend valida el espacio con canFitItems() - no necesitamos validación manual aquí
+    this.errorMessage = null;
     this.http.post('http://localhost:8000/api/daily-rewards/xux', {}).subscribe({
       next: (response: any) => {
         let msg = `+${response.xux_quantity} Chuches`;
@@ -126,13 +118,18 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
           msg += ` + ${response.vaccine_quantity} ${response.vaccine}`;
         }
         this.successMessage = msg;
-        this.loadDailyRewards();
-        this.loadMochilaInfo();
+        
+        // Refrescar datos usando los servicios reactivos
+        this.configService.refreshDailyRewards();
+        this.mochilaService.refreshMochila();
+        
         setTimeout(() => this.successMessage = null, 4000);
       },
       error: (error) => {
         console.error('Error claiming xux reward:', error);
-        this.errorMessage = error.error.message || 'Error reclamando recompensa';
+        // El backend devuelve un mensaje descriptivo cuando la mochila está llena
+        this.errorMessage = error.error?.message || 'Error reclamando recompensa';
+        setTimeout(() => this.errorMessage = null, 6000);
       }
     });
   }
@@ -147,24 +144,21 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.http.post('http://localhost:8000/api/daily-rewards/chuchemon', {}).subscribe({
       next: (response: any) => {
-        this.successMessage = response.message || '¡Chuchemon obtenido!';
-        this.loadDailyRewards();
+        console.log('Chuchemon claim response:', response);
+        const wasNew = response.was_new ? ' nuevo' : '';
+        this.successMessage = response.message || `¡Chuchemon${wasNew} obtenido!`;
+        
+        // Refrescar datos usando el servicio reactivo
+        this.configService.refreshDailyRewards();
         this.loadTeamInfo();
+        
         setTimeout(() => this.successMessage = null, 3000);
       },
       error: (error) => {
         console.error('Error claiming chuchemon reward:', error);
+        console.error('Error details:', error.error);
         const errorMsg = error.error?.message || error.error?.error || 'Error reclamando recompensa';
-        
-        // Mensajes específicos según el error
-        if (errorMsg.includes('equipo') || errorMsg.includes('3') || errorMsg.includes('tres')) {
-          this.errorMessage = 'Ya tienes 3 Chuchemons en tu equipo. Para recibir uno nuevo, primero debes liberar espacio en tu equipo desde la sección "Equipo".';
-        } else if (errorMsg.includes('total') || errorMsg.includes('capturado')) {
-          this.errorMessage = 'Has alcanzado el límite de Chuchemons capturados. Evoluciona o libera algunos para recibir más.';
-        } else {
-          this.errorMessage = errorMsg;
-        }
-        
+        this.errorMessage = errorMsg;
         setTimeout(() => this.errorMessage = null, 6000);
       }
     });

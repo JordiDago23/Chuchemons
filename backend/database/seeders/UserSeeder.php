@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
                 'apellidos' => 'Dape',
                 'email'     => 'jordi@chuchemons.com',
                 'password'  => Hash::make('password1234'),
-                'player_id' => '#Jordi0001',
+                'player_id' => '#Jordi5021',
                 'is_admin'  => false,
                 'bio'       => 'Entrenador de Chuchemons apasionado.',
             ],

@@ -91,35 +91,39 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/daily-rewards',        [DailyRewardController::class, 'getDailyRewards']);
     Route::post('/daily-rewards/xux',   [DailyRewardController::class, 'claimXuxReward']);
     Route::post('/daily-rewards/chuchemon', [DailyRewardController::class, 'claimChuchemonReward']);
-
-    // ─── ADMIN ────────────────────────────────────────────────────────
-    Route::prefix('admin')->middleware('admin')->group(function () {
-        Route::get('/stats',                        [AdminController::class, 'stats']);
-        Route::get('/users',                        [AdminController::class, 'listUsers']);
-        Route::get('/settings',                     [AdminController::class, 'settings']);
-        Route::put('/settings/config',              [AdminController::class, 'updateEvolutionConfig']);
-        Route::put('/settings/infection-rate',      [AdminController::class, 'updateInfectionRate']);
-        Route::put('/settings/schedules/xux',       [AdminController::class, 'updateDailyXuxSchedule']);
-        Route::put('/settings/schedules/chuchemon', [AdminController::class, 'updateDailyChuchemonSchedule']);
-        Route::post('/users/{id}/add-xux',          [AdminController::class, 'addXuxToUser']);
-        Route::post('/users/{id}/add-item',         [AdminController::class, 'addItemToUser']);
-        Route::post('/users/{id}/add-vaccine',      [AdminController::class, 'addVaccineToUser']);
-        Route::post('/users/{id}/add-chuchemon',    [AdminController::class, 'addRandomChuchemon']);
-
-        // CRUD Xuxemons (admin)
-        Route::post('/chuchemons',       [ChuchemonController::class, 'store']);
-        Route::put('/chuchemons/{id}',   [ChuchemonController::class, 'update']);
-        Route::delete('/chuchemons/{id}',[ChuchemonController::class, 'destroy']);
-
-        // CRUD Items (admin)
-        Route::post('/items',       [ItemController::class, 'store']);
-        Route::put('/items/{id}',   [ItemController::class, 'update']);
-        Route::delete('/items/{id}',[ItemController::class, 'destroy']);
-    });
+    
     // ─── CHAT / MENSAJES ─────────────────────────────────────
     Route::post('/messages/{friendId}/send', [App\Http\Controllers\MessageController::class, 'store']);
     Route::get('/messages/{friendId}', [App\Http\Controllers\MessageController::class, 'getConversation']);
     Route::get('/messages', [App\Http\Controllers\MessageController::class, 'getConversations']);
     Route::patch('/messages/{id}/read', [App\Http\Controllers\MessageController::class, 'markAsRead']);
     Route::patch('/messages/{friendId}/read-all', [App\Http\Controllers\MessageController::class, 'markConversationAsRead']);
+});
+
+// ─── SETTINGS (públicas - solo lectura) ──────────────────────
+Route::get('/settings', [AdminController::class, 'settings']);
+
+// ─── RUTAS PROTEGIDAS SOLO PARA ADMIN ────────────────────────
+Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
+    Route::get('/stats',                        [AdminController::class, 'stats']);
+    Route::get('/settings',                     [AdminController::class, 'settings']);
+    Route::get('/users',                        [AdminController::class, 'listUsers']);
+    Route::put('/settings/config',              [AdminController::class, 'updateEvolutionConfig']);
+    Route::put('/settings/infection-rate',      [AdminController::class, 'updateInfectionRate']);
+    Route::put('/settings/schedules/xux',       [AdminController::class, 'updateDailyXuxSchedule']);
+    Route::put('/settings/schedules/chuchemon', [AdminController::class, 'updateDailyChuchemonSchedule']);
+    Route::post('/users/{id}/add-xux',          [AdminController::class, 'addXuxToUser']);
+    Route::post('/users/{id}/add-item',         [AdminController::class, 'addItemToUser']);
+    Route::post('/users/{id}/add-vaccine',      [AdminController::class, 'addVaccineToUser']);
+    Route::post('/users/{id}/add-chuchemon',    [AdminController::class, 'addRandomChuchemon']);
+
+    // CRUD Xuxemons (admin)
+    Route::post('/chuchemons',       [ChuchemonController::class, 'store']);
+    Route::put('/chuchemons/{id}',   [ChuchemonController::class, 'update']);
+    Route::delete('/chuchemons/{id}',[ChuchemonController::class, 'destroy']);
+
+    // CRUD Items (admin)
+    Route::post('/items',       [ItemController::class, 'store']);
+    Route::put('/items/{id}',   [ItemController::class, 'update']);
+    Route::delete('/items/{id}',[ItemController::class, 'destroy']);
 });

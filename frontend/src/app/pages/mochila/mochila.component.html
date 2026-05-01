@@ -81,6 +81,7 @@
           <!-- Slot Xux -->
           @if (slot.kind === 'xux' && slot.xuxItem) {
             <div class="inv-card inv-card-xux">
+              <button class="card-delete-btn" (click)="deleteItem(slot, $event)" title="Eliminar 1 unidad">×</button>
               <span class="card-slot-num">#{{ slot.index }}</span>
               <span class="card-qty">x{{ slot.slotQty }}</span>
               <div class="card-icon">
@@ -90,7 +91,7 @@
                 @else if (slot.xuxItem.item?.name === 'Xux Exp') { <span>⭐</span> }
                 @else { <span>🍬</span> }
               </div>
-              <h3 class="card-name">{{ slot.xuxItem.item?.name ?? 'Xux' }}</h3>
+              <h3 class="card-name">{{ slot.xuxItem.item?.name ?? slot.xuxItem.chuchemon?.name ?? 'Xux' }}</h3>
               <button class="card-btn card-btn-xux" (click)="openPopup(slot)">Aplicar</button>
             </div>
           }
@@ -98,12 +99,11 @@
           <!-- Slot Vacuna -->
           @if (slot.kind === 'vacuna' && slot.vacunaItem) {
             <div class="inv-card inv-card-vacuna">
+              <button class="card-delete-btn" (click)="deleteItem(slot, $event)" title="Eliminar vacuna">×</button>
               <span class="card-slot-num">#{{ slot.index }}</span>
               <span class="card-qty">x1</span>
               <div class="card-icon">
-                @if (slot.vacunaItem.name === 'Xocolatina') { <span>🍫</span> }
-                @else if (slot.vacunaItem.name === 'Xal de fruits') { <span>🍬</span> }
-                @else { <span>💉</span> }
+                <span>{{ getVaccineEmoji(slot.vacunaItem.name) }}</span>
               </div>
               <h3 class="card-name">{{ slot.vacunaItem.name }}</h3>
               <button class="card-btn card-btn-vacuna" (click)="openPopup(slot)">Aplicar</button>

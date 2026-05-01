@@ -23,7 +23,7 @@
           (click)="selectConversation(conversation)"
           [class.active]="selectedFriendId === conversation.id"
         >
-          <div class="conv-avatar">{{ conversation.friend_name?.charAt(0) | uppercase }}</div>
+          <div class="conv-avatar">{{ conversation.friend_name.charAt(0) | uppercase }}</div>
           <div class="conv-info">
             <div class="conv-name">{{ conversation.friend_name }}</div>
             <div class="conv-preview">{{ conversation.last_message || 'Sin mensajes aún' }}</div>
@@ -42,7 +42,7 @@
     <!-- Área de mensajes -->
     <div class="chat-area">
       <div class="chat-header" *ngIf="selectedFriend">
-        <div class="header-avatar">{{ selectedFriend.friend_name?.charAt(0) | uppercase }}</div>
+        <div class="header-avatar">{{ selectedFriend.friend_name.charAt(0) | uppercase }}</div>
         <div class="header-name">{{ selectedFriend.friend_name }}</div>
         <div class="header-status" [class.online]="false">en línea</div>
       </div>
