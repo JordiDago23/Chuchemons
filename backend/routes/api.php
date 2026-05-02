@@ -93,6 +93,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/daily-rewards',        [DailyRewardController::class, 'getDailyRewards']);
     Route::post('/daily-rewards/xux',   [DailyRewardController::class, 'claimXuxReward']);
     Route::post('/daily-rewards/chuchemon', [DailyRewardController::class, 'claimChuchemonReward']);
+    Route::post('/daily-rewards/reset', [DailyRewardController::class, 'debugReset']);
     
     // ─── CHAT / MENSAJES ─────────────────────────────────────
     Route::post('/messages/{friendId}/send', [App\Http\Controllers\MessageController::class, 'store']);

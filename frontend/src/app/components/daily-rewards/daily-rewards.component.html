@@ -1,96 +1,175 @@
-<div class="daily-rewards">
-  <h2>Recompensas Diarias</h2>
+<div class="rewards-wrapper">
 
-  <div class="simulation-panel">
-    <div>
-      <p class="simulation-title">Modo prueba cliente</p>
-      <p class="simulation-copy">Referencia actual: {{ simulationReference }}</p>
-    </div>
-    <div class="simulation-actions">
-      <button class="sim-btn ghost" (click)="toggleSimulation()">
-        {{ simulationEnabled ? 'Desactivar simulación' : 'Activar simulación' }}
+  <div *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</div>
+  <div *ngIf="isLoading" class="loading-msg">Cargando recompensas...</div>
+
+  <div class="reward-sections">
+
+    <!-- ── CHUCHEMON SECTION ───────────────────────────────── -->
+    <div class="reward-section chuchemon-section"
+         [class.unavailable]="!isRewardAvailable(chuchemonReward)">
+
+      <div class="section-header">
+        <span class="section-icon">🎁</span>
+        <div>
+          <h3>Chuchemon Diario</h3>
+          <p class="section-sub">Un Chuchemon aleatorio de tu colección</p>
+        </div>
+      </div>
+
+      <div class="preview-placeholder">
+        <div class="mystery-glow"></div>
+        <span class="mystery">?</span>
+        <p>Chuchemon aleatorio</p>
+        <p class="mystery-sub">Solo disponibles los que aún no tienes</p>
+      </div>
+
+      <div class="availability-row" *ngIf="!isRewardAvailable(chuchemonReward)">
+        <span class="cooldown-badge">⏱ {{ getTimeUntilAvailable(chuchemonReward) }}</span>
+      </div>
+
+      <button class="claim-btn chuchemon-btn"
+        (click)="claimChuchemonReward()"
+        [disabled]="!isRewardAvailable(chuchemonReward)">
+        {{ isRewardAvailable(chuchemonReward) ? '¡Reclamar Chuchemon!' : 'Ya reclamado hoy' }}
       </button>
-      @if (simulationEnabled) {
-        <button class="sim-btn" (click)="shiftSimulation(6)">+6h</button>
-        <button class="sim-btn" (click)="shiftSimulation(24)">+24h</button>
-        <button class="sim-btn ghost" (click)="resetSimulation()">Ahora</button>
-      }
     </div>
-  </div>
-  
-  @if (isLoading) {
-    <p>Cargando recompensas...</p>
-  }
 
-  @if (successMessage) {
-    <div class="success">{{ successMessage }}</div>
-  }
+    <!-- ── CHUCHES SECTION ────────────────────────────────── -->
+    <div class="reward-section chuches-section"
+         [class.unavailable]="!isRewardAvailable(xuxReward)">
 
-  @if (errorMessage) {
-    <div class="error">{{ errorMessage }}</div>
-  }
-
-  <div class="rewards-grid">
-    <!-- Xux Daily Reward -->
-    @if (xuxReward) {
-      <div class="reward-card xux-reward">
-        <h3>Recompensa Diaria - Chuches</h3>
-        <div class="reward-icon">🍬</div>
-        <p class="quantity">{{ rewardConfig.daily_xux_quantity }} Chuches (2-3 tipos aleatorios)</p>
-        
-        <div class="availability-status">
-          @if (isRewardAvailable(xuxReward)) {
-            <span class="available">✓ Disponible ahora</span>
-          } @else {
-            <span class="unavailable">⏱ {{ getTimeUntilAvailable(xuxReward) }}</span>
-          }
+      <div class="section-header">
+        <span class="section-icon">🍬</span>
+        <div>
+          <h3>Chuches Diarias</h3>
+          <p class="section-sub">{{ rewardConfig.daily_xux_quantity }} Chuches variadas cada día</p>
         </div>
-
-        <button 
-          class="claim-btn"
-          (click)="claimXuxReward()"
-          [disabled]="!isRewardAvailable(xuxReward)"
-        >
-          {{ simulationEnabled ? 'Simular reclamo de Chuches' : 'Reclamar Chuches' }}
-        </button>
       </div>
-    }
 
-    <!-- Chuchemon Daily Reward -->
-    @if (chuchemonReward) {
-      <div class="reward-card chuchemon-reward">
-        <h3>Recompensa Diaria - Chuchemon</h3>
-        <div class="reward-icon">🎁</div>
-        <p class="quantity">1 Chuchemon aleatorio (Pequeño)</p>
-        
-        <div class="availability-status">
-          @if (isRewardAvailable(chuchemonReward)) {
-            <span class="available">✓ Disponible ahora</span>
-          } @else {
-            <span class="unavailable">⏱ {{ getTimeUntilAvailable(chuchemonReward) }}</span>
-          }
+      <div class="chuches-preview">
+        <div class="candy-bubbles">
+          <span class="bubble b1">🍓</span>
+          <span class="bubble b2">🍋</span>
+          <span class="bubble b3">🥤</span>
+          <span class="bubble b4">🍊</span>
+          <span class="bubble b5">🍬</span>
         </div>
-
-        <button 
-          class="claim-btn"
-          (click)="claimChuchemonReward()"
-          [disabled]="!isRewardAvailable(chuchemonReward)"
-        >
-          {{ simulationEnabled ? 'Simular reclamo de Chuchemon' : 'Reclamar Chuchemon' }}
-        </button>
+        <p class="candy-desc">2–3 tipos: chuches, vacunas y boosts</p>
+        <p class="candy-qty">{{ rewardConfig.daily_xux_quantity }} unidades en total</p>
       </div>
-    }
-  </div>
 
-  <div class="info-box">
-    <p><strong>ℹ️ Horarios configurados:</strong></p>
-    <p>• Chuches: Se renuevan cada día a las {{ rewardConfig.daily_xux_hour }}</p>
-    <p>• Chuchemon: Se renueva cada día a las {{ rewardConfig.daily_chuchemon_hour }}</p>
-  </div>
+      <div class="availability-row" *ngIf="!isRewardAvailable(xuxReward)">
+        <span class="cooldown-badge">⏱ {{ getTimeUntilAvailable(xuxReward) }}</span>
+      </div>
 
-  @if (simulationEnabled) {
-    <div class="simulation-note">
-      <p><strong>Modo prueba activo:</strong> los botones actualizan el estado sólo en el navegador para probar cooldowns y disponibilidad.</p>
+      <button class="claim-btn chuches-btn"
+        (click)="claimXuxReward()"
+        [disabled]="!isRewardAvailable(xuxReward)">
+        {{ isRewardAvailable(xuxReward) ? '¡Recoger Chuches!' : 'Ya reclamado hoy' }}
+      </button>
     </div>
-  }
+
+  </div><!-- /reward-sections -->
+
+  <div class="schedule-info">
+    <span>🕗 Chuches: {{ rewardConfig.daily_xux_hour }}</span>
+    <span>🕗 Chuchemon: {{ rewardConfig.daily_chuchemon_hour }}</span>
+  </div>
+
+  <div class="debug-bar">
+    <button class="debug-btn" (click)="debugReset()">🔧 Resetear para prueba</button>
+  </div>
+
+</div><!-- /rewards-wrapper -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     OVERLAY — CHUCHEMON REVEAL
+══════════════════════════════════════════════════════════ -->
+<div class="reveal-overlay chuchemon-overlay" *ngIf="showChuchemonOverlay">
+
+  <div class="overlay-beam-ring"></div>
+
+  <div class="stars-container">
+    <span *ngFor="let s of stars" class="star"></span>
+  </div>
+
+  <div class="overlay-card">
+
+    <div class="new-ribbon" *ngIf="wasNewChuchemon">¡NUEVO!</div>
+
+    <div class="reveal-img-wrap">
+      <div class="reveal-glow-ring"></div>
+      <img
+        *ngIf="claimedChuchemon"
+        [src]="'http://localhost:8000/chuchemons/' + claimedChuchemon.image"
+        [alt]="claimedChuchemon.name"
+        class="reveal-chuchemon-img"
+        onerror="this.src='assets/placeholder.png'"
+      >
+    </div>
+
+    <div class="reveal-info" [class.info-in]="chuchemonInfoVisible">
+      <h2 class="reveal-name">{{ claimedChuchemon?.name }}</h2>
+      <div class="reveal-badges">
+        <span class="type-badge"
+          [style.color]="elementColor(claimedChuchemon?.element)"
+          [style.background]="elementBg(claimedChuchemon?.element)">
+          {{ claimedChuchemon?.element }}
+        </span>
+        <span class="size-badge">{{ sizeLabel(claimedChuchemon?.mida) }}</span>
+      </div>
+      <div class="reveal-stats">
+        <div class="stat-box">
+          <span class="stat-label">ATK</span>
+          <strong class="stat-val">{{ claimedChuchemon?.attack }}</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">DEF</span>
+          <strong class="stat-val">{{ claimedChuchemon?.defense }}</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">VEL</span>
+          <strong class="stat-val">{{ claimedChuchemon?.speed }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <button class="overlay-continue-btn" [class.btn-in]="chuchemonInfoVisible"
+            (click)="closeChuchemonOverlay()">
+      ¡Continuar!
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     OVERLAY — CHUCHES REVEAL
+══════════════════════════════════════════════════════════ -->
+<div class="reveal-overlay xux-overlay" *ngIf="showXuxOverlay">
+
+  <div class="overlay-card xux-card">
+    <div class="xux-header">
+      <span class="xux-header-icon">🍬</span>
+      <h2>¡Chuches conseguidas!</h2>
+    </div>
+
+    <div class="items-grid">
+      <div class="item-reveal-card"
+           [class.item-in]="itemsVisible"
+           *ngFor="let item of claimedItems; let i = index"
+           [style.animation-delay]="(i * 120) + 'ms'">
+        <div class="item-emoji">{{ itemEmoji(item.name) }}</div>
+        <span class="item-name">{{ item.name }}</span>
+        <span class="item-qty">×{{ item.quantity }}</span>
+      </div>
+    </div>
+
+    <button class="overlay-continue-btn xux-continue" (click)="closeXuxOverlay()">
+      ¡Continuar!
+    </button>
+  </div>
+
 </div>

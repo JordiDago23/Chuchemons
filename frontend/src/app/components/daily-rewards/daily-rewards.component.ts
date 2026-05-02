@@ -18,20 +18,27 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   chuchemonReward: any = null;
   isLoading = false;
   errorMessage: string | null = null;
-  successMessage: string | null = null;
-  simulationEnabled = false;
-  simulationOffsetHours = 0;
-  mochilaInfo: any = null;
-  teamInfo: any = null;
-  
-  private destroy$ = new Subject<void>();
-  
-  // Configuración dinámica de recompensas (actualizada reactivamente)
+
+  // Overlay — Chuchemon
+  showChuchemonOverlay = false;
+  claimedChuchemon: any = null;
+  wasNewChuchemon = false;
+  chuchemonInfoVisible = false;
+
+  // Overlay — Chuches
+  showXuxOverlay = false;
+  claimedItems: any[] = [];
+  itemsVisible = false;
+
+  readonly stars = [1,2,3,4,5,6,7,8,9,10,11,12];
+
   rewardConfig: RewardConfig = {
     daily_xux_quantity: 10,
     daily_xux_hour: '08:00',
     daily_chuchemon_hour: '08:00'
   };
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
@@ -40,14 +47,10 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Suscribirse a las actualizaciones de configuración reactivas
     this.configService.rewardConfig$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(config => {
-        this.rewardConfig = config;
-      });
-    
-    // Suscribirse a los datos de recompensas diarias
+      .subscribe(config => { this.rewardConfig = config; });
+
     this.configService.dailyRewardsData$
       .pipe(takeUntil(this.destroy$))
       .subscribe(data => {
@@ -57,19 +60,8 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         }
       });
-    
-    // Suscribirse a actualizaciones reactivas de mochila
-    this.mochilaService.mochilaData$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
-        if (data) {
-          this.mochilaInfo = data;
-        }
-      });
-    
-    // Cargar info adicional
-    this.loadMochilaInfo();
-    this.loadTeamInfo();
+
+    this.configService.refreshDailyRewards();
   }
 
   ngOnDestroy(): void {
@@ -77,166 +69,115 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadDailyRewards(): void {
-    // Delegado al ConfigService
-    this.isLoading = true;
-    this.configService.refreshDailyRewards();
-  }
-
-  loadMochilaInfo(): void {
-    this.mochilaService.refreshMochila();
-  }
-
-  loadTeamInfo(): void {
-    this.http.get<any>('http://localhost:8000/api/user/team').subscribe({
-      next: (data) => {
-        this.teamInfo = data;
-      },
-      error: (error) => {
-        console.error('Error loading team info:', error);
-      }
-    });
-  }
-
-  get teamCount(): number {
-    if (!this.teamInfo || !this.teamInfo.team) return 0;
-    return this.teamInfo.team.filter((t: any) => t !== null).length;
-  }
-
-  claimXuxReward(): void {
-    if (this.simulationEnabled) {
-      this.simulateClaim('xux');
-      return;
-    }
-
-    // El backend valida el espacio con canFitItems() - no necesitamos validación manual aquí
-    this.errorMessage = null;
-    this.http.post('http://localhost:8000/api/daily-rewards/xux', {}).subscribe({
-      next: (response: any) => {
-        // Construir mensaje con todos los items recibidos
-        let msg = 'Recibido: ';
-        if (response.items && response.items.length > 0) {
-          const itemsText = response.items
-            .map((item: any) => `${item.quantity}x ${item.name}`)
-            .join(', ');
-          msg += itemsText;
-        } else {
-          msg += `${response.total_quantity} Chuches`;
-        }
-        this.successMessage = msg;
-        
-        // Refrescar datos usando los servicios reactivos
-        this.configService.refreshDailyRewards();
-        this.mochilaService.refreshMochila();
-        
-        setTimeout(() => this.successMessage = null, 5000);
-      },
-      error: (error) => {
-        console.error('Error claiming xux reward:', error);
-        // El backend devuelve un mensaje descriptivo cuando la mochila está llena
-        this.errorMessage = error.error?.message || 'Error reclamando recompensa';
-        setTimeout(() => this.errorMessage = null, 6000);
-      }
-    });
-  }
-
-  claimChuchemonReward(): void {
-    if (this.simulationEnabled) {
-      this.simulateClaim('chuchemon');
-      return;
-    }
-
-    // No se valida el equipo - el Chuchemon va a la Chuchedex aunque el equipo esté lleno
-    this.errorMessage = null;
-    this.http.post('http://localhost:8000/api/daily-rewards/chuchemon', {}).subscribe({
-      next: (response: any) => {
-        console.log('Chuchemon claim response:', response);
-        const wasNew = response.was_new ? ' nuevo' : '';
-        this.successMessage = response.message || `¡Chuchemon${wasNew} obtenido!`;
-        
-        // Refrescar datos usando el servicio reactivo
-        this.configService.refreshDailyRewards();
-        this.loadTeamInfo();
-        
-        setTimeout(() => this.successMessage = null, 3000);
-      },
-      error: (error) => {
-        console.error('Error claiming chuchemon reward:', error);
-        console.error('Error details:', error.error);
-        const errorMsg = error.error?.message || error.error?.error || 'Error reclamando recompensa';
-        this.errorMessage = errorMsg;
-        setTimeout(() => this.errorMessage = null, 6000);
-      }
-    });
-  }
-
   isRewardAvailable(reward: any): boolean {
     if (!reward) return false;
-    return new Date(reward.next_available_at) <= this.getEffectiveNow();
+    return new Date(reward.next_available_at) <= new Date();
   }
 
   getTimeUntilAvailable(reward: any): string {
     if (!reward) return '';
-    const now = this.getEffectiveNow();
-    const available = new Date(reward.next_available_at);
-    const diff = available.getTime() - now.getTime();
-    
-    if (diff <= 0) return 'Disponible ahora';
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return `En ${hours}h ${minutes}m`;
+    const diff = new Date(reward.next_available_at).getTime() - Date.now();
+    if (diff <= 0) return 'Disponible';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return `${h}h ${m}m`;
   }
 
-      toggleSimulation(): void {
-        this.simulationEnabled = !this.simulationEnabled;
-        if (!this.simulationEnabled) {
-          this.simulationOffsetHours = 0;
-        }
-        this.successMessage = null;
-        this.errorMessage = null;
+  sizeLabel(mida: string): string {
+    switch (mida) {
+      case 'Petit':  return 'Pequeño';
+      case 'Mitjà':  return 'Mediano';
+      case 'Gran':   return 'Grande';
+      default:       return mida ?? '';
+    }
+  }
+
+  elementColor(element: string): string {
+    switch (element) {
+      case 'Terra': return '#a16207';
+      case 'Aire':  return '#0369a1';
+      case 'Aigua': return '#0e7490';
+      default:      return '#555';
+    }
+  }
+
+  elementBg(element: string): string {
+    switch (element) {
+      case 'Terra': return '#fef9c3';
+      case 'Aire':  return '#e0f2fe';
+      case 'Aigua': return '#cffafe';
+      default:      return '#f3f4f6';
+    }
+  }
+
+  itemEmoji(name: string): string {
+    const n = (name ?? '').toLowerCase();
+    // Chuches
+    if (n.includes('maduixa') || n.includes('fresa'))          return '🍓';
+    if (n.includes('llimona') || n.includes('limon'))          return '🍋';
+    if (n.includes('cola'))                                    return '🥤';
+    if (n.includes('taronja') || n.includes('naranja'))        return '🍊';
+    if (n.includes('síndria') || n.includes('sandia'))         return '🍉';
+    if (n.includes('raïm') || n.includes('uva'))               return '🍇';
+    if (n.includes('exp'))                                     return '⭐';
+    // Vacunas
+    if (n.includes('insulina'))                                return '💉';
+    if (n.includes('xocolatina') || n.includes('chocolate'))   return '🍫';
+    if (n.includes('fruita') || n.includes('fruta'))           return '🍎';
+    if (n.includes('xal') || n.includes('sal'))                return '🧂';
+    return '🍬';
+  }
+
+  claimChuchemonReward(): void {
+    this.errorMessage = null;
+    this.http.post<any>('http://localhost:8000/api/daily-rewards/chuchemon', {}).subscribe({
+      next: (res) => {
+        this.claimedChuchemon = res.chuchemon;
+        this.wasNewChuchemon  = res.was_new;
+        this.chuchemonInfoVisible = false;
+        this.showChuchemonOverlay = true;
+        setTimeout(() => { this.chuchemonInfoVisible = true; }, 700);
+        this.configService.refreshDailyRewards();
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Error reclamando recompensa';
+        setTimeout(() => { this.errorMessage = null; }, 6000);
       }
+    });
+  }
 
-      shiftSimulation(hours: number): void {
-        this.simulationOffsetHours += hours;
+  closeChuchemonOverlay(): void {
+    this.showChuchemonOverlay = false;
+    this.claimedChuchemon = null;
+  }
+
+  claimXuxReward(): void {
+    this.errorMessage = null;
+    this.http.post<any>('http://localhost:8000/api/daily-rewards/xux', {}).subscribe({
+      next: (res) => {
+        this.claimedItems   = res.items ?? [];
+        this.itemsVisible   = false;
+        this.showXuxOverlay = true;
+        setTimeout(() => { this.itemsVisible = true; }, 300);
+        this.configService.refreshDailyRewards();
+        this.mochilaService.refreshMochila();
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Error reclamando recompensa';
+        setTimeout(() => { this.errorMessage = null; }, 6000);
       }
+    });
+  }
 
-      resetSimulation(): void {
-        this.simulationOffsetHours = 0;
-        this.successMessage = 'Simulación restablecida a la hora actual.';
-        setTimeout(() => this.successMessage = null, 2500);
-      }
+  closeXuxOverlay(): void {
+    this.showXuxOverlay = false;
+    this.claimedItems = [];
+  }
 
-      get simulationReference(): string {
-        return this.getEffectiveNow().toLocaleString('es-ES');
-      }
-
-      private getEffectiveNow(): Date {
-        const now = new Date();
-        now.setHours(now.getHours() + this.simulationOffsetHours);
-        return now;
-      }
-
-      private simulateClaim(type: 'xux' | 'chuchemon'): void {
-        const reward = type === 'xux' ? this.xuxReward : this.chuchemonReward;
-
-        if (!reward) {
-          return;
-        }
-
-        if (!this.isRewardAvailable(reward)) {
-          this.errorMessage = 'La recompensa simulada todavía no está disponible.';
-          return;
-        }
-
-        const nextAvailable = new Date(this.getEffectiveNow().getTime() + 24 * 60 * 60 * 1000);
-        reward.next_available_at = nextAvailable.toISOString();
-        reward.claimed_at = this.getEffectiveNow().toISOString();
-        this.errorMessage = null;
-        this.successMessage = type === 'xux'
-          ? 'Simulación: recompensa diaria de Chuches reclamada.'
-          : 'Simulación: recompensa diaria de Chuchemon reclamada.';
-        setTimeout(() => this.successMessage = null, 2500);
-      }
+  debugReset(): void {
+    this.http.post('http://localhost:8000/api/daily-rewards/reset', {}).subscribe({
+      next: () => { this.configService.refreshDailyRewards(); },
+      error: () => {}
+    });
+  }
 }

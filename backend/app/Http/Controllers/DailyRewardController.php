@@ -21,23 +21,17 @@ class DailyRewardController extends Controller
 
     /**
      * Calcula cuántos slots ocupa un item de la mochila.
-     * - Vacunas: NO apilables (1 vacuna = 1 slot)
      * - Items no_apilable: NO apilables (1 item = 1 slot)
-     * - Xuxes y otros: Apilables (5 por slot)
+     * - Todo lo demás (xuxes, vacunas): Apilables (5 por slot)
      */
     private static function calculateItemSlots($item): int
     {
-        // Vacunas: NO apilables
-        if ($item->vaccine_id) {
-            return $item->quantity;
-        }
-        
-        // Items: verificar si es no_apilable
+        // Items no_apilable: 1 slot por unidad
         if ($item->item_id && $item->item && $item->item->type === 'no_apilable') {
             return $item->quantity;
         }
-        
-        // Xuxes y items apilables: 5 por slot
+
+        // Todo lo demás (xuxes, vacunas): apilable 5 por slot
         return (int) ceil($item->quantity / self::STACK_SIZE);
     }
 
@@ -112,10 +106,8 @@ class DailyRewardController extends Controller
                 }
             }
             
-            // Determinar el stack size según el tipo de item
-            // Vacunas NO son apilables (1 vacuna = 1 slot)
-            // Xuxes e Items SÍ son apilables (5 por slot)
-            $stackSize = ($newItem['type'] === 'vaccine') ? 1 : self::STACK_SIZE;
+            // Todo apilable a 5 por slot (xuxes, vacunas, items apilables)
+            $stackSize = self::STACK_SIZE;
             
             if ($existingRow) {
                 // Ya existe - calcular slots antes y después de añadir
@@ -405,6 +397,28 @@ class DailyRewardController extends Controller
             $this->recalculateNextAvailableIfNeeded($xuxReward, 'daily_xux_hour', '08:00');
             $this->recalculateNextAvailableIfNeeded($chuchemonReward, 'daily_chuchemon_hour', '08:00');
 
+            // Regenerar chuchemon_id si no está asignado, o si el asignado ya lo posee el usuario
+            if ($chuchemonReward) {
+                $claimedToday = $chuchemonReward->claimed_at && $chuchemonReward->claimed_at->isToday();
+
+                if (!$claimedToday) {
+                    $currentId   = $chuchemonReward->chuchemon_id;
+                    $alreadyOwns = $currentId && DB::table('user_chuchemons')
+                        ->where('user_id', $user->id)
+                        ->where('chuchemon_id', $currentId)
+                        ->where('count', '>', 0)
+                        ->exists();
+
+                    if (!$currentId || $alreadyOwns) {
+                        $newC = $this->getRandomUnownedChuchemon($user->id);
+                        if ($newC) {
+                            $chuchemonReward->update(['chuchemon_id' => $newC->id]);
+                            $chuchemonReward->refresh();
+                        }
+                    }
+                }
+            }
+
             // Incluir configuración actual de horarios y cantidades
             $config = [
                 'daily_xux_quantity' => GameSetting::getInt('daily_xux_quantity', 10),
@@ -412,10 +426,18 @@ class DailyRewardController extends Controller
                 'daily_chuchemon_hour' => GameSetting::getValue('daily_chuchemon_hour', '08:00'),
             ];
 
+            // No revelar el chuchemon antes de reclamarlo
+            $chuchemonData = $chuchemonReward ? [
+                'id'               => $chuchemonReward->id,
+                'reward_type'      => $chuchemonReward->reward_type,
+                'claimed_at'       => $chuchemonReward->claimed_at,
+                'next_available_at'=> $chuchemonReward->next_available_at,
+            ] : null;
+
             return response()->json([
-                'xux' => $xuxReward,
-                'chuchemon' => $chuchemonReward,
-                'config' => $config,
+                'xux'      => $xuxReward,
+                'chuchemon'=> $chuchemonData,
+                'config'   => $config,
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error loading daily rewards', [
@@ -474,87 +496,87 @@ class DailyRewardController extends Controller
                 ], 400);
             }
 
-            // Cargar los items completos desde la base de datos
-            $itemIds = array_column($itemsData, 'item_id');
-            $items = Item::whereIn('id', $itemIds)->get()->keyBy('id');
-            
-            // Construir array de items con objetos completos
-            $itemsDistribution = array_map(function($data) use ($items) {
-                return [
-                    'item' => $items[$data['item_id']],
-                    'quantity' => $data['quantity']
-                ];
-            }, $itemsData);
+            // Cargar objetos completos (items y vacunas) según el tipo de cada entrada
+            $itemIds    = array_column(array_filter($itemsData, fn($d) => ($d['type'] ?? 'item') === 'item'), 'item_id');
+            $vaccineIds = array_column(array_filter($itemsData, fn($d) => ($d['type'] ?? '') === 'vaccine'), 'vaccine_id');
 
-            // Preparar array para validación de espacio
-            $itemsToAdd = array_map(function($dist) {
-                return [
-                    'type' => 'item',
-                    'item_id' => $dist['item']->id,
-                    'quantity' => $dist['quantity']
-                ];
-            }, $itemsDistribution);
-            
-            // Validar espacio ANTES de añadir items (considerando slots parcialmente llenos)
-            $spaceCheck = $this->canFitItems($user->id, $itemsToAdd);
-            
-            if (!$spaceCheck['can_fit']) {
-                return response()->json([
-                    'message' => 'Tu mochila está llena. Libera espacio antes de reclamar las Chuches.',
-                    'free_spaces' => $spaceCheck['free_slots'],
-                    'slots_needed' => $spaceCheck['slots_needed'],
-                    'currently_used' => $spaceCheck['currently_used'],
-                ], 400);
-            }
+            $itemsMap    = $itemIds    ? Item::whereIn('id', $itemIds)->get()->keyBy('id')       : collect();
+            $vaccinesMap = $vaccineIds ? Vaccine::whereIn('id', $vaccineIds)->get()->keyBy('id') : collect();
 
-            // Agregar todas las chuches a la mochila
-            foreach ($itemsDistribution as $dist) {
-                $itemRow = MochilaXux::where('user_id', $user->id)
-                    ->where('item_id', $dist['item']->id)
-                    ->whereNull('chuchemon_id')
-                    ->whereNull('vaccine_id')
-                    ->first();
-
-                if ($itemRow) {
-                    $itemRow->increment('quantity', $dist['quantity']);
+            // Construir distribución unificada con objeto completo + tipo
+            $distribution = [];
+            foreach ($itemsData as $data) {
+                $type = $data['type'] ?? 'item';
+                if ($type === 'vaccine') {
+                    $obj = $vaccinesMap[$data['vaccine_id']] ?? null;
                 } else {
-                    MochilaXux::create([
-                        'user_id'  => $user->id,
-                        'item_id'  => $dist['item']->id,
-                        'quantity' => $dist['quantity'],
-                    ]);
+                    $obj = $itemsMap[$data['item_id']] ?? null;
+                }
+                if ($obj) {
+                    $distribution[] = ['type' => $type, 'obj' => $obj, 'quantity' => $data['quantity']];
                 }
             }
 
-            // Actualizar el reward y LIMPIAR items_data (para que se regenere mañana)
-            // Usar forceNextDay = true para garantizar que sea mañana
-            $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '08:00', true);
-            
-            Log::info('Claiming xux reward - setting next_available_at', [
-                'user_id' => $user->id,
-                'current_time' => now()->toDateTimeString(),
-                'next_available_at' => $nextAvailable->toDateTimeString(),
-            ]);
-            
-            $reward->update([
-                'claimed_at' => now(),
-                'next_available_at' => $nextAvailable,
-                'items_data' => null, // Limpiar para que se genere nueva tirada mañana
-            ]);
-            $reward->refresh(); // Refrescar para obtener el valor correcto de la BD
+            // Preparar array para validación de espacio
+            $itemsToAdd = array_map(function($dist) {
+                if ($dist['type'] === 'vaccine') {
+                    return ['type' => 'vaccine', 'vaccine_id' => $dist['obj']->id, 'quantity' => $dist['quantity']];
+                }
+                return ['type' => 'item', 'item_id' => $dist['obj']->id, 'quantity' => $dist['quantity']];
+            }, $distribution);
 
-            // Preparar respuesta con todos los items recibidos
-            $itemsSummary = array_map(function($dist) {
-                return [
-                    'name' => $dist['item']->name,
-                    'quantity' => $dist['quantity'],
-                    'image' => $dist['item']->image
-                ];
-            }, $itemsDistribution);
+            // Validar espacio ANTES de añadir
+            $spaceCheck = $this->canFitItems($user->id, $itemsToAdd);
+            if (!$spaceCheck['can_fit']) {
+                return response()->json([
+                    'message' => 'Tu mochila está llena. Libera espacio antes de reclamar las Chuches.',
+                    'free_spaces'     => $spaceCheck['free_slots'],
+                    'slots_needed'    => $spaceCheck['slots_needed'],
+                    'currently_used'  => $spaceCheck['currently_used'],
+                ], 400);
+            }
+
+            // Agregar a la mochila
+            foreach ($distribution as $dist) {
+                if ($dist['type'] === 'vaccine') {
+                    $row = MochilaXux::where('user_id', $user->id)
+                        ->where('vaccine_id', $dist['obj']->id)
+                        ->whereNull('item_id')->whereNull('chuchemon_id')->first();
+                    if ($row) {
+                        $row->increment('quantity', $dist['quantity']);
+                    } else {
+                        MochilaXux::create(['user_id' => $user->id, 'vaccine_id' => $dist['obj']->id, 'quantity' => $dist['quantity']]);
+                    }
+                } else {
+                    $row = MochilaXux::where('user_id', $user->id)
+                        ->where('item_id', $dist['obj']->id)
+                        ->whereNull('chuchemon_id')->whereNull('vaccine_id')->first();
+                    if ($row) {
+                        $row->increment('quantity', $dist['quantity']);
+                    } else {
+                        MochilaXux::create(['user_id' => $user->id, 'item_id' => $dist['obj']->id, 'quantity' => $dist['quantity']]);
+                    }
+                }
+            }
+
+            $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '08:00', true);
+            $reward->update([
+                'claimed_at'        => now(),
+                'next_available_at' => $nextAvailable,
+                'items_data'        => null,
+            ]);
+            $reward->refresh();
+
+            // Preparar respuesta
+            $itemsSummary = array_map(fn($dist) => [
+                'name'     => $dist['obj']->name,
+                'quantity' => $dist['quantity'],
+                'type'     => $dist['type'],
+            ], $distribution);
 
             return response()->json([
-                'message' => 'Reward reclamado exitosamente',
-                'items' => $itemsSummary,
+                'message'        => 'Reward reclamado exitosamente',
+                'items'          => $itemsSummary,
                 'total_quantity' => array_sum(array_column($itemsSummary, 'quantity')),
                 'next_available_at' => $reward->next_available_at,
             ], 200);
@@ -641,13 +663,18 @@ class DailyRewardController extends Controller
                 ]);
             }
 
-            // Actualizar el reward (forceNextDay = true para garantizar que sea mañana)
+            // Guardar el chuchemon reclamado antes de cambiar el registro
+            $claimedChuchemon = Chuchemon::find($reward->chuchemon_id);
+
+            // Pre-asignar el siguiente Chuchemon (ahora el reclamado ya es del usuario, así no se repite)
+            $nextChuchemon = $this->getRandomUnownedChuchemon($user->id);
             $nextAvailable = $this->nextAvailableAt('daily_chuchemon_hour', '08:00', true);
             $reward->update([
-                'claimed_at' => now(),
+                'claimed_at'        => now(),
                 'next_available_at' => $nextAvailable,
+                'chuchemon_id'      => $nextChuchemon ? $nextChuchemon->id : $reward->chuchemon_id,
             ]);
-            $reward->refresh(); // Refrescar para obtener el valor correcto de la BD
+            $reward->refresh();
 
             Log::info('Chuchemon reward claimed successfully', [
                 'user_id' => $user->id,
@@ -656,10 +683,10 @@ class DailyRewardController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Reward de chuchemon reclamado exitosamente',
-                'chuchemon' => $reward->chuchemon,
-                'chuchemon_id' => $reward->chuchemon_id,
-                'was_new' => !$existing,
+                'message'           => 'Reward de chuchemon reclamado exitosamente',
+                'chuchemon'         => $claimedChuchemon,
+                'chuchemon_id'      => $claimedChuchemon?->id,
+                'was_new'           => !$existing,
                 'next_available_at' => $reward->next_available_at,
             ], 200);
         } catch (\Exception $e) {
@@ -672,12 +699,50 @@ class DailyRewardController extends Controller
         }
     }
 
+    private function getRandomUnownedChuchemon(int $userId): ?Chuchemon
+    {
+        $ownedIds = DB::table('user_chuchemons')
+            ->where('user_id', $userId)
+            ->where('count', '>', 0)
+            ->pluck('chuchemon_id')
+            ->toArray();
+
+        // Preferir Petit no poseídos
+        $q = Chuchemon::where('mida', 'Petit');
+        if (!empty($ownedIds)) {
+            $q->whereNotIn('id', $ownedIds);
+        }
+        $chuchemon = $q->inRandomOrder()->first();
+
+        // Si todos los Petit ya son poseídos, cualquier talla no poseída
+        if (!$chuchemon && !empty($ownedIds)) {
+            $chuchemon = Chuchemon::whereNotIn('id', $ownedIds)->inRandomOrder()->first();
+        }
+
+        // Fallback: cualquier Petit aunque ya lo tenga
+        if (!$chuchemon) {
+            $chuchemon = Chuchemon::where('mida', 'Petit')->inRandomOrder()->first();
+        }
+
+        return $chuchemon;
+    }
+
+    public function debugReset(): JsonResponse
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        DailyReward::where('user_id', $user->id)->update([
+            'next_available_at' => now(),
+            'claimed_at'        => null,
+        ]);
+        return response()->json(['message' => 'Recompensas reseteadas']);
+    }
+
     /**
      * Crea un daily reward de xuxes
      */
     private function createDailyXuxReward($userId): DailyReward
     {
-        $item = Item::where('type', '!=', 'no_apilable')->inRandomOrder()->first();
+        $item = Item::where('type', 'apilable')->where('name', 'like', 'Xux de %')->inRandomOrder()->first();
         if (!$item) {
             $item = Item::query()->firstOrCreate(
                 ['name' => Item::NAME_XUX_MADUIXA],
@@ -705,50 +770,67 @@ class DailyRewardController extends Controller
     }
 
     /**
-     * Genera una distribución aleatoria de items (2-3 tipos diferentes)
+     * Genera una distribución aleatoria de items (2-3 tipos diferentes).
+     * Mezcla chuches (Xux de X), Xux Exp y vacunas.
      */
     private function generateItemsDistribution(int $totalQuantity): array
     {
-        // Obtener todos los items apilables disponibles
-        $availableItems = Item::where('type', '!=', 'no_apilable')->get();
-        
-        if ($availableItems->count() < 2) {
-            // Fallback: si no hay suficientes items, devolver uno solo
-            $item = $availableItems->first();
-            return [
-                [
-                    'item_id' => $item->id,
-                    'quantity' => $totalQuantity,
-                ]
-            ];
+        // Combinar todos los items apilables y vacunas en un pool unificado
+        $itemPool = Item::where('type', 'apilable')->get()->map(fn($i) => [
+            'type'    => 'item',
+            'id'      => $i->id,
+            'name'    => $i->name,
+        ]);
+        $vaccinePool = Vaccine::all()->map(fn($v) => [
+            'type'    => 'vaccine',
+            'id'      => $v->id,
+            'name'    => $v->name,
+        ]);
+        $available = $itemPool->merge($vaccinePool)->values();
+
+        if ($available->count() < 2) {
+            $first = $available->first();
+            $key = $first['type'] === 'vaccine' ? 'vaccine_id' : 'item_id';
+            return [['type' => $first['type'], $key => $first['id'], 'quantity' => $totalQuantity]];
         }
 
-        // Decidir cuántos tipos diferentes dar (2 o 3 aleatorio)
-        $numTypes = rand(2, min(3, $availableItems->count()));
-        
-        // Seleccionar items aleatorios sin repetir
-        $selectedItems = $availableItems->random($numTypes);
-        
-        // Distribuir la cantidad total aleatoriamente entre los items seleccionados
+        // 2 o 3 tipos, con probabilidad igual para cada elemento del pool
+        $numTypes = rand(2, min(3, $available->count()));
+        $selected = $available->random($numTypes)->values();
+
+        // Las vacunas van primero con 1 unidad fija; los items reciben el resto
         $distribution = [];
         $remaining = $totalQuantity;
-        
-        foreach ($selectedItems as $index => $item) {
-            if ($index === $numTypes - 1) {
-                // Último item: dar todo lo que queda
+
+        // Primer paso: asignar 1 unidad a cada vacuna seleccionada
+        $itemEntries = [];
+        foreach ($selected as $entry) {
+            if ($entry['type'] === 'vaccine') {
+                $distribution[] = ['type' => 'vaccine', 'vaccine_id' => $entry['id'], 'quantity' => 1];
+                $remaining -= 1;
+            } else {
+                $itemEntries[] = $entry;
+            }
+        }
+
+        // Segundo paso: repartir las unidades restantes entre los items apilables
+        $itemCount = count($itemEntries);
+        foreach ($itemEntries as $idx => $entry) {
+            if ($idx === $itemCount - 1 || $itemCount === 0) {
                 $quantity = $remaining;
             } else {
-                // Items anteriores: dar entre 1 y lo que queda menos (numTypes - index - 1)
-                $minQuantity = 1;
-                $maxQuantity = $remaining - ($numTypes - $index - 1);
-                $quantity = rand($minQuantity, $maxQuantity);
+                $quantity = rand(1, $remaining - ($itemCount - $idx - 1));
                 $remaining -= $quantity;
             }
-            
-            $distribution[] = [
-                'item_id' => $item->id,
-                'quantity' => $quantity
-            ];
+            $distribution[] = ['type' => 'item', 'item_id' => $entry['id'], 'quantity' => $quantity];
+        }
+
+        // Si todos los seleccionados eran vacunas, dar el resto a un item aleatorio
+        if ($itemCount === 0 && $remaining > 0) {
+            $fallback = Item::where('type', 'apilable')->inRandomOrder()->first();
+            if ($fallback) {
+                $distribution[] = ['type' => 'item', 'item_id' => $fallback->id, 'quantity' => $remaining];
+            }
         }
 
         return $distribution;

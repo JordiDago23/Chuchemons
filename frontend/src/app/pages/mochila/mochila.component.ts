@@ -269,7 +269,7 @@ export class MochilaComponent implements OnInit, OnDestroy {
 
   get totalVacunaSlots(): number {
     const vacunaItems = this.mochilaXuxes.filter(i => i.vaccine_id);
-    return vacunaItems.reduce((sum, i) => sum + i.quantity, 0);
+    return vacunaItems.reduce((sum, i) => sum + Math.ceil(i.quantity / this.MAX_STACK), 0);
   }
 
   get totalXuxQuantity(): number {
@@ -314,12 +314,11 @@ export class MochilaComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Vacuna slots: cada UNIDAD de vacuna ocupa 1 slot individual
+    // Vacuna slots: apilables 5 por slot (igual que xuxes)
     const vacunaRecords = this.mochilaXuxes.filter(i => i.vaccine_id && i.vaccine);
-    
+
     for (const record of vacunaRecords) {
-      // Crear 1 slot por cada unidad de vacuna (quantity puede ser > 1)
-      for (let u = 0; u < record.quantity; u++) {
+      for (const qty of this.xuxSlotBreakdownForItem(record)) {
         if (slotIndex > this.MAX_SPACES) break;
         const vacunaItem: VacunaItem = {
           id: record.vaccine!.id,
@@ -328,15 +327,15 @@ export class MochilaComponent implements OnInit, OnDestroy {
           description: record.vaccine!.description ?? '',
           imageUrl: '',
           tag: 'Vacuna',
-          quantity: 1
+          quantity: record.quantity
         };
-        slots.push({ 
-          index: slotIndex++, 
-          kind: 'vacuna', 
-          label: record.vaccine!.name, 
+        slots.push({
+          index: slotIndex++,
+          kind: 'vacuna',
+          label: record.vaccine!.name,
           vacunaItem,
-          slotQty: 1,
-          mochilaRecordId: record.id // ID del registro en mochila_xuxes
+          slotQty: qty,
+          mochilaRecordId: record.id
         });
       }
     }

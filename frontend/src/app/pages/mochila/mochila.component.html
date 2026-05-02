@@ -101,7 +101,7 @@
             <div class="inv-card inv-card-vacuna">
               <button class="card-delete-btn" (click)="deleteItem(slot, $event)" title="Eliminar vacuna">×</button>
               <span class="card-slot-num">#{{ slot.index }}</span>
-              <span class="card-qty">x1</span>
+              <span class="card-qty">x{{ slot.slotQty }}</span>
               <div class="card-icon">
                 <span>{{ getVaccineEmoji(slot.vacunaItem.name) }}</span>
               </div>
