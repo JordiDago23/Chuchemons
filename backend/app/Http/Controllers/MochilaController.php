@@ -21,12 +21,17 @@ class MochilaController extends Controller
      */
     private static function calculateItemSlots($item): int
     {
+        // Vacunas: NO apilables (1 vacuna = 1 slot)
+        if ($item->vaccine_id) {
+            return $item->quantity;
+        }
+        
         // Items no_apilable: 1 slot por unidad
         if ($item->item_id && $item->item && $item->item->type === 'no_apilable') {
             return $item->quantity;
         }
 
-        // Todo lo demás (xuxes, vacunas): apilable 5 por slot
+        // Xuxes y items apilables: 5 por slot
         return (int) ceil($item->quantity / self::STACK_SIZE);
     }
 
@@ -92,8 +97,18 @@ class MochilaController extends Controller
             }
             
             // Determinar el stack size según el tipo de item
-            // Todo apilable a 5 por slot (xuxes, vacunas, items apilables)
-            $stackSize = self::STACK_SIZE;
+            // Vacunas NO son apilables (1 vacuna = 1 slot)
+            // Xuxes e Items SÍ son apilables (5 por slot)
+            $stackSize = ($newItem['type'] === 'vaccine') ? 1 : self::STACK_SIZE;
+            
+            // Items no_apilable: verificar si existe y tiene type no_apilable
+            if ($newItem['type'] === 'item' && isset($newItem['item_id'])) {
+                // Buscar el item para verificar si es no_apilable
+                $itemModel = \App\Models\Item::find($newItem['item_id']);
+                if ($itemModel && $itemModel->type === 'no_apilable') {
+                    $stackSize = 1; // NO apilable
+                }
+            }
             
             if ($existingRow) {
                 // Ya existe - calcular slots antes y después de añadir
