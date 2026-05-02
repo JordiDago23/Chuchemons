@@ -48,10 +48,15 @@ export class BatallaComponent implements OnInit, OnDestroy {
   actionLoading = '';
   success = '';
   error = '';
+  diceRolling = false;
   currentBattleId: number | null = null;
+  showResultOverlay = false;
+  resultAnimDone = false;
+  readonly particles = [1,2,3,4,5,6,7,8,9,10,11,12];
 
   private readonly destroy$ = new Subject<void>();
   private pollingSubscription: Subscription | null = null;
+  private overviewSub: Subscription | null = null;
 
   constructor(
     private auth: AuthService,
@@ -79,6 +84,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
       if (battleId > 0) {
         this.currentBattleId = battleId;
+        this.stopOverviewPolling();
         this.fetchBattle(battleId);
         return;
       }
@@ -88,6 +94,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
       this.myRoster = [];
       this.opponentRoster = [];
       this.loadOverview(true);
+      this.startOverviewPolling();
     });
 
     this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
@@ -104,6 +111,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+    this.stopOverviewPolling();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -211,6 +219,9 @@ export class BatallaComponent implements OnInit, OnDestroy {
         this.myRoster = response.my_roster ?? [];
         this.opponentRoster = response.opponent_roster ?? [];
         this.battleLoading = false;
+        if (response.battle.status === 'completed') {
+          this.triggerResultOverlay();
+        }
         this.startPollingIfNeeded();
       },
       error: (err) => {
@@ -224,42 +235,84 @@ export class BatallaComponent implements OnInit, OnDestroy {
     this.stopPolling();
     const battle = this.selectedBattle;
     const userId = this.user?.id;
-    if (!battle || !userId) {
-      return;
-    }
+    if (!battle || !userId) return;
 
     const waitingForOpponentSelect = battle.status === 'pending_selection' && !!battle.my_selection;
-    const loserWaitingForClaim = battle.status === 'completed' && !battle.winner_chuchemon_id && battle.winner_id !== userId;
+    const inCombatRivalTurn        = battle.status === 'in_combat' && !battle.is_my_turn;
+    const loserWaitingForClaim     = battle.status === 'completed' && !battle.winner_chuchemon_id && battle.winner_id !== userId;
 
-    if (!waitingForOpponentSelect && !loserWaitingForClaim) {
-      return;
-    }
+    if (!waitingForOpponentSelect && !inCombatRivalTurn && !loserWaitingForClaim) return;
 
-    this.pollingSubscription = interval(4000)
+    this.pollingSubscription = interval(2000)
       .pipe(
         takeUntil(this.destroy$),
         switchMap(() =>
-          this.currentBattleId
-            ? this.battleService.getBattle(this.currentBattleId)
-            : EMPTY
+          this.currentBattleId ? this.battleService.getBattle(this.currentBattleId) : EMPTY
         )
       )
       .subscribe({
         next: (response: BattleDetailsResponse) => {
+          if (response.battle.status === 'cancelled') {
+            this.stopPolling();
+            this.error = 'Tu rival abandonó la batalla.';
+            setTimeout(() => this.router.navigate(['/batalla']), 2000);
+            return;
+          }
+
           this.selectedBattle = response.battle;
           this.myRoster = response.my_roster ?? this.myRoster;
           this.opponentRoster = response.opponent_roster ?? this.opponentRoster;
 
-          const done =
-            (response.battle.status === 'completed' && !!response.battle.winner_chuchemon_id) ||
-            (response.battle.status === 'completed' && response.battle.winner_id === userId);
-
-          if (done) {
+          // Si el combate pasó a ser mi turno, parar el polling (el jugador ahora actúa)
+          if (response.battle.status === 'in_combat' && response.battle.is_my_turn) {
             this.stopPolling();
-            this.loadOverview(true);
+            return;
+          }
+
+          if (response.battle.status === 'completed') {
+            this.triggerResultOverlay();
+            const isLoser = response.battle.winner_id !== this.user?.id;
+            const claimed = !!response.battle.winner_chuchemon_id;
+            if (!isLoser || claimed) {
+              this.stopPolling();
+              this.loadOverview(true);
+            }
           }
         },
       });
+  }
+
+  private triggerResultOverlay(): void {
+    if (!this.showResultOverlay && this.hasResult) {
+      this.showResultOverlay = true;
+      setTimeout(() => { this.resultAnimDone = true; }, 2200);
+    }
+  }
+
+  goBack(): void {
+    this.stopPolling();
+    this.showResultOverlay = false;
+    this.resultAnimDone = false;
+    this.router.navigate(['/batalla']);
+    // overview polling se arrancará cuando el paramMap detecte battleId=null
+  }
+
+  private startOverviewPolling(): void {
+    this.stopOverviewPolling();
+    this.overviewSub = interval(5000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (!this.isCombatPage) {
+          this.loadOverview(true);
+        }
+      });
+  }
+
+  private stopOverviewPolling(): void {
+    if (this.overviewSub) {
+      this.overviewSub.unsubscribe();
+      this.overviewSub = null;
+    }
   }
 
   private stopPolling(): void {
@@ -295,8 +348,27 @@ export class BatallaComponent implements OnInit, OnDestroy {
   }
 
   closeBattlePanel(): void {
-    this.stopPolling();
-    this.router.navigate(['/batalla']);
+    const status = this.selectedBattle?.status;
+    if (!this.selectedBattle || (status !== 'pending_selection' && status !== 'in_combat')) {
+      this.stopPolling();
+      this.router.navigate(['/batalla']);
+      return;
+    }
+
+    this.actionLoading = 'cancel';
+    this.battleService.cancelBattle(this.selectedBattle.id).subscribe({
+      next: () => {
+        this.actionLoading = '';
+        this.stopPolling();
+        this.router.navigate(['/batalla']);
+      },
+      error: () => {
+        // Si falla (ej. ya completada), salimos igualmente
+        this.actionLoading = '';
+        this.stopPolling();
+        this.router.navigate(['/batalla']);
+      }
+    });
   }
 
   get isCombatPage(): boolean {
@@ -337,9 +409,9 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
     this.battleService.claimChuchemon(this.selectedBattle.id, chuchemonId).subscribe({
       next: (response) => {
-        this.success = response.message;
         this.actionLoading = '';
         this.selectedBattle = response.battle;
+        this.stopPolling();
         this.loadOverview(true);
       },
       error: (err: any) => {
@@ -349,16 +421,62 @@ export class BatallaComponent implements OnInit, OnDestroy {
     });
   }
 
+  rollDice(): void {
+    if (!this.selectedBattle || this.diceRolling) return;
+    this.diceRolling = true;
+    this.error = '';
+
+    this.battleService.rollDice(this.selectedBattle.id).subscribe({
+      next: (response) => {
+        this.selectedBattle = response.battle;
+        this.diceRolling = false;
+        if (!response.battle_over) {
+          this.startPollingIfNeeded();
+        } else {
+          this.triggerResultOverlay();
+          this.loadOverview(true);
+        }
+      },
+      error: (err) => {
+        this.error = err.error?.message ?? 'Error al tirar el dado.';
+        this.diceRolling = false;
+      }
+    });
+  }
+
+  get isMyTurn(): boolean {
+    return !!this.selectedBattle?.is_my_turn;
+  }
+
+  get isInCombat(): boolean {
+    return this.selectedBattle?.status === 'in_combat';
+  }
+
+  get myHpPercent(): number {
+    const b = this.selectedBattle;
+    if (!b || b.my_current_hp == null) return 100;
+    const max = this.myFighter?.max_hp ?? 100;
+    return Math.max(0, Math.round((b.my_current_hp / max) * 100));
+  }
+
+  get opponentHpPercent(): number {
+    const b = this.selectedBattle;
+    if (!b || b.opponent_current_hp == null) return 100;
+    const max = this.opponentFighter?.max_hp ?? 100;
+    return Math.max(0, Math.round((b.opponent_current_hp / max) * 100));
+  }
+
   get hasBothSelections(): boolean {
     return !!this.selectedBattle?.my_selection && !!this.selectedBattle?.opponent_selection;
   }
 
   get battlePhaseLabel(): string {
-    if (!this.selectedBattle) {
-      return '';
+    if (!this.selectedBattle) return '';
+    switch (this.selectedBattle.status) {
+      case 'in_combat':  return this.isMyTurn ? '⚔️ Tu turno' : '⏳ Turno del rival';
+      case 'completed':  return 'Resultado final';
+      default:           return 'Esperando selección';
     }
-
-    return this.selectedBattle.status === 'completed' ? 'Resultado final' : 'Esperando selección';
   }
 
   get myFighter(): BattleRosterEntry | null {
@@ -482,6 +600,11 @@ export class BatallaComponent implements OnInit, OnDestroy {
     }
 
     return value >= 0 ? `+${value}` : `${value}`;
+  }
+
+  sizeLabel(mida: string | null | undefined): string {
+    const map: Record<string, string> = { Petit: 'Pequeño', 'Mitjà': 'Mediano', Mitja: 'Mediano', Gran: 'Grande' };
+    return mida ? (map[mida] ?? mida) : '-';
   }
 
   imageFor(entry: BattleRosterEntry | null): string {

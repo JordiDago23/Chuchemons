@@ -120,7 +120,7 @@
             <div class="list-item">
               <div>
                 <strong>vs {{ battle.opponent?.display_name || battle.opponent?.player_id || 'Rival' }}</strong>
-                <p>{{ battle.status === 'pending_selection' ? 'Pendiente de selección' : 'Completada' }}</p>
+                <p>{{ battle.status === 'pending_selection' ? 'Pendiente de selección' : battle.status === 'in_combat' ? 'En combate' : 'Completada' }}</p>
               </div>
               <button class="primary-btn" (click)="openBattle(battle.id)">Abrir</button>
             </div>
@@ -186,43 +186,108 @@
             <h2>Batalla en Curs</h2>
             <p>Batalla #{{ selectedBattle.id }} · {{ battlePhaseLabel }}</p>
           </div>
-          <button class="ghost-btn" (click)="closeBattlePanel()">Retirar-se</button>
+          @if (selectedBattle?.status === 'pending_selection' || selectedBattle?.status === 'in_combat') {
+            <button class="danger-btn" (click)="closeBattlePanel()" [disabled]="actionLoading === 'cancel'">
+              {{ actionLoading === 'cancel' ? 'Cancelando...' : 'Abandonar batalla' }}
+            </button>
+          } @else {
+            <button class="ghost-btn" (click)="closeBattlePanel()">Volver</button>
+          }
         </div>
 
         <div class="battle-fighters-grid">
-          <article class="fighter-card">
-            <div class="fighter-tag">El teu Xuxemon</div>
+          <!-- ── Mi luchador ── -->
+          <article class="fighter-card" [class.my-turn]="isMyTurn && isInCombat">
+            <div class="fighter-tag">Tu Xuxemon</div>
             <img class="fighter-image" [src]="imageFor(myFighter)" [alt]="myFighter?.name || 'Tu Xuxemon'" />
             <div class="fighter-name-row">
               <h3>{{ myFighter?.name || 'Selecciona un Xuxemon' }}</h3>
-              <span class="fighter-level">Nv. {{ myFighter?.level || '-' }}</span>
+              <span class="fighter-level">{{ sizeLabel(myFighter?.current_mida) }}</span>
             </div>
-            <p class="fighter-hp-text">Punts de Vida: {{ myFighter?.current_hp ?? '-' }} / {{ myFighter?.max_hp ?? '-' }}</p>
-            <div class="hp-track">
-              <span class="hp-fill" [style.width.%]="myFighter?.hp_percent || 0"></span>
-            </div>
+
+            @if (isInCombat || hasResult) {
+              <p class="fighter-hp-text">
+                HP: {{ selectedBattle?.my_current_hp ?? myFighter?.current_hp ?? '-' }}
+                / {{ myFighter?.max_hp ?? '-' }}
+              </p>
+              <div class="hp-track">
+                <span class="hp-fill" [style.width.%]="myHpPercent"
+                  [class.hp-low]="myHpPercent <= 25"
+                  [class.hp-mid]="myHpPercent > 25 && myHpPercent <= 50"></span>
+              </div>
+            } @else {
+              <p class="fighter-hp-text">HP: {{ myFighter?.current_hp ?? '-' }} / {{ myFighter?.max_hp ?? '-' }}</p>
+              <div class="hp-track">
+                <span class="hp-fill" [style.width.%]="myFighter?.hp_percent || 0"></span>
+              </div>
+            }
+
             <div class="fighter-stats-row">
               <div><small>Atac</small><strong>{{ myFighter?.attack ?? '-' }}</strong></div>
-              <div><small>Defensa</small><strong>{{ myFighter?.defense ?? '-' }}</strong></div>
-              <div><small>Velocitat</small><strong>{{ myFighter?.speed ?? '-' }}</strong></div>
+              <div><small>Def</small><strong>{{ myFighter?.defense ?? '-' }}</strong></div>
+              <div><small>Vel</small><strong>{{ myFighter?.speed ?? '-' }}</strong></div>
             </div>
           </article>
 
-          <article class="fighter-card rival">
-            <div class="fighter-tag">Oponent</div>
+          <!-- ── Dado central ── -->
+          <div class="dice-center">
+            @if (isInCombat) {
+              <div class="dice-wrapper" [class.rolling]="diceRolling">
+                <div class="dice-face">
+                  {{ selectedBattle?.last_roll?.roll ?? '?' }}
+                </div>
+              </div>
+
+              @if (selectedBattle?.last_roll) {
+                <div class="last-roll-info">
+                  <small>+{{ selectedBattle!.last_roll!.size_mod }} tam</small>
+                  <small>{{ selectedBattle!.last_roll!.type_mod >= 0 ? '+' : '' }}{{ selectedBattle!.last_roll!.type_mod }} tipo</small>
+                  <strong class="damage-dealt">-{{ selectedBattle!.last_roll!.damage }} HP</strong>
+                </div>
+              }
+
+              @if (isMyTurn) {
+                <button class="roll-btn" (click)="rollDice()" [disabled]="diceRolling">
+                  {{ diceRolling ? '...' : '🎲 Tirar dado' }}
+                </button>
+              } @else {
+                <p class="waiting-roll">Esperando al rival...</p>
+              }
+            } @else if (!isInCombat && !hasResult) {
+              <div class="dice-face dice-idle">?</div>
+            }
+          </div>
+
+          <!-- ── Luchador rival ── -->
+          <article class="fighter-card rival" [class.my-turn]="!isMyTurn && isInCombat">
+            <div class="fighter-tag">Rival</div>
             <img class="fighter-image" [src]="imageFor(opponentFighter)" [alt]="opponentFighter?.name || 'Xuxemon rival'" />
             <div class="fighter-name-row">
               <h3>{{ opponentFighter?.name || 'Esperando selección rival' }}</h3>
-              <span class="fighter-level">Nv. {{ opponentFighter?.level || '-' }}</span>
+              <span class="fighter-level">{{ sizeLabel(opponentFighter?.current_mida) }}</span>
             </div>
-            <p class="fighter-hp-text">Punts de Vida: {{ opponentFighter?.current_hp ?? '-' }} / {{ opponentFighter?.max_hp ?? '-' }}</p>
-            <div class="hp-track">
-              <span class="hp-fill" [style.width.%]="opponentFighter?.hp_percent || 0"></span>
-            </div>
+
+            @if (isInCombat || hasResult) {
+              <p class="fighter-hp-text">
+                HP: {{ selectedBattle?.opponent_current_hp ?? opponentFighter?.current_hp ?? '-' }}
+                / {{ opponentFighter?.max_hp ?? '-' }}
+              </p>
+              <div class="hp-track">
+                <span class="hp-fill" [style.width.%]="opponentHpPercent"
+                  [class.hp-low]="opponentHpPercent <= 25"
+                  [class.hp-mid]="opponentHpPercent > 25 && opponentHpPercent <= 50"></span>
+              </div>
+            } @else {
+              <p class="fighter-hp-text">HP: {{ opponentFighter?.current_hp ?? '-' }} / {{ opponentFighter?.max_hp ?? '-' }}</p>
+              <div class="hp-track">
+                <span class="hp-fill" [style.width.%]="opponentFighter?.hp_percent || 0"></span>
+              </div>
+            }
+
             <div class="fighter-stats-row">
               <div><small>Atac</small><strong>{{ opponentFighter?.attack ?? '-' }}</strong></div>
-              <div><small>Defensa</small><strong>{{ opponentFighter?.defense ?? '-' }}</strong></div>
-              <div><small>Velocitat</small><strong>{{ opponentFighter?.speed ?? '-' }}</strong></div>
+              <div><small>Def</small><strong>{{ opponentFighter?.defense ?? '-' }}</strong></div>
+              <div><small>Vel</small><strong>{{ opponentFighter?.speed ?? '-' }}</strong></div>
             </div>
           </article>
         </div>
@@ -255,60 +320,98 @@
         }
 
         <section class="card">
-          <h3>Registre de Batalla</h3>
+          <h3>Registro de combate</h3>
           <div class="battle-log">
-            @for (line of battleLogLines; track $index) {
-              <p>• {{ line }}</p>
+            @if (!selectedBattle?.combat_log?.length) {
+              <p class="log-empty">El combate aún no ha empezado.</p>
+            }
+            @for (entry of (selectedBattle?.combat_log ?? []); track entry.turn) {
+              <div class="log-entry" [class.my-attack]="entry.attacker_id === user?.id">
+                <span class="log-turn">T{{ entry.turn }}</span>
+                <span class="log-text">
+                  <strong>{{ entry.attacker_name }}</strong> tira
+                  <strong>{{ entry.roll }}</strong>
+                  (tam {{ entry.size_mod >= 0 ? '+' : '' }}{{ entry.size_mod }},
+                   tipo {{ entry.type_mod >= 0 ? '+' : '' }}{{ entry.type_mod }})
+                  → ataque {{ entry.attack_total }} vs def {{ entry.defense }}
+                  → <strong>{{ entry.damage }} daño</strong>
+                  · {{ entry.defender_name }}: {{ entry.hp_after }} HP
+                </span>
+              </div>
             }
           </div>
         </section>
 
-        @if (!battleLoading && hasResult) {
-          <div class="result-box" [class.win]="didIWin" [class.lose]="!didIWin">
-            <h3>{{ didIWin ? 'Victoria' : 'Derrota' }}</h3>
-            <p>{{ resultText }}</p>
-
-            @if (selectedBattle.result_payload) {
-              <div class="result-grid">
-                <div>
-                  <span>Tu tirada</span>
-                  <strong>{{ myRoll() ?? '-' }}</strong>
-                </div>
-                <div>
-                  <span>Rival tirada</span>
-                  <strong>{{ opponentRoll() ?? '-' }}</strong>
-                </div>
-                <div>
-                  <span>Tipo (tu)</span>
-                  <strong>{{ formatSigned(myTypeMod()) }}</strong>
-                </div>
-                <div>
-                  <span>Tipo (rival)</span>
-                  <strong>{{ formatSigned(opponentTypeMod()) }}</strong>
-                </div>
-                <div>
-                  <span>Tamaño (tu)</span>
-                  <strong>{{ formatSigned(mySizeMod()) }}</strong>
-                </div>
-                <div>
-                  <span>Tamaño (rival)</span>
-                  <strong>{{ formatSigned(opponentSizeMod()) }}</strong>
-                </div>
-                <div>
-                  <span>Tu total</span>
-                  <strong>{{ myTotal() ?? '-' }}</strong>
-                </div>
-                <div>
-                  <span>Rival total</span>
-                  <strong>{{ opponentTotal() ?? '-' }}</strong>
-                </div>
-              </div>
-            }
-          </div>
-        }
       </section>
       }
+
+      <!-- ── Overlay de victoria / derrota ── -->
+      @if (showResultOverlay && hasResult) {
+        <div class="result-overlay" [class.win-overlay]="didIWin" [class.lose-overlay]="!didIWin">
+
+          <!-- Partículas de fondo (victoria) -->
+          @if (didIWin) {
+            <div class="particles" aria-hidden="true">
+              @for (p of particles; track p) {
+                <span class="particle"></span>
+              }
+            </div>
+          }
+
+          <div class="result-anim-block">
+            <div class="result-emoji">{{ didIWin ? '🏆' : '💀' }}</div>
+            <h1 class="result-heading">{{ didIWin ? '¡VICTORIA!' : 'DERROTA' }}</h1>
+            <p class="result-sub">{{ didIWin ? '¡Has ganado la batalla!' : 'Has perdido la batalla.' }}</p>
+          </div>
+
+          <div class="claim-area" [class.claim-visible]="resultAnimDone">
+
+            @if (canClaim) {
+              <div class="claim-box">
+                <h3>Elige el Xuxemon que quieres robar</h3>
+                <div class="roster-grid">
+                  @for (entry of opponentRoster; track entry.id) {
+                    <button
+                      class="roster-card"
+                      (click)="claimFromBattle(entry.id)"
+                      [disabled]="actionLoading !== ''">
+                      <div>
+                        <strong>{{ entry.name }}</strong>
+                        <p>Nv.{{ entry.level }} · {{ entry.element }}</p>
+                        <small>HP {{ entry.current_hp }}/{{ entry.max_hp }}</small>
+                      </div>
+                      <span class="steal-btn">{{ isLoadingAction('claim', entry.id) ? '...' : '⚡ Robar' }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+            } @else if (didIWin && selectedBattle?.winner_chuchemon_id) {
+              <div class="claimed-box">
+                <div class="claimed-icon">✅</div>
+                <p class="claimed-text">¡Xuxemon robado y añadido a tu Chuchedex!</p>
+                <button class="back-btn" (click)="goBack()">Volver al menú</button>
+              </div>
+
+            } @else if (!didIWin && !selectedBattle?.winner_chuchemon_id) {
+              <div class="waiting-claim-box">
+                <div class="spinner"></div>
+                <p class="waiting-msg">El rival está eligiendo su botín...</p>
+              </div>
+
+            } @else if (!didIWin && selectedBattle?.winner_chuchemon_id) {
+              <div class="claimed-box">
+                <div class="claimed-icon">💔</div>
+                <p class="claimed-text">El rival te ha robado un Xuxemon.</p>
+                <button class="back-btn" (click)="goBack()">Volver al menú</button>
+              </div>
+            }
+
+          </div>
+        </div>
+      }
     }
+
 
 </app-main-layout>
 

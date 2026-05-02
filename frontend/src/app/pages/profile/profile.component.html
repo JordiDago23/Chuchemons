@@ -226,13 +226,13 @@
             </div>
           </div>
           <div class="stats-card">
-            <h2>Estadisticas de batalla</h2>
+            <h2>Estadísticas de colección</h2>
             <div class="capture-header">
-              <span>Xuxemons Capturados</span>
-              <span class="capture-count">{{ stats.captured }}/{{ stats.captured + 1 }}</span>
+              <span>Xuxemons capturados</span>
+              <span class="capture-count">{{ stats.captured }}/{{ stats.total }}</span>
             </div>
-            <div class="capture-bar"><div class="capture-fill" [style.width.%]="xpPercent"></div></div>
-            <p class="capture-pct">{{ xpPercent }}% completado</p>
+            <div class="capture-bar"><div class="capture-fill" [style.width.%]="capturePercent"></div></div>
+            <p class="capture-pct">{{ capturePercent }}% completado</p>
             @for (t of typeStats; track t.type) {
               <div class="type-stat" [style.background]="t.color + '18'">
                 <span>{{ t.type }}</span>

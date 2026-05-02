@@ -49,9 +49,25 @@ export interface BattleResultPayload {
   stolen: boolean;
 }
 
+export interface CombatLogEntry {
+  turn: number;
+  attacker_id: number;
+  attacker_name: string;
+  defender_name: string;
+  roll: number;
+  size_mod: number;
+  type_mod: number;
+  attack: number;
+  attack_total: number;
+  defense: number;
+  damage: number;
+  hp_before: number;
+  hp_after: number;
+}
+
 export interface BattleSummary {
   id: number;
-  status: 'pending_selection' | 'completed';
+  status: 'pending_selection' | 'in_combat' | 'completed' | 'cancelled';
   challenger_id: number;
   challenged_id: number;
   created_at?: string | null;
@@ -65,6 +81,13 @@ export interface BattleSummary {
   loser_chuchemon_id: number | null;
   can_claim?: boolean;
   result_payload?: BattleResultPayload | null;
+  // Combate por turnos
+  current_turn_id: number | null;
+  is_my_turn: boolean;
+  my_current_hp: number | null;
+  opponent_current_hp: number | null;
+  last_roll: CombatLogEntry | null;
+  combat_log: CombatLogEntry[];
 }
 
 export interface BattleRequestSummary {
@@ -132,5 +155,15 @@ export class BattleService {
     return this.http.post<{ message: string; battle: BattleSummary }>(`${this.apiUrl}/battle/${battleId}/claim`, {
       chuchemon_id: chuchemonId,
     });
+  }
+
+  rollDice(battleId: number): Observable<{ message: string; battle: BattleSummary; last_roll: CombatLogEntry; battle_over: boolean }> {
+    return this.http.post<{ message: string; battle: BattleSummary; last_roll: CombatLogEntry; battle_over: boolean }>(
+      `${this.apiUrl}/battle/${battleId}/roll`, {}
+    );
+  }
+
+  cancelBattle(battleId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/battle/${battleId}`);
   }
 }

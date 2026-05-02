@@ -70,7 +70,7 @@ class BattleController extends Controller
             'challenged:id,nombre,apellidos,email,player_id,bio,last_seen_at',
             'selections',
         ])
-            ->where('status', 'pending_selection')
+            ->whereIn('status', ['pending_selection', 'in_combat'])
             ->where(function ($query) use ($user) {
                 $query->where('challenger_id', $user->id)
                     ->orWhere('challenged_id', $user->id);
@@ -295,12 +295,31 @@ class BattleController extends Controller
             ]);
         }
 
-        $resolved = $this->resolveBattle($battle->id, (int) $user->id);
+        // Ambos han seleccionado → iniciar combate por turnos
+        $challengerSel = $battle->selections->firstWhere('user_id', $battle->challenger_id);
+        $challengedSel  = $battle->selections->firstWhere('user_id', $battle->challenged_id);
+
+        $fighterA = $this->getOwnedFighter((int) $battle->challenger_id, (int) $challengerSel->chuchemon_id);
+        $fighterB = $this->getOwnedFighter((int) $battle->challenged_id, (int) $challengedSel->chuchemon_id);
+
+        // El de más velocidad empieza; empate → el challenger
+        $firstTurnId = ((int) ($fighterB->speed ?? 0) > (int) ($fighterA->speed ?? 0))
+            ? (int) $battle->challenged_id
+            : (int) $battle->challenger_id;
+
+        $battle->update([
+            'status'                 => 'in_combat',
+            'challenger_current_hp'  => (int) ($fighterA->current_hp ?? $fighterA->max_hp ?? 100),
+            'challenged_current_hp'  => (int) ($fighterB->current_hp ?? $fighterB->max_hp ?? 100),
+            'current_turn_id'        => $firstTurnId,
+            'combat_log'             => [],
+            'last_roll'              => null,
+        ]);
 
         return response()->json([
-            'message' => 'Batalla resuelta.',
-            'battle' => $resolved,
-            'resolved' => true,
+            'message' => '¡Comienza el combate! ' . ($firstTurnId === (int) $user->id ? 'Es tu turno.' : 'Turno del rival.'),
+            'battle'  => $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), $user->id),
+            'resolved' => false,
         ]);
     }
 
@@ -360,6 +379,121 @@ class BattleController extends Controller
             'message' => '¡Has robado el Xuxemon seleccionado!',
             'battle' => $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), (int) $user->id),
         ]);
+    }
+
+    public function rollDice(Battle $battle): JsonResponse
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+
+        if (!$this->isBattleParticipant($battle, (int) $user->id)) {
+            return response()->json(['message' => 'No puedes participar en esta batalla.'], 403);
+        }
+        if ($battle->status !== 'in_combat') {
+            return response()->json(['message' => 'El combate no está en curso.'], 409);
+        }
+        if ((int) $battle->current_turn_id !== (int) $user->id) {
+            return response()->json(['message' => 'No es tu turno.'], 403);
+        }
+
+        $battle->load('selections');
+        $isChallenger    = (int) $battle->challenger_id === (int) $user->id;
+        $opponentId      = $this->opponentId($battle, (int) $user->id);
+        $mySel           = $battle->selections->firstWhere('user_id', $user->id);
+        $opponentSel     = $battle->selections->firstWhere('user_id', $opponentId);
+
+        $myFighter       = $this->getOwnedFighter((int) $user->id, (int) $mySel->chuchemon_id);
+        $opponentFighter = $this->getOwnedFighter($opponentId, (int) $opponentSel->chuchemon_id);
+
+        $myCurrentHp       = $isChallenger ? (int) $battle->challenger_current_hp : (int) $battle->challenged_current_hp;
+        $opponentCurrentHp = $isChallenger ? (int) $battle->challenged_current_hp : (int) $battle->challenger_current_hp;
+
+        // ── Cálculo del turno ────────────────────────────
+        $roll      = random_int(1, 6);
+        $sizeMod   = $this->sizeModifier((string) ($myFighter->current_mida ?? 'Petit'));
+        $typeMod   = $this->elementModifier((string) $myFighter->element, (string) $opponentFighter->element);
+        $attackTotal = (int) ($myFighter->attack ?? 50) + $roll + $sizeMod + $typeMod;
+        $damage      = max(0, $attackTotal - (int) ($opponentFighter->defense ?? 50));
+        $newOpponentHp = max(0, $opponentCurrentHp - $damage);
+
+        $log = $battle->combat_log ?? [];
+        $turnEntry = [
+            'turn'              => count($log) + 1,
+            'attacker_id'       => (int) $user->id,
+            'attacker_name'     => $myFighter->name,
+            'defender_name'     => $opponentFighter->name,
+            'roll'              => $roll,
+            'size_mod'          => $sizeMod,
+            'type_mod'          => $typeMod,
+            'attack'            => (int) ($myFighter->attack ?? 50),
+            'attack_total'      => $attackTotal,
+            'defense'           => (int) ($opponentFighter->defense ?? 50),
+            'damage'            => $damage,
+            'hp_before'         => $opponentCurrentHp,
+            'hp_after'          => $newOpponentHp,
+        ];
+        $log[] = $turnEntry;
+
+        // ── ¿Batalla terminada? ──────────────────────────
+        if ($newOpponentHp <= 0) {
+            $updateData = [
+                'status'      => 'completed',
+                'winner_id'   => $user->id,
+                'loser_id'    => $opponentId,
+                'resolved_at' => now(),
+                'combat_log'  => $log,
+                'last_roll'   => $turnEntry,
+                'result_payload' => ['combat_turns' => count($log)],
+                'current_turn_id' => null,
+            ];
+            $isChallenger
+                ? ($updateData['challenged_current_hp'] = 0)
+                : ($updateData['challenger_current_hp']  = 0);
+
+            $battle->update($updateData);
+
+            return response()->json([
+                'message'     => '¡Batalla terminada!',
+                'battle'      => $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), (int) $user->id),
+                'last_roll'   => $turnEntry,
+                'battle_over' => true,
+            ]);
+        }
+
+        // ── Siguiente turno ──────────────────────────────
+        $updateData = [
+            'current_turn_id' => $opponentId,
+            'combat_log'      => $log,
+            'last_roll'       => $turnEntry,
+        ];
+        $isChallenger
+            ? ($updateData['challenged_current_hp'] = $newOpponentHp)
+            : ($updateData['challenger_current_hp']  = $newOpponentHp);
+
+        $battle->update($updateData);
+
+        return response()->json([
+            'message'     => 'Turno completado.',
+            'battle'      => $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), (int) $user->id),
+            'last_roll'   => $turnEntry,
+            'battle_over' => false,
+        ]);
+    }
+
+    public function cancelBattle(Battle $battle): JsonResponse
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+
+        if (!$this->isBattleParticipant($battle, (int) $user->id)) {
+            return response()->json(['message' => 'No puedes cancelar esta batalla.'], 403);
+        }
+
+        if (!in_array($battle->status, ['pending_selection', 'in_combat'])) {
+            return response()->json(['message' => 'Solo se puede cancelar una batalla activa.'], 409);
+        }
+
+        $battle->update(['status' => 'cancelled']);
+
+        return response()->json(['message' => 'Batalla cancelada.']);
     }
 
     private function resolveBattle(int $battleId, int $viewerId): array
@@ -526,6 +660,8 @@ class BattleController extends Controller
                 'chuchemons.id',
                 'chuchemons.name',
                 'chuchemons.element',
+                'chuchemons.attack',
+                'chuchemons.defense',
                 'chuchemons.speed',
                 'user_chuchemons.current_mida',
                 'user_chuchemons.count',
@@ -588,22 +724,33 @@ class BattleController extends Controller
         $mySelection = $battle->selections->firstWhere('user_id', $viewerId);
         $opponentSelection = $battle->selections->firstWhere('user_id', $this->opponentId($battle, $viewerId));
 
+        $isChallenger    = (int) $battle->challenger_id === $viewerId;
+        $myCurrentHp     = $isChallenger ? $battle->challenger_current_hp : $battle->challenged_current_hp;
+        $opponentCurrentHp = $isChallenger ? $battle->challenged_current_hp : $battle->challenger_current_hp;
+
         return [
-            'id' => $battle->id,
-            'status' => $battle->status,
-            'challenger_id' => $battle->challenger_id,
-            'challenged_id' => $battle->challenged_id,
-            'created_at' => optional($battle->created_at)?->toISOString(),
-            'resolved_at' => optional($battle->resolved_at)?->toISOString(),
-            'opponent' => $opponent ? $this->formatBattleUser($opponent) : null,
-            'my_selection' => $mySelection ? (int) $mySelection->chuchemon_id : null,
-            'opponent_selection' => $opponentSelection ? (int) $opponentSelection->chuchemon_id : null,
-            'winner_id' => $battle->winner_id,
-            'loser_id' => $battle->loser_id,
-            'winner_chuchemon_id' => $battle->winner_chuchemon_id,
-            'loser_chuchemon_id' => $battle->loser_chuchemon_id,
-            'can_claim' => $battle->status === 'completed' && (int) $battle->winner_id === $viewerId && is_null($battle->winner_chuchemon_id),
-            'result_payload' => $battle->result_payload,
+            'id'                   => $battle->id,
+            'status'               => $battle->status,
+            'challenger_id'        => $battle->challenger_id,
+            'challenged_id'        => $battle->challenged_id,
+            'created_at'           => optional($battle->created_at)?->toISOString(),
+            'resolved_at'          => optional($battle->resolved_at)?->toISOString(),
+            'opponent'             => $opponent ? $this->formatBattleUser($opponent) : null,
+            'my_selection'         => $mySelection ? (int) $mySelection->chuchemon_id : null,
+            'opponent_selection'   => $opponentSelection ? (int) $opponentSelection->chuchemon_id : null,
+            'winner_id'            => $battle->winner_id,
+            'loser_id'             => $battle->loser_id,
+            'winner_chuchemon_id'  => $battle->winner_chuchemon_id,
+            'loser_chuchemon_id'   => $battle->loser_chuchemon_id,
+            'can_claim'            => $battle->status === 'completed' && (int) $battle->winner_id === $viewerId && is_null($battle->winner_chuchemon_id),
+            'result_payload'       => $battle->result_payload,
+            // Estado de combate por turnos
+            'current_turn_id'      => $battle->current_turn_id,
+            'is_my_turn'           => (int) $battle->current_turn_id === $viewerId,
+            'my_current_hp'        => $myCurrentHp,
+            'opponent_current_hp'  => $opponentCurrentHp,
+            'last_roll'            => $battle->last_roll,
+            'combat_log'           => $battle->combat_log ?? [],
         ];
     }
 

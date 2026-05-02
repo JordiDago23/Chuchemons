@@ -1,7 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
+import { BattleService } from '../../core/services/battle.service';
+import { ChuchemonService } from '../../services/chuchemon.service';
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 import { Router } from '@angular/router';
@@ -24,7 +28,7 @@ function optionalPasswordMatchValidator(group: AbstractControl): ValidationError
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   user: any = null;
   activeTab: 'info' | 'stats' | 'logros' = 'info';
   editMode = false;
@@ -36,8 +40,9 @@ export class ProfileComponent implements OnInit {
   showConfirm = false;
   showDeleteConfirm = false;
 
-  // Stats mock — por defecto en 0 para cuentas nuevas
-  stats = { level: 0, xp: 0, xpMax: 100, wins: 0, losses: 0, streak: 0, captured: 0 };
+  private destroy$ = new Subject<void>();
+
+  stats = { level: 0, xp: 0, xpMax: 100, wins: 0, losses: 0, streak: 0, captured: 0, total: 0 };
 
   typeStats = [
     { type: 'Tipo Agua', count: 0, color: '#457b9d' },
@@ -63,6 +68,12 @@ export class ProfileComponent implements OnInit {
     return Math.round((this.stats.xp / this.stats.xpMax) * 100);
   }
 
+  get capturePercent(): number {
+    return this.stats.total > 0
+      ? Math.round((this.stats.captured / this.stats.total) * 100)
+      : 0;
+  }
+
   get memberSince(): string {
     if (!this.user?.created_at) return '-';
     const d = new Date(this.user.created_at);
@@ -76,7 +87,13 @@ export class ProfileComponent implements OnInit {
   get password()  { return this.editForm.get('password')!; }
   get bioCtrl()   { return this.editForm.get('bio')!; }
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router,
+    private battleService: BattleService,
+    private chuchemonService: ChuchemonService
+  ) {
     this.editForm = this.fb.group({
       nombre:                ['', [Validators.required]],
       apellidos:             ['', [Validators.required]],
@@ -103,13 +120,41 @@ export class ProfileComponent implements OnInit {
     if (cached) {
       this.user = cached;
       this.fillForm(cached);
-      return;
+    } else {
+      this.auth.me().subscribe({
+        next: (u: any) => { this.user = u; this.fillForm(u); }
+      });
     }
-    this.auth.me().subscribe({
-      next: (u: any) => {
-        this.user = u;
-        this.fillForm(u);
+    this.loadStats();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadStats(): void {
+    this.battleService.getOverview().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r) => {
+        this.stats.wins   = r.stats.victories;
+        this.stats.losses = r.stats.defeats;
+        this.stats.streak = r.stats.streak;
       }
+    });
+
+    this.chuchemonService.getMyChuchemons().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (mine) => {
+        this.stats.captured = mine.length;
+        this.typeStats = [
+          { type: 'Tipo Agua',   count: mine.filter((c: any) => c.element === 'Aigua').length, color: '#457b9d' },
+          { type: 'Tipo Tierra', count: mine.filter((c: any) => c.element === 'Terra').length, color: '#b8860b' },
+          { type: 'Tipo Aire',   count: mine.filter((c: any) => c.element === 'Aire').length,  color: '#48cae4' },
+        ];
+      }
+    });
+
+    this.chuchemonService.getAllChuchemons().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (all) => { this.stats.total = all.length; }
     });
   }
 

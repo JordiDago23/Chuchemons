@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subject, BehaviorSubject, timer, EMPTY } from 'rxjs';
 import { takeUntil, switchMap, tap, filter, catchError } from 'rxjs/operators';
 import { ChatService, Message, Conversation } from '../../services/chat.service';
@@ -39,7 +40,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   constructor(
     private chatService: ChatService,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -86,6 +88,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   // aunque el usuario esté en otra conversación o sin ninguna abierta
 
   private startConversationsStream(): void {
+    const targetFriendId = Number(this.route.snapshot.queryParamMap.get('friendId')) || null;
+    let autoOpened = false;
+
     timer(0, 4000).pipe(
       takeUntil(this.destroy$),
       switchMap(() => this.chatService.getConversations().pipe(
@@ -99,6 +104,15 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       if (this.selectedFriend) {
         const updated = this.conversations.find(c => c.id === this.selectedFriendId);
         if (updated) this.selectedFriend = updated;
+      }
+
+      // Abre automáticamente la conversación indicada por queryParam (solo la primera vez)
+      if (targetFriendId && !autoOpened) {
+        const target = this.conversations.find(c => c.id === targetFriendId);
+        if (target) {
+          autoOpened = true;
+          this.selectConversation(target);
+        }
       }
     });
   }

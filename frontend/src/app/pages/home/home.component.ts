@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { BattleService } from '../../core/services/battle.service';
 import { LevelingPanelComponent } from '../../components/leveling-panel/leveling-panel.component';
 import { InfectionsPanelComponent } from '../../components/infections-panel/infections-panel.component';
 import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewards.component';
@@ -93,7 +94,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
-    private chuchemonService: ChuchemonService
+    private chuchemonService: ChuchemonService,
+    private battleService: BattleService
   ) {}
 
   ngOnInit() {
@@ -179,7 +181,16 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.stats.total = response.length;
           this.stats.captured = response.filter((ch: any) => ch.captured).length;
         },
-        error: (error) => console.error('Error loading chuchemons:', error)
+        error: (err) => console.error('Error loading chuchemons:', err)
+      });
+
+    this.battleService.getOverview()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => {
+          this.stats.wins   = r.stats.victories;
+          this.stats.losses = r.stats.defeats;
+        }
       });
   }
 

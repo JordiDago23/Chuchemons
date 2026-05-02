@@ -19,11 +19,18 @@ class Battle extends Model
         'loser_chuchemon_id',
         'resolved_at',
         'result_payload',
+        'challenger_current_hp',
+        'challenged_current_hp',
+        'current_turn_id',
+        'last_roll',
+        'combat_log',
     ];
 
     protected $casts = [
-        'resolved_at' => 'datetime',
+        'resolved_at'  => 'datetime',
         'result_payload' => 'array',
+        'last_roll'    => 'array',
+        'combat_log'   => 'array',
     ];
 
     public function challenger()
