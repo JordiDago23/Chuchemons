@@ -133,7 +133,7 @@
 .card-qty {
   position: absolute;
   top: 5px;
-  right: 7px;
+  right: 30px; /* Mover a la izquierda para no superponerse con el botón de delete */
   font-size: 0.68rem;
   font-weight: 800;
   color: #f4722b;
@@ -967,9 +967,55 @@
   border: none;
   border-radius: 10px;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
+}
+
+.popup-btn-apply:hover { background: #27ae60; }
+.popup-btn-apply:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* DELETE BUTTON (X) in inventory cards */
+.card-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #e74c3c;
+  background: #fff;
+  color: #e74c3c;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.inv-card {
+  position: relative;
+}
+
+.inv-card:hover .card-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.card-delete-btn:hover {
+  background: #e74c3c;
+  color: #fff;
+  transform: scale(1.1);
 }
 
 .popup-btn-apply:hover { opacity: 0.88; }

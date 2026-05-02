@@ -6,6 +6,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { ChuchemonService } from '../../services/chuchemon.service';
+import { ConfigService, EvolutionConfig } from '../../services/config.service';
+import { LevelingService } from '../../services/leveling.service';
 
 @Component({
   selector: 'app-leveling-panel',
@@ -28,27 +30,49 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   private confirmAction: (() => void) | null = null;
   private destroy$ = new Subject<void>();
 
-  // Configuración de costos de evolución desde el backend
-  evolveCostConfig = {
-    xux_petit_mitja: 3,  // Default fallback
-    xux_mitja_gran: 5    // Default fallback
+  // Configuración de costos de evolución (actualizada reactivamente)
+  evolveCostConfig: EvolutionConfig = {
+    xux_petit_mitja: 3,
+    xux_mitja_gran: 5
   };
 
   private readonly api = 'http://localhost:8000/api';
 
   constructor(
     private http: HttpClient,
-    private chuchemonService: ChuchemonService
+    private chuchemonService: ChuchemonService,
+    private configService: ConfigService,
+    private levelingService: LevelingService
   ) {}
 
   ngOnInit(): void {
-    this.loadChuchemons();
+    // Cargar datos inicialmente
+    this.levelingService.refreshLevelingChuchemons();
+    
+    // Suscribirse a cambios reactivos de chuchemons
+    this.levelingService.levelingChuchemons$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(chuchemons => {
+        this.chuchemons = chuchemons;
+        if (chuchemons.length > 0) {
+          const prevId = this.selectedChuchemon?.id;
+          this.selectedChuchemon = chuchemons.find((c: any) => c.id === prevId) ?? chuchemons[0];
+        }
+        this.isLoading = false;
+      });
     
     // Suscribirse a cambios de estado para actualizar automáticamente
     this.chuchemonService.stateChanges$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.loadChuchemons();
+        this.levelingService.notifyStateChanged();
+      });
+
+    // Suscribirse a actualizaciones reactivas de configuración de evolución
+    this.configService.evolutionConfig$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(config => {
+        this.evolveCostConfig = config;
       });
   }
 
@@ -58,31 +82,9 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   }
 
   loadChuchemons(): void {
+    // Ahora delegado al servicio reactivo
     this.isLoading = true;
-    this.http.get<any>(`${this.api}/level/chuchemons`).subscribe({
-      next: (response) => {
-        // El backend ahora devuelve { chuchemons: [...], config: {...} }
-        const data = response.chuchemons || response;  // Compatibilidad con respuesta antigua
-        const config = response.config;
-        
-        // Actualizar configuración si viene del backend
-        if (config) {
-          this.evolveCostConfig.xux_petit_mitja = config.xux_petit_mitja ?? 3;
-          this.evolveCostConfig.xux_mitja_gran = config.xux_mitja_gran ?? 5;
-        }
-        
-        this.chuchemons = data;
-        if (data.length > 0) {
-          const prevId = this.selectedChuchemon?.id;
-          this.selectedChuchemon = data.find((c: any) => c.id === prevId) ?? data[0];
-        }
-        this.isLoading = false;
-      },
-      error: () => {
-        this.errorMessage = 'Error cargando los Xuxemons';
-        this.isLoading = false;
-      }
-    });
+    this.levelingService.refreshLevelingChuchemons(true);
   }
 
   selectChuchemon(c: any): void {
@@ -105,10 +107,9 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   }
 
   private executeEvolve(): void {
-    this.http.post<any>(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/evolve`, {}).subscribe({
+    this.levelingService.evolveChuchemon(this.selectedChuchemon.id).subscribe({
       next: (res) => {
         this.actionMessage = res.message ?? '¡Xuxemon evolucionado!';
-        this.loadChuchemons();
         this.chuchemonService.notifyChuchemonStateChanged();
       },
       error: (err) => {
@@ -154,10 +155,9 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   }
 
   private executeHealWithXux(): void {
-    this.http.post(`${this.api}/user/chuchemons/${this.selectedChuchemon.id}/heal`, { quantity: this.healQty }).subscribe({
+    this.levelingService.healChuchemon(this.selectedChuchemon.id, this.healQty).subscribe({
       next: (res: any) => {
         this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp}) · +${res.xp_gained ?? 0} XP`;
-        this.loadChuchemons();
         this.chuchemonService.notifyChuchemonStateChanged();
       },
       error: (err) => {

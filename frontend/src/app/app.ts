@@ -4,6 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { LoadingService } from './core/services/loading.service';
+import { ConfigService } from './services/config.service';
 
 @Component({
   selector: 'app-root',
@@ -18,11 +19,14 @@ export class App {
   private readonly meta = inject(Meta);
   private readonly destroyRef = inject(DestroyRef);
   private readonly loading = inject(LoadingService);
+  private readonly configService = inject(ConfigService);
 
   protected readonly title = signal('frontend');
   protected readonly isGlobalLoading = signal(false);
 
   constructor() {
+    // Iniciar polling solo de configuraciones (datos del admin que cambian raramente)
+    this.configService.startPolling();
     this.loading.isLoading$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => this.isGlobalLoading.set(value));

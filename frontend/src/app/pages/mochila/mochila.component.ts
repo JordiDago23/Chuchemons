@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { MochilaService, MochilaXuxItem } from '../../services/mochila.service';
@@ -37,6 +39,7 @@ interface InventorySlot {
   xuxItem?: MochilaXuxItem;
   vacunaItem?: VacunaItem;
   slotQty?: number;
+  mochilaRecordId?: number; // ID del registro en mochila_xuxes (para eliminar)
 }
 
 // Component
@@ -47,7 +50,7 @@ interface InventorySlot {
   templateUrl: './mochila.component.html',
   styleUrls: ['./mochila.component.css']
 })
-export class MochilaComponent implements OnInit {
+export class MochilaComponent implements OnInit, OnDestroy {
   user: any = null;
   loading = true;
 
@@ -55,6 +58,8 @@ export class MochilaComponent implements OnInit {
 
   readonly MAX_SPACES = 20;
   readonly MAX_STACK = 5;
+
+  private destroy$ = new Subject<void>();
 
   // Items from backend
   items: InventoryItem[] = [];
@@ -119,10 +124,32 @@ export class MochilaComponent implements OnInit {
 
   private afterUserLoaded() {
     this.loadItems();
-    this.loadMochila();
     this.loadChuchemons();
     this.loadTeam();
     this.loadInfections();
+    
+    // Suscribirse a actualizaciones reactivas de mochila
+    this.mochilaService.mochilaData$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data) {
+          // Guardar TODOS los items sin filtrar (incluyendo vacunas)
+          this.mochilaXuxes = data.items;
+          
+          this.backendUsedSpaces = data.used_spaces;
+          this.backendFreeSpaces = data.free_spaces;
+
+          this.mochilaLoading = false;
+        }
+      });
+    
+    // Cargar mochila inicialmente
+    this.loadMochila();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private get authHeaders(): HttpHeaders {
@@ -166,28 +193,7 @@ export class MochilaComponent implements OnInit {
 
   private loadMochila() {
     this.mochilaLoading = true;
-    this.mochilaService.getMochila().subscribe({
-      next: (res) => {
-        this.mochilaXuxes   = res.items.filter((i: any) => !i.vaccine_id);
-        this.backendUsedSpaces = res.used_spaces;
-        this.backendFreeSpaces = res.free_spaces;
-
-        // Cargar vacunas de la mochila
-        const vaccineRows = res.items.filter((i: any) => i.vaccine_id && i.vaccine);
-        this.vacunaItems = vaccineRows.map((row: any) => ({
-          id: row.vaccine_id,
-          type: 'no_apilable' as const,
-          name: row.vaccine.name,
-          description: row.vaccine.description ?? '',
-          imageUrl: '',
-          tag: 'Vacuna',
-          quantity: row.quantity,
-        }));
-
-        this.mochilaLoading = false;
-      },
-      error: () => { this.mochilaLoading = false; }
-    });
+    this.mochilaService.refreshMochila();
   }
 
   private loadChuchemons() {
@@ -212,15 +218,9 @@ export class MochilaComponent implements OnInit {
 
     this.mochilaService.addXux(chuchemon.id, qty).subscribe({
       next: (res) => {
-        this.backendUsedSpaces = res.used_spaces;
-        this.backendFreeSpaces = res.free_spaces;
-        // Update or insert into mochilaXuxes
-        const idx = this.mochilaXuxes.findIndex(i => i.chuchemon_id === chuchemon.id);
-        if (idx >= 0) {
-          this.mochilaXuxes[idx] = res.item;
-        } else {
-          this.mochilaXuxes.push(res.item);
-        }
+        // Refrescar mochila reactivamente
+        this.mochilaService.refreshMochila();
+        
         this.feedbackMap[chuchemon.id] = {
           type: res.discarded > 0 ? 'warn' : 'success',
           msg:  res.message,
@@ -263,47 +263,81 @@ export class MochilaComponent implements OnInit {
   }
 
   get totalXuxSlots(): number {
-    return this.mochilaXuxes.reduce((sum, i) => sum + this.xuxSlotsForItem(i), 0);
+    const xuxItems = this.mochilaXuxes.filter(i => !i.vaccine_id);
+    return xuxItems.reduce((sum, i) => sum + this.xuxSlotsForItem(i), 0);
   }
 
   get totalVacunaSlots(): number {
-    return this.vacunaItems.reduce((sum, i) => sum + i.quantity, 0);
+    const vacunaItems = this.mochilaXuxes.filter(i => i.vaccine_id);
+    return vacunaItems.reduce((sum, i) => sum + i.quantity, 0);
   }
 
   get totalXuxQuantity(): number {
-    return this.mochilaXuxes.reduce((s, i) => s + i.quantity, 0);
+    const xuxItems = this.mochilaXuxes.filter(i => !i.vaccine_id);
+    return xuxItems.reduce((s, i) => s + i.quantity, 0);
   }
 
   get xuxTypeCount(): number {
-    return this.mochilaXuxes.filter(i => i.quantity > 0).length;
+    const xuxItems = this.mochilaXuxes.filter(i => !i.vaccine_id && i.quantity > 0);
+    return xuxItems.length;
   }
 
   get totalVacunaQuantity(): number {
-    return this.vacunaItems.reduce((s, i) => s + i.quantity, 0);
+    const vacunaItems = this.mochilaXuxes.filter(i => i.vaccine_id);
+    return vacunaItems.reduce((s, i) => s + i.quantity, 0);
   }
 
   get vacunaTypeCount(): number {
-    return this.vacunaItems.filter(i => i.quantity > 0).length;
+    const vacunaItems = this.mochilaXuxes.filter(i => i.vaccine_id && i.quantity > 0);
+    return vacunaItems.length;
   }
 
   get inventorySlots(): InventorySlot[] {
     const slots: InventorySlot[] = [];
     let slotIndex = 1;
 
-    // Xux slots: each item can span multiple stacked slots
-    for (const xuxItem of this.mochilaXuxes) {
+    // Xux slots: each item can span multiple stacked slots (items y chuchemons)
+    const xuxRecords = this.mochilaXuxes.filter(i => !i.vaccine_id);
+    
+    for (const xuxItem of xuxRecords) {
       for (const qty of this.xuxSlotBreakdownForItem(xuxItem)) {
         if (slotIndex > this.MAX_SPACES) break;
-        const label = xuxItem.item?.name ?? 'Xux';
-        slots.push({ index: slotIndex++, kind: 'xux', label, xuxItem, slotQty: qty });
+        const label = xuxItem.item?.name ?? xuxItem.chuchemon?.name ?? 'Xux';
+        slots.push({ 
+          index: slotIndex++, 
+          kind: 'xux', 
+          label, 
+          xuxItem, 
+          slotQty: qty,
+          mochilaRecordId: xuxItem.id 
+        });
       }
     }
 
-    // Vacuna slots: each unit occupies 1 slot
-    for (const vacunaItem of this.vacunaItems) {
-      for (let u = 0; u < vacunaItem.quantity; u++) {
+    // Vacuna slots: cada UNIDAD de vacuna ocupa 1 slot individual
+    const vacunaRecords = this.mochilaXuxes.filter(i => i.vaccine_id && i.vaccine);
+    
+    for (const record of vacunaRecords) {
+      // Crear 1 slot por cada unidad de vacuna (quantity puede ser > 1)
+      for (let u = 0; u < record.quantity; u++) {
         if (slotIndex > this.MAX_SPACES) break;
-        slots.push({ index: slotIndex++, kind: 'vacuna', label: vacunaItem.name, vacunaItem, slotQty: 1 });
+        const vacunaItem: VacunaItem = {
+          id: record.vaccine!.id,
+          type: 'no_apilable',
+          name: record.vaccine!.name,
+          description: record.vaccine!.description ?? '',
+          imageUrl: '',
+          tag: 'Vacuna',
+          quantity: 1
+        };
+        slots.push({ 
+          index: slotIndex++, 
+          kind: 'vacuna', 
+          label: record.vaccine!.name, 
+          vacunaItem,
+          slotQty: 1,
+          mochilaRecordId: record.id // ID del registro en mochila_xuxes
+        });
       }
     }
 
@@ -339,8 +373,9 @@ export class MochilaComponent implements OnInit {
 
     this.itemService.addItem(item.id, qty).subscribe({
       next: (res) => {
-        this.backendUsedSpaces = res.used_spaces;
-        this.backendFreeSpaces = res.free_spaces;
+        // Refrescar mochila reactivamente
+        this.mochilaService.refreshMochila();
+        
         this.itemFeedbackMap[item.id] = {
           type: res.added < qty ? 'warn' : 'success',
           msg: res.message,
@@ -415,6 +450,10 @@ export class MochilaComponent implements OnInit {
     'Insulina':       { description: 'Cura todas las enfermedades del Xuxemon.',                  diseases: ['Todas las enfermedades'], emoji: '💉' },
     'Fruita fresca':  { description: 'Al usarla en un Xuxemon elimina "Sobredosis de sucre".',   diseases: ['Sobredosis de sucre'], emoji: '🍎' },
   };
+
+  getVaccineEmoji(vaccineName: string): string {
+    return this.VACUNA_META[vaccineName]?.emoji ?? '💉';
+  }
 
   openPopup(slot: InventorySlot) {
     this.currentSlot = slot;
@@ -547,6 +586,36 @@ export class MochilaComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Delete item from mochila
+  deleteItem(slot: InventorySlot, event: Event) {
+    event.stopPropagation(); // Evitar que se abra el popup
+    
+    // Usar mochilaRecordId directamente (ya guardado en el slot)
+    const mochilaItemId = slot.mochilaRecordId;
+    
+    if (!mochilaItemId) {
+      console.error('No se encontró el ID del item en la mochila');
+      return;
+    }
+    
+    // Llamar al endpoint DELETE /api/mochila/{id}
+    this.http.delete<any>(`http://localhost:8000/api/mochila/${mochilaItemId}`, { headers: this.authHeaders })
+      .subscribe({
+        next: (res) => {
+          // Actualizar espacios del backend
+          this.backendFreeSpaces = res.free_spaces;
+          this.backendUsedSpaces = res.used_spaces;
+          
+          // Refrescar mochila reactivamente
+          this.mochilaService.refreshMochila();
+        },
+        error: (err) => {
+          console.error('Error al eliminar item:', err);
+          alert(err?.error?.message ?? 'Error al eliminar el item');
+        }
+      });
   }
 
   logout() {

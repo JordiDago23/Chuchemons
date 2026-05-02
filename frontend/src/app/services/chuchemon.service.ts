@@ -20,7 +20,7 @@ export class ChuchemonService {
   private myChuchemonsLoadedAt = 0;
   private teamCache: any = null;
   private teamLoadedAt = 0;
-  private readonly cacheTtlMs = 30000;
+  private readonly cacheTtlMs = 0; // Sin caché - actualizaciones inmediatas
 
   constructor(private http: HttpClient) {}
 

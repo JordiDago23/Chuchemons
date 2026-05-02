@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap, catchError, timeout } from 'rxjs/operators';
 import { throwError, BehaviorSubject, firstValueFrom, of } from 'rxjs';
+import { ConfigService } from '../../services/config.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = 'http://localhost:8000/api';
   private readonly userStorageKey = 'currentUser';
+  private configService = inject(ConfigService);
 
   // Usuario cacheado — evita llamadas extra a /api/me
   private _user = new BehaviorSubject<any>(null);
@@ -47,6 +49,8 @@ export class AuthService {
       tap((res: any) => {
         this.saveToken(res.token);
         this.setCurrentUser(res.user);
+        // Refrescar daily rewards después del registro exitoso
+        this.configService.refreshDailyRewards();
       }),
       catchError(this.handleError)
     );
@@ -57,6 +61,8 @@ export class AuthService {
       tap((res: any) => {
         this.saveToken(res.token);
         this.setCurrentUser(res.user);
+        // Refrescar daily rewards después del login exitoso
+        this.configService.refreshDailyRewards();
       }),
       catchError(this.handleError)
     );

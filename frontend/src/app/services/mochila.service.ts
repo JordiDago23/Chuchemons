@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export interface MochilaXuxItem {
   id: number;
@@ -49,16 +50,40 @@ export interface AddXuxResponse {
 export class MochilaService {
   private apiUrl = 'http://localhost:8000/api';
 
+  // BehaviorSubject para estado reactivo de la mochila
+  private mochilaDataSubject = new BehaviorSubject<MochilaResponse | null>(null);
+  public mochilaData$: Observable<MochilaResponse | null> = this.mochilaDataSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
   getMochila(): Observable<MochilaResponse> {
-    return this.http.get<MochilaResponse>(`${this.apiUrl}/mochila`);
+    return this.http.get<MochilaResponse>(`${this.apiUrl}/mochila`).pipe(
+      tap(data => this.mochilaDataSubject.next(data))
+    );
+  }
+
+  /**
+   * Refresca los datos de la mochila
+   */
+  refreshMochila(): void {
+    this.getMochila().subscribe({
+      error: (error) => console.error('Error refreshing mochila:', error)
+    });
   }
 
   addXux(chuchemonId: number, quantity: number): Observable<AddXuxResponse> {
     return this.http.post<AddXuxResponse>(`${this.apiUrl}/mochila/add-xux`, {
       chuchemon_id: chuchemonId,
       quantity,
-    });
+    }).pipe(
+      tap(() => this.refreshMochila()) // Actualizar mochila después de añadir
+    );
+  }
+
+  /**
+   * Obtiene el valor actual de mochilaData de forma síncrona
+   */
+  getCurrentMochilaData(): MochilaResponse | null {
+    return this.mochilaDataSubject.value;
   }
 }
