@@ -435,6 +435,16 @@ class BattleController extends Controller
 
         // ── ¿Batalla terminada? ──────────────────────────
         if ($newOpponentHp <= 0) {
+            // Persist final HP to user_chuchemons: loser → 0, winner → remaining HP
+            DB::table('user_chuchemons')
+                ->where('user_id', $opponentId)
+                ->where('chuchemon_id', $opponentSel->chuchemon_id)
+                ->update(['current_hp' => 0]);
+            DB::table('user_chuchemons')
+                ->where('user_id', (int) $user->id)
+                ->where('chuchemon_id', $mySel->chuchemon_id)
+                ->update(['current_hp' => $myCurrentHp]);
+
             $updateData = [
                 'status'      => 'completed',
                 'winner_id'   => $user->id,
@@ -460,6 +470,12 @@ class BattleController extends Controller
         }
 
         // ── Siguiente turno ──────────────────────────────
+        // Persist defender's reduced HP to user_chuchemons
+        DB::table('user_chuchemons')
+            ->where('user_id', $opponentId)
+            ->where('chuchemon_id', $opponentSel->chuchemon_id)
+            ->update(['current_hp' => $newOpponentHp]);
+
         $updateData = [
             'current_turn_id' => $opponentId,
             'combat_log'      => $log,
@@ -614,6 +630,21 @@ class BattleController extends Controller
                 ->where('user_id', $fromUserId)
                 ->where('chuchemon_id', $chuchemonId)
                 ->delete();
+
+            // Limpiar slots del equipo del perdedor que apunten a este Chuchemon
+            $loserTeam = \App\Models\UserTeam::where('user_id', $fromUserId)->first();
+            if ($loserTeam) {
+                $dirty = false;
+                foreach (['chuchemon_1_id', 'chuchemon_2_id', 'chuchemon_3_id'] as $slot) {
+                    if ((int) $loserTeam->$slot === $chuchemonId) {
+                        $loserTeam->$slot = null;
+                        $dirty = true;
+                    }
+                }
+                if ($dirty) {
+                    $loserTeam->save();
+                }
+            }
         }
 
         $winnerRow = DB::table('user_chuchemons')

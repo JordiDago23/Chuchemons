@@ -109,6 +109,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'recompensas',
+    title: 'Recompensas | Chuchemons',
+    data: {
+      description: 'Recoge tus recompensas diarias de Chuches y Chuchemons.',
+      keywords: 'recompensas, diarias, chuches, chuchemon'
+    },
+    loadComponent: () => import('./pages/recompensas/recompensas.component').then(m => m.RecompensasComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'admin',
     title: 'Admin | Chuchemons',
     data: {

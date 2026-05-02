@@ -93,6 +93,17 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
   }
 
   selectChuchemon(position: number, chuchemonId: number | null): void {
+    if (chuchemonId !== null) {
+      // Si ya está en este mismo slot → deseleccionar (toggle)
+      if (this.selectedChuchemons[position] === chuchemonId) {
+        this.selectedChuchemons[position] = null;
+        return;
+      }
+      // Si está en otro slot → liberarlo antes de moverlo
+      this.selectedChuchemons = this.selectedChuchemons.map((id, i) =>
+        i !== position && id === chuchemonId ? null : id
+      ) as (number | null)[];
+    }
     this.selectedChuchemons[position] = chuchemonId;
   }
 

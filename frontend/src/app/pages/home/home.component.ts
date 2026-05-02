@@ -8,7 +8,6 @@ import { ChuchemonService } from '../../services/chuchemon.service';
 import { BattleService } from '../../core/services/battle.service';
 import { LevelingPanelComponent } from '../../components/leveling-panel/leveling-panel.component';
 import { InfectionsPanelComponent } from '../../components/infections-panel/infections-panel.component';
-import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewards.component';
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 import { ChuchemonDetailsModalComponent } from '../../components/chuchemon-details-modal/chuchemon-details-modal.component';
 import { Chuchemon } from '../../models/chuchemon.model';
@@ -21,7 +20,6 @@ import { Chuchemon } from '../../models/chuchemon.model';
     RouterLink,
     LevelingPanelComponent,
     InfectionsPanelComponent,
-    DailyRewardsComponent,
     MainLayoutComponent,
     ChuchemonDetailsModalComponent
   ],

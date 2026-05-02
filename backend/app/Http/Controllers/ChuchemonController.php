@@ -332,7 +332,15 @@ class ChuchemonController extends Controller
                         $uc = DB::table('user_chuchemons')
                             ->where('user_id', $user->id)
                             ->where('chuchemon_id', $c->id)
+                            ->where('count', '>', 0)
                             ->first();
+
+                        if (!$uc) {
+                            // El usuario ya no tiene este Chuchemon (fue robado); limpiar slot
+                            $team->$slot = null;
+                            $team->save();
+                            continue;
+                        }
                         $maxHp  = $uc->max_hp    ?? LevelingController::computeMaxHp($c->defense ?? 50, $uc->level ?? 1, $uc->current_mida ?? 'Petit');
                         $currHp = $uc->current_hp ?? $maxHp;
                         $xpForNext = $uc->experience_for_next_level ?? LevelingController::experienceForMida($uc->current_mida ?? 'Petit');

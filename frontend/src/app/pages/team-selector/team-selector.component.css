@@ -301,6 +301,15 @@
   font-weight: 600;
 }
 
+.slot-btn.occupied,
+.slot-btn:disabled {
+  background: #f1f5f9;
+  color: #cbd5e1;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ─── ACTIONS ──────────────────────────────────────────────────────────────– */
 .actions {
   display: flex;

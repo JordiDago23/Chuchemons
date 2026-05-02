@@ -279,9 +279,21 @@ class LevelingController extends Controller
             $user = JWTAuth::parseToken()->authenticate();
             if (!$user) return response()->json(['message' => 'Usuario no autenticado'], 401);
 
+            // Solo mostrar los Chuchemons que están en el equipo activo del usuario
+            $team = DB::table('user_teams')->where('user_id', $user->id)->first();
+            $teamIds = $team
+                ? array_filter([
+                    $team->chuchemon_1_id,
+                    $team->chuchemon_2_id,
+                    $team->chuchemon_3_id,
+                ], fn($id) => !is_null($id))
+                : [];
+
             $chuchemons = DB::table('user_chuchemons')
                 ->join('chuchemons', 'user_chuchemons.chuchemon_id', '=', 'chuchemons.id')
                 ->where('user_chuchemons.user_id', $user->id)
+                ->when(count($teamIds) > 0, fn($q) => $q->whereIn('chuchemons.id', $teamIds))
+                ->when(count($teamIds) === 0, fn($q) => $q->whereRaw('1=0')) // sin equipo → lista vacía
                 ->select(
                     'chuchemons.id',
                     'chuchemons.name',
