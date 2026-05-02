@@ -147,7 +147,7 @@ class DailyRewardController extends Controller
         ];
     }
 
-    private function nextAvailableAt(string $settingKey, string $defaultHour): Carbon
+    private function nextAvailableAt(string $settingKey, string $defaultHour, bool $forceNextDay = false): Carbon
     {
         $hourValue = (string) GameSetting::getValue($settingKey, $defaultHour);
         [$hour, $minute] = array_pad(explode(':', $hourValue), 2, '00');
@@ -155,9 +155,14 @@ class DailyRewardController extends Controller
         $currentTime = now();
         $nextAvailable = $currentTime->copy()->setHour((int) $hour)->setMinute((int) $minute)->setSecond(0);
         
-        // Si ya pasó la hora de hoy, programar para mañana
-        if ($currentTime->gte($nextAvailable)) {
+        // Si forceNextDay = true (después de reclamar), SIEMPRE programar para mañana
+        if ($forceNextDay) {
             $nextAvailable->addDay();
+        } else {
+            // Si ya pasó la hora de hoy, programar para mañana
+            if ($currentTime->gte($nextAvailable)) {
+                $nextAvailable->addDay();
+            }
         }
 
         Log::info('Calculated next_available_at', [
@@ -167,9 +172,77 @@ class DailyRewardController extends Controller
             'parsed_minute' => $minute,
             'current_time' => $currentTime->toDateTimeString(),
             'next_available' => $nextAvailable->toDateTimeString(),
+            'force_next_day' => $forceNextDay,
         ]);
 
         return $nextAvailable;
+    }
+
+    /**
+     * Recalcula next_available_at si la hora configurada ha cambiado
+     */
+    private function recalculateNextAvailableIfNeeded(?DailyReward $reward, string $settingKey, string $defaultHour): void
+    {
+        if (!$reward) {
+            return;
+        }
+
+        $currentTime = now();
+        
+        // IMPORTANTE: Si la recompensa ya está disponible (next_available_at <= now) 
+        // y NO fue reclamada hoy, NO recalcular (dejarla disponible)
+        $isAlreadyAvailable = $reward->next_available_at <= $currentTime;
+        $wasClaimedToday = $reward->claimed_at && $reward->claimed_at->isToday();
+        
+        if ($isAlreadyAvailable && !$wasClaimedToday) {
+            // La recompensa está disponible y no ha sido reclamada hoy
+            // NO recalcular para evitar posponerla incorrectamente
+            Log::info('Skipping recalculation - reward is available and not claimed today', [
+                'reward_type' => $reward->reward_type,
+                'user_id' => $reward->user_id,
+                'next_available_at' => $reward->next_available_at->toDateTimeString(),
+                'current_time' => $currentTime->toDateTimeString(),
+            ]);
+            return;
+        }
+
+        // Obtener la hora configurada actualmente
+        $configuredHour = (string) GameSetting::getValue($settingKey, $defaultHour);
+        [$configHour, $configMinute] = array_pad(explode(':', $configuredHour), 2, '00');
+
+        // Obtener la hora de next_available_at
+        $nextAvailableHour = $reward->next_available_at->format('H');
+        $nextAvailableMinute = $reward->next_available_at->format('i');
+
+        // Si las horas coinciden, no hay nada que hacer
+        if ((int)$nextAvailableHour === (int)$configHour && (int)$nextAvailableMinute === (int)$configMinute) {
+            return;
+        }
+
+        Log::info('Detected configuration change, recalculating next_available_at', [
+            'reward_type' => $reward->reward_type,
+            'user_id' => $reward->user_id,
+            'old_hour' => $nextAvailableHour . ':' . $nextAvailableMinute,
+            'new_hour' => $configHour . ':' . $configMinute,
+            'claimed_at' => $reward->claimed_at ? $reward->claimed_at->toDateTimeString() : 'null',
+            'was_claimed_today' => $wasClaimedToday,
+        ]);
+
+        // Recalcular next_available_at
+        // Si fue reclamado hoy, mantener que sea para mañana
+        $newNextAvailable = $this->nextAvailableAt($settingKey, $defaultHour, $wasClaimedToday);
+
+        $reward->update([
+            'next_available_at' => $newNextAvailable,
+        ]);
+
+        $reward->refresh();
+
+        Log::info('Recalculated next_available_at', [
+            'reward_type' => $reward->reward_type,
+            'user_id' => $reward->user_id,
+            'new_next_available_at' => $newNextAvailable->toDateTimeString(),
+        ]);
     }
 
     /**
@@ -202,6 +275,135 @@ class DailyRewardController extends Controller
             if (!$chuchemonReward) {
                 $chuchemonReward = $this->createDailyChuchemonReward($user->id);
             }
+
+            // AUTO-CORRECCIÓN: Detectar recompensas afectadas por bug de reprogramación
+            // Si next_available_at está en el futuro Y el usuario NO reclamó hoy,
+            // pero la hora configurada de hoy ya pasó, resetear a now() para permitir reclamo
+            $currentTime = now();
+            
+            if ($xuxReward) {
+                $wasClaimedToday = $xuxReward->claimed_at && $xuxReward->claimed_at->isToday();
+                $isFuture = $xuxReward->next_available_at->isFuture();
+                
+                if ($isFuture && !$wasClaimedToday) {
+                    // La recompensa está programada para el futuro pero el usuario no reclamó hoy
+                    // Verificar si la hora configurada de HOY ya pasó
+                    $configuredHour = (string) GameSetting::getValue('daily_xux_hour', '08:00');
+                    [$hour, $minute] = array_pad(explode(':', $configuredHour), 2, '00');
+                    $todayAtConfiguredHour = $currentTime->copy()->setHour((int) $hour)->setMinute((int) $minute)->setSecond(0);
+                    
+                    if ($currentTime->gte($todayAtConfiguredHour)) {
+                        // La hora de hoy ya pasó, debería poder reclamar ahora
+                        Log::warning('Auto-correcting xux reward affected by bug', [
+                            'user_id' => $user->id,
+                            'old_next_available_at' => $xuxReward->next_available_at->toDateTimeString(),
+                            'current_time' => $currentTime->toDateTimeString(),
+                            'resetting_to' => $currentTime->toDateTimeString(),
+                        ]);
+                        
+                        $xuxReward->update([
+                            'next_available_at' => $currentTime,
+                        ]);
+                        $xuxReward->refresh();
+                    }
+                }
+            }
+            
+            if ($chuchemonReward) {
+                $wasClaimedToday = $chuchemonReward->claimed_at && $chuchemonReward->claimed_at->isToday();
+                $isFuture = $chuchemonReward->next_available_at->isFuture();
+                
+                if ($isFuture && !$wasClaimedToday) {
+                    $configuredHour = (string) GameSetting::getValue('daily_chuchemon_hour', '08:00');
+                    [$hour, $minute] = array_pad(explode(':', $configuredHour), 2, '00');
+                    $todayAtConfiguredHour = $currentTime->copy()->setHour((int) $hour)->setMinute((int) $minute)->setSecond(0);
+                    
+                    if ($currentTime->gte($todayAtConfiguredHour)) {
+                        Log::warning('Auto-correcting chuchemon reward affected by bug', [
+                            'user_id' => $user->id,
+                            'old_next_available_at' => $chuchemonReward->next_available_at->toDateTimeString(),
+                            'current_time' => $currentTime->toDateTimeString(),
+                            'resetting_to' => $currentTime->toDateTimeString(),
+                        ]);
+                        
+                        $chuchemonReward->update([
+                            'next_available_at' => $currentTime,
+                        ]);
+                        $chuchemonReward->refresh();
+                    }
+                }
+            }
+
+            // Regenerar items_data SOLO cuando corresponda un nuevo día
+            if ($xuxReward) {
+                $currentTime = now();
+                $hasItems = !empty($xuxReward->items_data);
+                
+                // Determinar si es un "nuevo día de recompensa"
+                // Caso 1: items_data está vacío (primera vez o después de reclamar)
+                // Caso 2: next_available_at ya pasó Y claimed_at es de un día diferente (no hoy)
+                $shouldRegenerate = false;
+                
+                if (!$hasItems) {
+                    // No hay tirada generada, generar una nueva
+                    $shouldRegenerate = true;
+                    $reason = 'no_items_data';
+                } else {
+                    // Ya hay una tirada generada, verificar si es de un día anterior
+                    $isAvailable = $xuxReward->next_available_at <= $currentTime;
+                    $wasClaimedToday = $xuxReward->claimed_at && $xuxReward->claimed_at->isToday();
+                    
+                    // Solo regenerar si está disponible Y NO fue reclamado hoy
+                    // Esto significa que es un día nuevo (pasó 24h) y no se ha reclamado todavía hoy
+                    if ($isAvailable && !$wasClaimedToday) {
+                        // Verificar que claimed_at sea de un día anterior (no de hoy)
+                        $claimedDate = $xuxReward->claimed_at ? $xuxReward->claimed_at->toDateString() : null;
+                        $todayDate = $currentTime->toDateString();
+                        
+                        if ($claimedDate && $claimedDate !== $todayDate) {
+                            // La última reclamación fue en un día diferente, regenerar
+                            $shouldRegenerate = true;
+                            $reason = 'new_day_after_claim';
+                        } elseif (!$claimedDate) {
+                            // Nunca se ha reclamado pero next_available_at ya pasó
+                            // NO regenerar si ya hay items_data (tirada activa sin reclamar)
+                            $shouldRegenerate = false;
+                            $reason = 'active_unclaimed_roll';
+                        }
+                    }
+                }
+                
+                Log::info('Checking if should regenerate xux items_data', [
+                    'user_id' => $user->id,
+                    'should_regenerate' => $shouldRegenerate,
+                    'reason' => $reason ?? 'not_needed',
+                    'has_items' => $hasItems,
+                    'current_time' => $currentTime->toDateTimeString(),
+                    'next_available_at' => $xuxReward->next_available_at->toDateTimeString(),
+                    'claimed_at' => $xuxReward->claimed_at ? $xuxReward->claimed_at->toDateTimeString() : 'null',
+                ]);
+                
+                if ($shouldRegenerate) {
+                    $newQuantity = GameSetting::getInt('daily_xux_quantity', 10);
+                    $newItemsData = $this->generateItemsDistribution($newQuantity);
+                    
+                    $xuxReward->update([
+                        'quantity' => $newQuantity,
+                        'items_data' => $newItemsData,
+                    ]);
+                    $xuxReward->refresh();
+                    
+                    Log::info('Generated new daily xux items distribution', [
+                        'user_id' => $user->id,
+                        'items_data' => $newItemsData,
+                        'reason' => $reason ?? 'unknown',
+                    ]);
+                }
+            }
+
+            // Recalcular next_available_at si la hora configurada ha cambiado
+            $this->recalculateNextAvailableIfNeeded($xuxReward, 'daily_xux_hour', '08:00');
+            $this->recalculateNextAvailableIfNeeded($chuchemonReward, 'daily_chuchemon_hour', '08:00');
 
             // Incluir configuración actual de horarios y cantidades
             $config = [
@@ -261,20 +463,39 @@ class DailyRewardController extends Controller
                 return response()->json(['message' => 'La recompensa diaria de Xux no está configurada correctamente.'], 409);
             }
 
-            // Dar solo chuches aleatorias (sin vacunas)
-            $totalItems = $reward->quantity; // 10 o lo que esté configurado
+            // Obtener la distribución de items (DEBE existir - se genera solo en getDailyRewards)
+            $itemsData = $reward->items_data;
             
-            // Obtener un item aleatorio (de tipo apilable)
-            $randomItem = Item::where('type', '!=', 'no_apilable')->inRandomOrder()->first();
-            if (!$randomItem) {
-                return response()->json(['message' => 'No hay items disponibles'], 500);
+            // Si no existe items_data, el usuario debe cargar primero la pantalla de recompensas
+            if (empty($itemsData)) {
+                return response()->json([
+                    'message' => 'Recompensa no disponible. Por favor, recarga la página.',
+                    'error' => 'items_data_not_generated'
+                ], 400);
             }
 
-            // Validar espacio ANTES de añadir items (considerando slots parcialmente llenos)
-            $itemsToAdd = [
-                ['type' => 'item', 'item_id' => $randomItem->id, 'quantity' => $totalItems],
-            ];
+            // Cargar los items completos desde la base de datos
+            $itemIds = array_column($itemsData, 'item_id');
+            $items = Item::whereIn('id', $itemIds)->get()->keyBy('id');
             
+            // Construir array de items con objetos completos
+            $itemsDistribution = array_map(function($data) use ($items) {
+                return [
+                    'item' => $items[$data['item_id']],
+                    'quantity' => $data['quantity']
+                ];
+            }, $itemsData);
+
+            // Preparar array para validación de espacio
+            $itemsToAdd = array_map(function($dist) {
+                return [
+                    'type' => 'item',
+                    'item_id' => $dist['item']->id,
+                    'quantity' => $dist['quantity']
+                ];
+            }, $itemsDistribution);
+            
+            // Validar espacio ANTES de añadir items (considerando slots parcialmente llenos)
             $spaceCheck = $this->canFitItems($user->id, $itemsToAdd);
             
             if (!$spaceCheck['can_fit']) {
@@ -286,35 +507,55 @@ class DailyRewardController extends Controller
                 ], 400);
             }
 
-            // Agregar las chuches a la mochila
-            $itemRow = MochilaXux::where('user_id', $user->id)
-                ->where('item_id', $randomItem->id)
-                ->whereNull('chuchemon_id')
-                ->whereNull('vaccine_id')
-                ->first();
+            // Agregar todas las chuches a la mochila
+            foreach ($itemsDistribution as $dist) {
+                $itemRow = MochilaXux::where('user_id', $user->id)
+                    ->where('item_id', $dist['item']->id)
+                    ->whereNull('chuchemon_id')
+                    ->whereNull('vaccine_id')
+                    ->first();
 
-            if ($itemRow) {
-                $itemRow->increment('quantity', $totalItems);
-            } else {
-                MochilaXux::create([
-                    'user_id'  => $user->id,
-                    'item_id'  => $randomItem->id,
-                    'quantity' => $totalItems,
-                ]);
+                if ($itemRow) {
+                    $itemRow->increment('quantity', $dist['quantity']);
+                } else {
+                    MochilaXux::create([
+                        'user_id'  => $user->id,
+                        'item_id'  => $dist['item']->id,
+                        'quantity' => $dist['quantity'],
+                    ]);
+                }
             }
 
-            // Actualizar el reward
-            $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '08:00');
+            // Actualizar el reward y LIMPIAR items_data (para que se regenere mañana)
+            // Usar forceNextDay = true para garantizar que sea mañana
+            $nextAvailable = $this->nextAvailableAt('daily_xux_hour', '08:00', true);
+            
+            Log::info('Claiming xux reward - setting next_available_at', [
+                'user_id' => $user->id,
+                'current_time' => now()->toDateTimeString(),
+                'next_available_at' => $nextAvailable->toDateTimeString(),
+            ]);
+            
             $reward->update([
                 'claimed_at' => now(),
                 'next_available_at' => $nextAvailable,
+                'items_data' => null, // Limpiar para que se genere nueva tirada mañana
             ]);
             $reward->refresh(); // Refrescar para obtener el valor correcto de la BD
 
+            // Preparar respuesta con todos los items recibidos
+            $itemsSummary = array_map(function($dist) {
+                return [
+                    'name' => $dist['item']->name,
+                    'quantity' => $dist['quantity'],
+                    'image' => $dist['item']->image
+                ];
+            }, $itemsDistribution);
+
             return response()->json([
                 'message' => 'Reward reclamado exitosamente',
-                'item_name' => $randomItem->name,
-                'quantity' => $totalItems,
+                'items' => $itemsSummary,
+                'total_quantity' => array_sum(array_column($itemsSummary, 'quantity')),
                 'next_available_at' => $reward->next_available_at,
             ], 200);
         } catch (\Exception $e) {
@@ -400,8 +641,8 @@ class DailyRewardController extends Controller
                 ]);
             }
 
-            // Actualizar el reward
-            $nextAvailable = $this->nextAvailableAt('daily_chuchemon_hour', '08:00');
+            // Actualizar el reward (forceNextDay = true para garantizar que sea mañana)
+            $nextAvailable = $this->nextAvailableAt('daily_chuchemon_hour', '08:00', true);
             $reward->update([
                 'claimed_at' => now(),
                 'next_available_at' => $nextAvailable,
@@ -436,7 +677,7 @@ class DailyRewardController extends Controller
      */
     private function createDailyXuxReward($userId): DailyReward
     {
-        $item = Item::where('type', 'apilable')->inRandomOrder()->first();
+        $item = Item::where('type', '!=', 'no_apilable')->inRandomOrder()->first();
         if (!$item) {
             $item = Item::query()->firstOrCreate(
                 ['name' => Item::NAME_XUX_MADUIXA],
@@ -448,13 +689,69 @@ class DailyRewardController extends Controller
             );
         }
 
+        $quantity = GameSetting::getInt('daily_xux_quantity', 10);
+        
+        // Generar distribución de items (2-3 tipos diferentes)
+        $itemsData = $this->generateItemsDistribution($quantity);
+
         return DailyReward::create([
             'user_id' => $userId,
             'reward_type' => 'xux',
-            'item_id' => $item->id,
-            'quantity' => GameSetting::getInt('daily_xux_quantity', 10),
+            'item_id' => $item->id, // Mantener para compatibilidad
+            'quantity' => $quantity,
+            'items_data' => $itemsData,
             'next_available_at' => now(),
         ]);
+    }
+
+    /**
+     * Genera una distribución aleatoria de items (2-3 tipos diferentes)
+     */
+    private function generateItemsDistribution(int $totalQuantity): array
+    {
+        // Obtener todos los items apilables disponibles
+        $availableItems = Item::where('type', '!=', 'no_apilable')->get();
+        
+        if ($availableItems->count() < 2) {
+            // Fallback: si no hay suficientes items, devolver uno solo
+            $item = $availableItems->first();
+            return [
+                [
+                    'item_id' => $item->id,
+                    'quantity' => $totalQuantity,
+                ]
+            ];
+        }
+
+        // Decidir cuántos tipos diferentes dar (2 o 3 aleatorio)
+        $numTypes = rand(2, min(3, $availableItems->count()));
+        
+        // Seleccionar items aleatorios sin repetir
+        $selectedItems = $availableItems->random($numTypes);
+        
+        // Distribuir la cantidad total aleatoriamente entre los items seleccionados
+        $distribution = [];
+        $remaining = $totalQuantity;
+        
+        foreach ($selectedItems as $index => $item) {
+            if ($index === $numTypes - 1) {
+                // Último item: dar todo lo que queda
+                $quantity = $remaining;
+            } else {
+                // Items anteriores: dar entre 1 y lo que queda menos (numTypes - index - 1)
+                $minQuantity = 1;
+                $maxQuantity = $remaining - ($numTypes - $index - 1);
+                $quantity = rand($minQuantity, $maxQuantity);
+                $remaining -= $quantity;
+            }
+            
+            $distribution[] = [
+                'item_id' => $item->id,
+                'quantity' => $quantity
+            ];
+        }
+
+        return $distribution;
     }
 
     /**

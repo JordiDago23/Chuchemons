@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, interval } from 'rxjs';
+import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
@@ -59,7 +59,6 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   selectedChuchemonForDetails: ChuchemonExtended | null = null;
 
   private pageVisible = true;
-  private autoRefreshSubscription?: Subscription;
   private readonly visibilityChangeHandler = () => {
     if (!document.hidden) {
       this.loadChuchemons(false);
@@ -75,6 +74,8 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.checkAdminStatus();
     this.loadChuchemons();
+    
+    // Suscribirse a cambios de estado para actualizar automáticamente
     this.chuchemonService.stateChanges$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -82,9 +83,6 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
           this.loadChuchemons(false, true);
         }
       });
-    
-    // Auto-refresh every 10 seconds when page is visible
-    this.setupAutoRefresh();
     
     // Reload when page/tab becomes visible
     document.addEventListener('visibilitychange', this.visibilityChangeHandler);
@@ -94,23 +92,9 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
-    if (this.autoRefreshSubscription) {
-      this.autoRefreshSubscription.unsubscribe();
-    }
     if (this.evolutionCelebrationTimer) {
       clearTimeout(this.evolutionCelebrationTimer);
     }
-  }
-
-  private setupAutoRefresh(): void {
-    // Auto-refresh every 10 seconds
-    this.autoRefreshSubscription = interval(10000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        if (!this.isLoading && !document.hidden) {
-          this.loadChuchemons(false, true);
-        }
-      });
   }
 
   @HostListener('window:focus', ['$event'])

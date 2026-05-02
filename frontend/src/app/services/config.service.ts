@@ -25,14 +25,14 @@ export interface DailyRewardsData {
 })
 export class ConfigService implements OnDestroy {
   private readonly API_BASE = 'http://localhost:8000/api';
-  private readonly POLL_INTERVAL = 60000; // 60 segundos
+  private readonly POLL_INTERVAL = 30000; // 30 segundos - solo para config de admin
   
   private destroy$ = new Subject<void>();
   
   // BehaviorSubjects para configuraciones
   private rewardConfigSubject = new BehaviorSubject<RewardConfig>({
     daily_xux_quantity: 10,
-    daily_xux_hour: '06:00',
+    daily_xux_hour: '08:00',
     daily_chuchemon_hour: '08:00'
   });
   
@@ -95,7 +95,7 @@ export class ConfigService implements OnDestroy {
         if (data.config) {
           const config: RewardConfig = {
             daily_xux_quantity: data.config.daily_xux_quantity ?? 10,
-            daily_xux_hour: data.config.daily_xux_hour ?? '06:00',
+            daily_xux_hour: data.config.daily_xux_hour ?? '08:00',
             daily_chuchemon_hour: data.config.daily_chuchemon_hour ?? '08:00'
           };
           this.rewardConfigSubject.next(config);

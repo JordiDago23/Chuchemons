@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subject, interval, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Chuchemon } from '../../models/chuchemon.model';
 import { ChuchemonService } from '../../services/chuchemon.service';
@@ -27,7 +27,6 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
   private destroy$ = new Subject<void>();
-  private pollingSubscription?: Subscription;
 
   constructor(
     private chuchemonService: ChuchemonService,
@@ -40,25 +39,19 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(u => this.user = u);
     this.loadMyChuchemons();
     this.loadCurrentTeam();
-    this.startPolling();
+    
+    // Suscribirse a cambios de estado para actualizar automáticamente
+    this.chuchemonService.stateChanges$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadMyChuchemons();
+        this.loadCurrentTeam();
+      });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.stopPolling();
-  }
-
-  private startPolling(): void {
-    // Verificar cambios cada 30 segundos
-    this.pollingSubscription = interval(30000).subscribe(() => {
-      this.loadMyChuchemons();
-      this.loadCurrentTeam();
-    });
-  }
-
-  private stopPolling(): void {
-    this.pollingSubscription?.unsubscribe();
   }
 
   loadMyChuchemons(): void {

@@ -29,7 +29,7 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   // Configuración dinámica de recompensas (actualizada reactivamente)
   rewardConfig: RewardConfig = {
     daily_xux_quantity: 10,
-    daily_xux_hour: '06:00',
+    daily_xux_hour: '08:00',
     daily_chuchemon_hour: '08:00'
   };
 
@@ -113,9 +113,15 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.http.post('http://localhost:8000/api/daily-rewards/xux', {}).subscribe({
       next: (response: any) => {
-        let msg = `+${response.xux_quantity} Chuches`;
-        if (response.vaccine) {
-          msg += ` + ${response.vaccine_quantity} ${response.vaccine}`;
+        // Construir mensaje con todos los items recibidos
+        let msg = 'Recibido: ';
+        if (response.items && response.items.length > 0) {
+          const itemsText = response.items
+            .map((item: any) => `${item.quantity}x ${item.name}`)
+            .join(', ');
+          msg += itemsText;
+        } else {
+          msg += `${response.total_quantity} Chuches`;
         }
         this.successMessage = msg;
         
@@ -123,7 +129,7 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
         this.configService.refreshDailyRewards();
         this.mochilaService.refreshMochila();
         
-        setTimeout(() => this.successMessage = null, 4000);
+        setTimeout(() => this.successMessage = null, 5000);
       },
       error: (error) => {
         console.error('Error claiming xux reward:', error);

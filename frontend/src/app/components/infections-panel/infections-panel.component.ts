@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { interval, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { InfectionsService } from '../../services/infections.service';
+import { LevelingService } from '../../services/leveling.service';
 
 @Component({
   selector: 'app-infections-panel',
@@ -25,33 +28,64 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
   feedbackMap: Record<number, { type: string; msg: string } | null> = {};
   isLoading = false;
   errorMessage: string | null = null;
-  private pollingSubscription?: Subscription;
+  private destroy$ = new Subject<void>();
   private readonly api = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private infectionsService: InfectionsService,
+    private levelingService: LevelingService
+  ) {}
 
   ngOnInit(): void {
-    this.loadInfections();
-    this.loadMalalties();
-    this.loadVaccines();
-    this.loadTeamHp();
-    this.startPolling();
+    // Cargar datos inicialmente
+    this.infectionsService.refreshAll();
+    this.levelingService.refreshLevelingChuchemons();
+
+    // Suscribirse a infections reactivas
+    this.infectionsService.infections$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(infections => {
+        this.infections = infections;
+        this.generateTodos();
+      });
+
+    // Suscribirse a malalties reactivas
+    this.infectionsService.malalties$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(malalties => {
+        this.malalties = malalties;
+        this.generateTodos();
+      });
+
+    // Suscribirse a vaccines reactivas
+    this.infectionsService.vaccines$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(vaccines => {
+        this.vaccines = vaccines;
+        this.generateTodos();
+      });
+
+    // Suscribirse a team chuchemons reactivos
+    this.levelingService.levelingChuchemons$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(chuchemons => {
+        this.teamChuchemons = chuchemons;
+        this.lowHpChuchemons = chuchemons.filter((c: any) => {
+          const curr = c.current_hp ?? c.max_hp;
+          const max = c.max_hp ?? 1;
+          return curr < max;
+        });
+        // Init heal qty map
+        chuchemons.forEach((c: any) => {
+          if (this.healQtyMap[c.id] === undefined) this.healQtyMap[c.id] = 1;
+        });
+      });
   }
 
   ngOnDestroy(): void {
-    this.stopPolling();
-  }
-
-  private startPolling(): void {
-    this.pollingSubscription = interval(30000).subscribe(() => {
-      this.loadInfections();
-      this.loadVaccines();
-      this.loadTeamHp();
-    });
-  }
-
-  private stopPolling(): void {
-    this.pollingSubscription?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   generateTodos(): void {
@@ -98,45 +132,20 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
   }
 
   loadInfections(): void {
-    this.http.get<any[]>('http://localhost:8000/api/infections').subscribe({
-      next: (data) => {
-        this.infections = data;
-        this.generateTodos();
-      },
-      error: (error) => {
-        console.error('Error loading infections:', error);
-      }
-    });
+    this.infectionsService.refreshInfections(true);
   }
 
   loadMalalties(): void {
-    this.http.get<any[]>('http://localhost:8000/api/malalties').subscribe({
-      next: (data) => {
-        this.malalties = data;
-        this.generateTodos();
-      },
-      error: (error) => {
-        console.error('Error loading malalties:', error);
-      }
-    });
+    this.infectionsService.refreshMalalties(true);
   }
 
   loadVaccines(): void {
-    this.http.get<any[]>('http://localhost:8000/api/vaccines').subscribe({
-      next: (data) => {
-        this.vaccines = data;
-        this.generateTodos();
-      },
-      error: (error) => {
-        console.error('Error loading vaccines:', error);
-      }
-    });
+    this.infectionsService.refreshVaccines(true);
   }
 
   cureInfection(infectionId: number, vaccineId: number): void {
-    this.http.post(`http://localhost:8000/api/infections/cure/${infectionId}/${vaccineId}`, {}).subscribe({
+    this.infectionsService.cureInfection(infectionId, vaccineId).subscribe({
       next: () => {
-        this.loadInfections();
         this.errorMessage = null;
       },
       error: (error) => {
@@ -147,23 +156,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
   }
 
   loadTeamHp(): void {
-    this.http.get<any>(`${this.api}/level/chuchemons`).subscribe({
-      next: (response) => {
-        // El backend ahora devuelve { chuchemons: [...], config: {...} } o solo array
-        const data = response.chuchemons || response;
-        this.teamChuchemons = data;
-        this.lowHpChuchemons = data.filter((c: any) => {
-          const curr = c.current_hp ?? c.max_hp;
-          const max = c.max_hp ?? 1;
-          return curr < max;
-        });
-        // Init heal qty map
-        data.forEach((c: any) => {
-          if (this.healQtyMap[c.id] === undefined) this.healQtyMap[c.id] = 1;
-        });
-      },
-      error: () => {}
-    });
+    this.levelingService.refreshLevelingChuchemons(true);
   }
 
   healChuchemon(c: any): void {
@@ -171,11 +164,10 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
     if (qty < 1 || this.healingMap[c.id]) return;
     this.healingMap[c.id] = true;
     this.feedbackMap[c.id] = null;
-    this.http.post<any>(`${this.api}/user/chuchemons/${c.id}/heal`, { quantity: qty }).subscribe({
+    this.levelingService.healChuchemon(c.id, qty).subscribe({
       next: (res) => {
         this.feedbackMap[c.id] = { type: 'success', msg: res.message };
         this.healingMap[c.id] = false;
-        this.loadTeamHp();
       },
       error: (err) => {
         this.feedbackMap[c.id] = { type: 'error', msg: err.error?.message ?? 'Error al curar' };
@@ -188,11 +180,10 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
     if (this.evolvingMap[c.id]) return;
     this.evolvingMap[c.id] = true;
     this.feedbackMap[c.id] = null;
-    this.http.post<any>(`${this.api}/chuchemons/${c.id}/evolve`, {}).subscribe({
+    this.levelingService.evolveChuchemon(c.id).subscribe({
       next: (res) => {
         this.feedbackMap[c.id] = { type: 'success', msg: res.message };
         this.evolvingMap[c.id] = false;
-        this.loadTeamHp();
       },
       error: (err) => {
         this.feedbackMap[c.id] = { type: 'error', msg: err.error?.message ?? 'Error al evolucionar' };

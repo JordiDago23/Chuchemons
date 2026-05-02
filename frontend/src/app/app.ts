@@ -25,7 +25,7 @@ export class App {
   protected readonly isGlobalLoading = signal(false);
 
   constructor() {
-    // Iniciar polling global de configuraciones
+    // Iniciar polling solo de configuraciones (datos del admin que cambian raramente)
     this.configService.startPolling();
     this.loading.isLoading$
       .pipe(takeUntilDestroyed(this.destroyRef))
