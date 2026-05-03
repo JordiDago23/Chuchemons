@@ -539,13 +539,13 @@ class DailyRewardController extends Controller
             // Agregar a la mochila
             foreach ($distribution as $dist) {
                 if ($dist['type'] === 'vaccine') {
-                    $row = MochilaXux::where('user_id', $user->id)
-                        ->where('vaccine_id', $dist['obj']->id)
-                        ->whereNull('item_id')->whereNull('chuchemon_id')->first();
-                    if ($row) {
-                        $row->increment('quantity', $dist['quantity']);
-                    } else {
-                        MochilaXux::create(['user_id' => $user->id, 'vaccine_id' => $dist['obj']->id, 'quantity' => $dist['quantity']]);
+                    // Vacunas NO son apilables: crear registros individuales con quantity = 1
+                    for ($i = 0; $i < $dist['quantity']; $i++) {
+                        MochilaXux::create([
+                            'user_id' => $user->id,
+                            'vaccine_id' => $dist['obj']->id,
+                            'quantity' => 1, // 1 vacuna por registro (NO apilable)
+                        ]);
                     }
                 } else {
                     $row = MochilaXux::where('user_id', $user->id)

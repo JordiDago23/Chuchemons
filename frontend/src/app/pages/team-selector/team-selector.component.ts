@@ -99,12 +99,36 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
         this.selectedChuchemons[position] = null;
         return;
       }
-      // Si está en otro slot → liberarlo antes de moverlo
-      this.selectedChuchemons = this.selectedChuchemons.map((id, i) =>
-        i !== position && id === chuchemonId ? null : id
-      ) as (number | null)[];
     }
     this.selectedChuchemons[position] = chuchemonId;
+  }
+
+  /**
+   * Determina si un slot debe estar deshabilitado para un chuchemon específico
+   */
+  isSlotDisabledForChuchemon(position: number, chuchemonId: number): boolean {
+    const currentInSlot = this.selectedChuchemons[position];
+    
+    // Si el slot está ocupado por otro chuchemon diferente → deshabilitar
+    if (currentInSlot !== null && currentInSlot !== chuchemonId) {
+      return true;
+    }
+    
+    // Si es el mismo chuchemon en este slot → NO deshabilitar (para poder deseleccionar)
+    if (currentInSlot === chuchemonId) {
+      return false;
+    }
+    
+    // Contar cuántas copias de este chuchemon ya están en uso en OTROS slots
+    const usageInOtherSlots = this.selectedChuchemons.filter(
+      (id, idx) => idx !== position && id === chuchemonId
+    ).length;
+    
+    const chuchemon = this.myChuchemons.find(c => c.id === chuchemonId);
+    const maxCopies = chuchemon?.count ?? 1;
+    
+    // Si ya usaste todas las copias disponibles → deshabilitar
+    return usageInOtherSlots >= maxCopies;
   }
 
   getChuchemonImage(position: number): string {
@@ -141,7 +165,7 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
         next: () => {
           this.successMessage = 'Equipo guardado exitosamente';
           setTimeout(() => {
-            this.router.navigate(['/chuchedex']);
+            this.router.navigate(['/home']);
           }, 1500);
         },
         error: (error) => {
@@ -152,7 +176,7 @@ export class TeamSelectorComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/chuchedex']);
+    this.router.navigate(['/home']);
   }
 
   logout(): void {

@@ -56,7 +56,11 @@
               <div class="dropdown-trigger">
                 <select (change)="selectChuchemon(position, +$any($event.target).value)" class="slot-select">
                   <option value="">Selecciona un Chuchemon</option>
-                  <option *ngFor="let chuchemon of myChuchemons" [value]="chuchemon.id">
+                  <option 
+                    *ngFor="let chuchemon of myChuchemons" 
+                    [value]="chuchemon.id"
+                    [disabled]="isSlotDisabledForChuchemon(position, chuchemon.id)"
+                  >
                     {{ chuchemon.name }} (x{{ chuchemon.count ?? 1 }})
                   </option>
                 </select>
@@ -86,8 +90,8 @@
                   *ngFor="let position of [0, 1, 2]"
                   class="slot-btn"
                   [class.selected]="selectedChuchemons[position] === chuchemon.id"
-                  [class.occupied]="selectedChuchemons[position] !== null && selectedChuchemons[position] !== chuchemon.id"
-                  [disabled]="selectedChuchemons[position] !== null && selectedChuchemons[position] !== chuchemon.id"
+                  [class.occupied]="isSlotDisabledForChuchemon(position, chuchemon.id)"
+                  [disabled]="isSlotDisabledForChuchemon(position, chuchemon.id)"
                   (click)="selectChuchemon(position, chuchemon.id)"
                 >
                   {{ selectedChuchemons[position] === chuchemon.id ? '✓ Slot ' + (position + 1) : 'Slot ' + (position + 1) }}

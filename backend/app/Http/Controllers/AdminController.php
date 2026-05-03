@@ -588,19 +588,13 @@ class AdminController extends Controller
             ], 422);
         }
 
-        // Añadir items a la mochila
-        $existing = MochilaXux::where('user_id', $targetUser->id)
-            ->where('vaccine_id', $vaccine->id)
-            ->first();
-
-        if ($existing) {
-            $existing->quantity += $qtyToAdd;
-            $existing->save();
-        } else {
+        // Añadir vacunas a la mochila
+        // Vacunas NO son apilables: cada vacuna debe ser un registro separado con quantity = 1
+        for ($i = 0; $i < $qtyToAdd; $i++) {
             MochilaXux::create([
                 'user_id'    => $targetUser->id,
                 'vaccine_id' => $vaccine->id,
-                'quantity'   => $qtyToAdd,
+                'quantity'   => 1, // 1 vacuna por registro (NO apilable)
             ]);
         }
 

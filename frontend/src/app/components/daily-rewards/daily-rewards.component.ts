@@ -116,15 +116,12 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
     if (n.includes('maduixa') || n.includes('fresa'))          return '🍓';
     if (n.includes('llimona') || n.includes('limon'))          return '🍋';
     if (n.includes('cola'))                                    return '🥤';
-    if (n.includes('taronja') || n.includes('naranja'))        return '🍊';
-    if (n.includes('síndria') || n.includes('sandia'))         return '🍉';
-    if (n.includes('raïm') || n.includes('uva'))               return '🍇';
     if (n.includes('exp'))                                     return '⭐';
     // Vacunas
     if (n.includes('insulina'))                                return '💉';
     if (n.includes('xocolatina') || n.includes('chocolate'))   return '🍫';
     if (n.includes('fruita') || n.includes('fruta'))           return '🍎';
-    if (n.includes('xal') || n.includes('sal'))                return '🧂';
+    if (n.includes('xal') || n.includes('sal'))                return '🍬';
     return '🍬';
   }
 
