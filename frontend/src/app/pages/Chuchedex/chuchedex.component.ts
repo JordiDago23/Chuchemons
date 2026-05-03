@@ -378,7 +378,7 @@ export class ChuchedexComponent implements OnInit, OnDestroy {
       this.evolutionCelebrationName = '';
       this.evolutionCelebrationSize = '';
       this.evolutionCelebrationTimer = null;
-    }, 1800);
+    }, 3500);
   }
 
   logout(): void {

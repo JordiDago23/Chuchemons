@@ -209,3 +209,27 @@
     (cancel)="onCancelAction()"
   ></app-confirm-dialog>
 </div>
+
+@if (showEvoOverlay) {
+  <div class="lp-evo-overlay" aria-live="assertive">
+    <div class="lp-evo-flash" aria-hidden="true"></div>
+    <div class="lp-evo-rings" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="lp-evo-sparks" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="lp-evo-stars" aria-hidden="true">
+      <span>★</span><span>✦</span><span>★</span>
+      <span>✦</span><span>★</span><span>✦</span>
+    </div>
+    <div class="lp-evo-card">
+      <p class="lp-evo-eyebrow">¡Evolución completada!</p>
+      <div class="lp-evo-size-badge">{{ evoSize }}</div>
+      <h2 class="lp-evo-name">{{ evoName }}</h2>
+      <p class="lp-evo-sub">ha evolucionado</p>
+    </div>
+  </div>
+}

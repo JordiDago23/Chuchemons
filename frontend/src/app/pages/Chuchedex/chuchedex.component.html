@@ -132,14 +132,25 @@
     ></app-confirm-dialog>
 
     @if (showEvolutionCelebration) {
-      <div class="evolution-celebration" role="status" aria-live="assertive">
-        <div class="evolution-celebration__card">
-          <div class="evolution-celebration__rings" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </div>
-          <p class="evolution-celebration__eyebrow">Evolución completada</p>
-          <h2>{{ evolutionCelebrationName }}</h2>
-          <p>Ahora es tamaño <strong>{{ evolutionCelebrationSize }}</strong>.</p>
+      <div class="evo-overlay" role="status" aria-live="assertive">
+        <div class="evo-flash" aria-hidden="true"></div>
+        <div class="evo-rings" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="evo-sparks" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="evo-stars" aria-hidden="true">
+          <span>★</span><span>✦</span><span>★</span>
+          <span>✦</span><span>★</span><span>✦</span>
+        </div>
+        <div class="evo-card">
+          <p class="evo-eyebrow">¡Evolución completada!</p>
+          <div class="evo-size-badge">{{ evolutionCelebrationSize }}</div>
+          <h2 class="evo-name">{{ evolutionCelebrationName }}</h2>
+          <p class="evo-sub">ha evolucionado</p>
         </div>
       </div>
     }

@@ -31,6 +31,12 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   private confirmAction: (() => void) | null = null;
   private destroy$ = new Subject<void>();
 
+  // Evolution animation overlay
+  showEvoOverlay = false;
+  evoName = '';
+  evoSize = '';
+  private evoTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Configuración de costos de evolución (actualizada reactivamente)
   evolveCostConfig: EvolutionConfig = {
     xux_petit_mitja: 3,
@@ -81,6 +87,7 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.evoTimer) clearTimeout(this.evoTimer);
   }
 
   loadChuchemons(): void {
@@ -99,23 +106,20 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
     const cost = this.getEvolveCost();
     const currentXp = this.selectedChuchemon.experience ?? 0;
     const xpNeeded = this.selectedChuchemon.experience_for_next_level ?? 0;
-    
+
     if ((this.selectedChuchemon.xuxes_exp ?? 0) < cost) {
-      this.actionMessage = `Necesitas ${cost} Xux Exp para evolucionar (te faltan ${xpNeeded - currentXp} XP). Tienes ${this.selectedChuchemon.xuxes_exp ?? 0} caramelos.`;
+      this.actionMessage = `Necesitas ${cost} Xux Exp (te faltan ${Math.max(0, xpNeeded - currentXp)} XP). Tienes ${this.selectedChuchemon.xuxes_exp ?? 0}.`;
       return;
     }
-    this.openConfirmDialog(
-      'Confirmar evolución',
-      `Gastarás ${cost} Xux Exp para evolucionar ${this.selectedChuchemon.name} a ${this.getNextSizeLabel()}.`,
-      () => this.executeEvolve()
-    );
-  }
 
-  private executeEvolve(): void {
+    const name = this.selectedChuchemon.name;
+    const nextSize = this.getNextSizeLabel();
+
     this.levelingService.evolveChuchemon(this.selectedChuchemon.id).subscribe({
       next: (res) => {
         const xp = res.xp_gained ?? 0;
         this.actionMessage = `${res.message ?? '¡Xuxemon evolucionado!'} · +${xp} XP`;
+        this.triggerEvoOverlay(name, nextSize);
         this.chuchemonService.notifyChuchemonStateChanged();
         if (xp > 0) {
           this.auth.refreshUser().subscribe();
@@ -125,6 +129,17 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
         this.actionMessage = err.error?.message ?? 'Error al evolucionar';
       }
     });
+  }
+
+  private triggerEvoOverlay(name: string, size: string): void {
+    this.evoName = name;
+    this.evoSize = size;
+    this.showEvoOverlay = true;
+    if (this.evoTimer) clearTimeout(this.evoTimer);
+    this.evoTimer = setTimeout(() => {
+      this.showEvoOverlay = false;
+      this.evoTimer = null;
+    }, 3500);
   }
 
   getEvolveCost(): number {
