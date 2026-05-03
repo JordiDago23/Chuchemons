@@ -9,63 +9,75 @@ class ChuchemonSeeder extends Seeder
 {
     public function run(): void
     {
+        // Rule: attack must always be > defense (guarantees min damage in battle even with worst roll + type penalty).
+        // Battle formula: damage = max(0, attack + roll(1-6) + sizeMod(0/1/2) + typeMod(-1/0/+1) - defense)
+        // Worst case Petit: damage = attack + 1 - 1 - defense = attack - defense → must be > 0.
         $chuchemons = [
-            ['name' => 'Apleki',       'element' => 'Terra', 'mida' => 'Petit',  'image' => 'apleki.png'],
-            ['name' => 'Avecrem',      'element' => 'Aire',  'mida' => 'Petit',  'image' => 'avecrem.png'],
-            ['name' => 'Bambino',      'element' => 'Terra', 'mida' => 'Petit',  'image' => 'bambino.png'],
-            ['name' => 'Beeboo',       'element' => 'Aire',  'mida' => 'Petit',  'image' => 'beeboo.png'],
-            ['name' => 'Boo-hoot',     'element' => 'Aire',  'mida' => 'Petit',  'image' => 'boo-hoot.png'],
-            ['name' => 'Cabrales',     'element' => 'Terra', 'mida' => 'Petit',  'image' => 'cabrales.png'],
-            ['name' => 'Catua',        'element' => 'Aire',  'mida' => 'Petit',  'image' => 'catua.png'],
-            ['name' => 'Catyuska',     'element' => 'Aire',  'mida' => 'Petit',  'image' => 'catyuska.png'],
-            ['name' => 'Chapapá',      'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'chapapa.png'],
-            ['name' => 'Horseluis',    'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'horseluis.png'],
-            ['name' => 'Krokolisko',   'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'krokolisko.png'],
-            ['name' => 'Kurama',       'element' => 'Terra', 'mida' => 'Petit',  'image' => 'kurama.png'],
-            ['name' => 'Ladybug',      'element' => 'Aire',  'mida' => 'Petit',  'image' => 'ladybug.png'],
-            ['name' => 'Lengualargui', 'element' => 'Terra', 'mida' => 'Petit',  'image' => 'lengualargui.png'],
-            ['name' => 'Medusation',   'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'medusation.png'],
-            ['name' => 'Meekmeek',     'element' => 'Terra', 'mida' => 'Petit',  'image' => 'meekmeek.png'],
-            ['name' => 'Megalo',       'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'megalo.png'],
-            ['name' => 'Mocha',        'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'mocha.png'],
-            ['name' => 'Murcimurci',   'element' => 'Aire',  'mida' => 'Petit',  'image' => 'murcimurci.png'],
-            ['name' => 'Nemo',         'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'nemo.png'],
-            ['name' => 'Oinkcelot',    'element' => 'Terra', 'mida' => 'Petit',  'image' => 'oinkcelot.png'],
-            ['name' => 'Oreo',         'element' => 'Terra', 'mida' => 'Petit',  'image' => 'oreo.png'],
-            ['name' => 'Otto',         'element' => 'Terra', 'mida' => 'Petit',  'image' => 'otto.png'],
-            ['name' => 'Pinchimott',   'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'pinchimott.png'],
-            ['name' => 'Pollis',       'element' => 'Aire',  'mida' => 'Petit',  'image' => 'pollis.png'],
-            ['name' => 'Posón',        'element' => 'Aire',  'mida' => 'Petit',  'image' => 'poson.png'],
-            ['name' => 'Quakko',       'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'quakko.png'],
-            ['name' => 'Rajoy',        'element' => 'Aire',  'mida' => 'Petit',  'image' => 'rajoy.png'],
-            ['name' => 'Rawlion',      'element' => 'Terra', 'mida' => 'Petit',  'image' => 'rawlion.png'],
-            ['name' => 'Rexxo',        'element' => 'Terra', 'mida' => 'Petit',  'image' => 'rexxo.png'],
-            ['name' => 'Ron',          'element' => 'Terra', 'mida' => 'Petit',  'image' => 'ron.png'],
-            ['name' => 'Sesssi',       'element' => 'Terra', 'mida' => 'Petit',  'image' => 'sesssi.png'],
-            ['name' => 'Shelly',       'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'shelly.png'],
-            ['name' => 'Sirucco',      'element' => 'Aire',  'mida' => 'Petit',  'image' => 'sirucco.png'],
-            ['name' => 'Peereira',     'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'peereira.png'],
-            ['name' => 'Trompeta',     'element' => 'Aire',  'mida' => 'Petit',  'image' => 'trompeta.png'],
-            ['name' => 'Trompi',       'element' => 'Terra', 'mida' => 'Petit',  'image' => 'trompi.png'],
-            ['name' => 'Tux',          'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'tux.png'],
-            ['name' => 'Chopper',      'element' => 'Aire',  'mida' => 'Petit',  'image' => 'chopper.png'],
-            ['name' => 'Cuellilargui', 'element' => 'Terra', 'mida' => 'Petit',  'image' => 'cuellilargui.png'],
-            ['name' => 'Deskangoo',    'element' => 'Terra', 'mida' => 'Petit',  'image' => 'deskangoo.png'],
-            ['name' => 'Doflamingo',   'element' => 'Aire',  'mida' => 'Petit',  'image' => 'doflamingo.png'],
-            ['name' => 'Dolly',        'element' => 'Terra', 'mida' => 'Petit',  'image' => 'dolly.png'],
-            ['name' => 'Elconchudo',   'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'elconchudo.png'],
-            ['name' => 'Eldientes',    'element' => 'Terra', 'mida' => 'Petit',  'image' => 'eldientes.png'],
-            ['name' => 'Elgominas',    'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'elgominas.png'],
-            ['name' => 'Flipper',      'element' => 'Aigua', 'mida' => 'Petit',  'image' => 'flipper.png'],
-            ['name' => 'Floppi',       'element' => 'Aire',  'mida' => 'Petit',  'image' => 'floppi.png'],
+            // ── TERRA ─────────────────────────────────────────────────────────────
+            // Petit
+            ['name' => 'Apleki',       'element' => 'Terra', 'mida' => 'Petit', 'attack' => 65, 'defense' => 39, 'speed' => 72,  'image' => 'apleki.png'],
+            ['name' => 'Meekmeek',     'element' => 'Terra', 'mida' => 'Petit', 'attack' => 60, 'defense' => 56, 'speed' => 77,  'image' => 'meekmeek.png'],
+            ['name' => 'Oreo',         'element' => 'Terra', 'mida' => 'Petit', 'attack' => 71, 'defense' => 62, 'speed' => 52,  'image' => 'oreo.png'],
+            ['name' => 'Ron',          'element' => 'Terra', 'mida' => 'Petit', 'attack' => 67, 'defense' => 61, 'speed' => 54,  'image' => 'ron.png'],
+            ['name' => 'Trompi',       'element' => 'Terra', 'mida' => 'Petit', 'attack' => 77, 'defense' => 69, 'speed' => 82,  'image' => 'trompi.png'],
+            ['name' => 'Cuellilargui', 'element' => 'Terra', 'mida' => 'Petit', 'attack' => 84, 'defense' => 46, 'speed' => 86,  'image' => 'cuellilargui.png'],
+            ['name' => 'Dolly',        'element' => 'Terra', 'mida' => 'Petit', 'attack' => 87, 'defense' => 36, 'speed' => 81,  'image' => 'dolly.png'],
+            // Mitjà
+            ['name' => 'Lengualargui', 'element' => 'Terra', 'mida' => 'Mitj',  'attack' => 87, 'defense' => 60, 'speed' => 60,  'image' => 'lengualargui.png'],
+            ['name' => 'Otto',         'element' => 'Terra', 'mida' => 'Mitj',  'attack' => 66, 'defense' => 60, 'speed' => 92,  'image' => 'otto.png'],
+            ['name' => 'Rawlion',      'element' => 'Terra', 'mida' => 'Mitj',  'attack' => 90, 'defense' => 61, 'speed' => 96,  'image' => 'rawlion.png'],
+            ['name' => 'Sesssi',       'element' => 'Terra', 'mida' => 'Mitj',  'attack' => 57, 'defense' => 37, 'speed' => 30,  'image' => 'sesssi.png'],
+            ['name' => 'Deskangoo',    'element' => 'Terra', 'mida' => 'Mitj',  'attack' => 70, 'defense' => 56, 'speed' => 64,  'image' => 'deskangoo.png'],
+            // Gran
+            ['name' => 'Bambino',      'element' => 'Terra', 'mida' => 'Gran',  'attack' => 87, 'defense' => 78, 'speed' => 58,  'image' => 'bambino.png'],
+            ['name' => 'Cabrales',     'element' => 'Terra', 'mida' => 'Gran',  'attack' => 80, 'defense' => 68, 'speed' => 71,  'image' => 'cabrales.png'],
+            ['name' => 'Kurama',       'element' => 'Terra', 'mida' => 'Gran',  'attack' => 62, 'defense' => 52, 'speed' => 81,  'image' => 'kurama.png'],
+            ['name' => 'Oinkcelot',    'element' => 'Terra', 'mida' => 'Gran',  'attack' => 62, 'defense' => 54, 'speed' => 83,  'image' => 'oinkcelot.png'],
+            ['name' => 'Rexxo',        'element' => 'Terra', 'mida' => 'Gran',  'attack' => 92, 'defense' => 73, 'speed' => 81,  'image' => 'rexxo.png'],
+            ['name' => 'Eldientes',    'element' => 'Terra', 'mida' => 'Gran',  'attack' => 58, 'defense' => 52, 'speed' => 45,  'image' => 'eldientes.png'],
+
+            // ── AIRE ──────────────────────────────────────────────────────────────
+            // Petit
+            ['name' => 'Beeboo',       'element' => 'Aire',  'mida' => 'Petit', 'attack' => 93, 'defense' => 62, 'speed' => 35,  'image' => 'beeboo.png'],
+            ['name' => 'Catua',        'element' => 'Aire',  'mida' => 'Petit', 'attack' => 82, 'defense' => 79, 'speed' => 54,  'image' => 'catua.png'],
+            ['name' => 'Ladybug',      'element' => 'Aire',  'mida' => 'Petit', 'attack' => 86, 'defense' => 68, 'speed' => 41,  'image' => 'ladybug.png'],
+            ['name' => 'Murcimurci',   'element' => 'Aire',  'mida' => 'Petit', 'attack' => 70, 'defense' => 63, 'speed' => 71,  'image' => 'murcimurci.png'],
+            ['name' => 'Pollis',       'element' => 'Aire',  'mida' => 'Petit', 'attack' => 79, 'defense' => 71, 'speed' => 75,  'image' => 'pollis.png'],
+            ['name' => 'Rajoy',        'element' => 'Aire',  'mida' => 'Petit', 'attack' => 79, 'defense' => 72, 'speed' => 48,  'image' => 'rajoy.png'],
+            ['name' => 'Sirucco',      'element' => 'Aire',  'mida' => 'Petit', 'attack' => 81, 'defense' => 65, 'speed' => 38,  'image' => 'sirucco.png'],
+            // Mitjà
+            ['name' => 'Avecrem',      'element' => 'Aire',  'mida' => 'Mitj',  'attack' => 92, 'defense' => 72, 'speed' => 91,  'image' => 'avecrem.png'],
+            ['name' => 'Boo-hoot',     'element' => 'Aire',  'mida' => 'Mitj',  'attack' => 67, 'defense' => 65, 'speed' => 92,  'image' => 'boo-hoot.png'],
+            ['name' => 'Catyuska',     'element' => 'Aire',  'mida' => 'Mitj',  'attack' => 92, 'defense' => 78, 'speed' => 32,  'image' => 'catyuska.png'],
+            ['name' => 'Posón',        'element' => 'Aire',  'mida' => 'Mitj',  'attack' => 63, 'defense' => 53, 'speed' => 79,  'image' => 'poson.png'],
+            // Gran
+            ['name' => 'Trompeta',     'element' => 'Aire',  'mida' => 'Gran',  'attack' => 78, 'defense' => 67, 'speed' => 68,  'image' => 'trompeta.png'],
+            ['name' => 'Chopper',      'element' => 'Aire',  'mida' => 'Gran',  'attack' => 68, 'defense' => 58, 'speed' => 45,  'image' => 'chopper.png'],
+            ['name' => 'Doflamingo',   'element' => 'Aire',  'mida' => 'Gran',  'attack' => 76, 'defense' => 64, 'speed' => 84,  'image' => 'doflamingo.png'],
+            ['name' => 'Floppi',       'element' => 'Aire',  'mida' => 'Gran',  'attack' => 75, 'defense' => 38, 'speed' => 33,  'image' => 'floppi.png'],
+
+            // ── AIGUA ─────────────────────────────────────────────────────────────
+            // Petit
+            ['name' => 'Horseluis',    'element' => 'Aigua', 'mida' => 'Petit', 'attack' => 65, 'defense' => 58, 'speed' => 100, 'image' => 'horseluis.png'],
+            ['name' => 'Elgominas',    'element' => 'Aigua', 'mida' => 'Petit', 'attack' => 72, 'defense' => 63, 'speed' => 50,  'image' => 'elgominas.png'],
+            // Mitjà
+            ['name' => 'Krokolisko',   'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 74, 'defense' => 67, 'speed' => 62,  'image' => 'krokolisko.png'],
+            ['name' => 'Megalo',       'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 84, 'defense' => 64, 'speed' => 95,  'image' => 'megalo.png'],
+            ['name' => 'Nemo',         'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 85, 'defense' => 78, 'speed' => 66,  'image' => 'nemo.png'],
+            ['name' => 'Peereira',     'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 86, 'defense' => 83, 'speed' => 31,  'image' => 'peereira.png'],
+            ['name' => 'Tux',          'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 84, 'defense' => 76, 'speed' => 94,  'image' => 'tux.png'],
+            ['name' => 'Elconchudo',   'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 70, 'defense' => 62, 'speed' => 44,  'image' => 'elconchudo.png'],
+            ['name' => 'Flipper',      'element' => 'Aigua', 'mida' => 'Mitj',  'attack' => 68, 'defense' => 55, 'speed' => 94,  'image' => 'flipper.png'],
+            // Gran
+            ['name' => 'Chapapà',      'element' => 'Aigua', 'mida' => 'Gran',  'attack' => 70, 'defense' => 58, 'speed' => 97,  'image' => 'chapapa.png'],
+            ['name' => 'Medusation',   'element' => 'Aigua', 'mida' => 'Gran',  'attack' => 61, 'defense' => 51, 'speed' => 35,  'image' => 'medusation.png'],
+            ['name' => 'Mocha',        'element' => 'Aigua', 'mida' => 'Gran',  'attack' => 52, 'defense' => 40, 'speed' => 62,  'image' => 'mocha.png'],
+            ['name' => 'Pinchimott',   'element' => 'Aigua', 'mida' => 'Gran',  'attack' => 87, 'defense' => 55, 'speed' => 73,  'image' => 'pinchimott.png'],
+            ['name' => 'Quakko',       'element' => 'Aigua', 'mida' => 'Gran',  'attack' => 87, 'defense' => 82, 'speed' => 35,  'image' => 'quakko.png'],
+            ['name' => 'Shelly',       'element' => 'Aigua', 'mida' => 'Gran',  'attack' => 77, 'defense' => 69, 'speed' => 52,  'image' => 'shelly.png'],
         ];
 
         foreach ($chuchemons as $data) {
-            // si no hay stats predefinidos, generamos valores razonables
-            $data['attack']  = $data['attack']  ?? rand(45, 95);
-            $data['defense'] = $data['defense'] ?? rand(35, 90);
-            $data['speed']   = $data['speed']   ?? rand(30, 100);
-
             Chuchemon::updateOrCreate(['name' => $data['name']], $data);
         }
     }
