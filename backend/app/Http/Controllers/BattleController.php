@@ -411,8 +411,10 @@ class BattleController extends Controller
         $roll      = random_int(1, 6);
         $sizeMod   = $this->sizeModifier((string) ($myFighter->current_mida ?? 'Petit'));
         $typeMod   = $this->elementModifier((string) $myFighter->element, (string) $opponentFighter->element);
-        $attackTotal = (int) ($myFighter->attack ?? 50) + $roll + $sizeMod + $typeMod;
-        $damage      = max(0, $attackTotal - (int) ($opponentFighter->defense ?? 50));
+        $myEffAtk  = (int) round(LevelingController::effectiveAttack((int) ($myFighter->attack ?? 50), (string) ($myFighter->current_mida ?? 'Petit')) * (1 + (($myFighter->attack_boost ?? 0) / 100)));
+        $oppEffDef = (int) round(LevelingController::effectiveDefense((int) ($opponentFighter->defense ?? 50), (string) ($opponentFighter->current_mida ?? 'Petit')) * (1 + (($opponentFighter->defense_boost ?? 0) / 100)));
+        $attackTotal = $myEffAtk + $roll + $sizeMod + $typeMod;
+        $damage      = max(0, $attackTotal - $oppEffDef);
         $newOpponentHp = max(0, $opponentCurrentHp - $damage);
 
         $log = $battle->combat_log ?? [];
@@ -424,9 +426,9 @@ class BattleController extends Controller
             'roll'              => $roll,
             'size_mod'          => $sizeMod,
             'type_mod'          => $typeMod,
-            'attack'            => (int) ($myFighter->attack ?? 50),
+            'attack'            => $myEffAtk,
             'attack_total'      => $attackTotal,
-            'defense'           => (int) ($opponentFighter->defense ?? 50),
+            'defense'           => $oppEffDef,
             'damage'            => $damage,
             'hp_before'         => $opponentCurrentHp,
             'hp_after'          => $newOpponentHp,
@@ -701,7 +703,9 @@ class BattleController extends Controller
                 'user_chuchemons.current_mida',
                 'user_chuchemons.count',
                 'user_chuchemons.current_hp',
-                'user_chuchemons.max_hp'
+                'user_chuchemons.max_hp',
+                'user_chuchemons.attack_boost',
+                'user_chuchemons.defense_boost'
             )
             ->first();
     }
@@ -724,29 +728,40 @@ class BattleController extends Controller
                 'user_chuchemons.level',
                 'user_chuchemons.current_mida',
                 'user_chuchemons.current_hp',
-                'user_chuchemons.max_hp'
+                'user_chuchemons.max_hp',
+                'user_chuchemons.attack_boost',
+                'user_chuchemons.defense_boost'
             )
             ->orderByDesc('user_chuchemons.level')
             ->orderBy('chuchemons.name')
             ->get()
             ->map(function ($entry) {
-                $maxHp = max((int) ($entry->max_hp ?? 1), 1);
+                $maxHp    = max((int) ($entry->max_hp ?? 1), 1);
                 $currentHp = max((int) ($entry->current_hp ?? $maxHp), 0);
+                $mida     = $entry->current_mida ?? 'Petit';
+                $baseAtk  = (int) ($entry->attack ?? 50);
+                $baseDef  = (int) ($entry->defense ?? 50);
+                $atkBoost = ($entry->attack_boost ?? 0) / 100;
+                $defBoost = ($entry->defense_boost ?? 0) / 100;
 
                 return [
-                    'id' => (int) $entry->id,
-                    'name' => $entry->name,
-                    'element' => $entry->element,
-                    'image' => $entry->image,
-                    'attack' => (int) ($entry->attack ?? 50),
-                    'defense' => (int) ($entry->defense ?? 50),
-                    'speed' => (int) ($entry->speed ?? 50),
-                    'count' => (int) ($entry->count ?? 0),
-                    'level' => (int) ($entry->level ?? 1),
-                    'current_mida' => $entry->current_mida ?? 'Petit',
-                    'current_hp' => $currentHp,
-                    'max_hp' => $maxHp,
-                    'hp_percent' => round(($currentHp / $maxHp) * 100, 1),
+                    'id'               => (int) $entry->id,
+                    'name'             => $entry->name,
+                    'element'          => $entry->element,
+                    'image'            => $entry->image,
+                    'attack'           => $baseAtk,
+                    'defense'          => $baseDef,
+                    'speed'            => (int) ($entry->speed ?? 50),
+                    'effective_attack' => (int) round(LevelingController::effectiveAttack($baseAtk, $mida) * (1 + $atkBoost)),
+                    'effective_defense'=> (int) round(LevelingController::effectiveDefense($baseDef, $mida) * (1 + $defBoost)),
+                    'attack_boost'     => (int) ($entry->attack_boost ?? 0),
+                    'defense_boost'    => (int) ($entry->defense_boost ?? 0),
+                    'count'            => (int) ($entry->count ?? 0),
+                    'level'            => (int) ($entry->level ?? 1),
+                    'current_mida'     => $mida,
+                    'current_hp'       => $currentHp,
+                    'max_hp'           => $maxHp,
+                    'hp_percent'       => round(($currentHp / $maxHp) * 100, 1),
                 ];
             })
             ->values();

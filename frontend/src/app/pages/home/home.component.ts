@@ -78,6 +78,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.auth.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(u => { if (u) this.applyUserXp(u); });
+
     this.chuchemonService.stateChanges$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {

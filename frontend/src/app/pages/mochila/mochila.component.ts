@@ -553,6 +553,7 @@ export class MochilaComponent implements OnInit, OnDestroy {
           this.loadMochila();
           this.loadTeam();
           this.chuchemonService.notifyChuchemonStateChanged();
+          this.auth.refreshUser().subscribe();
         },
         error: (err) => {
           this.applyFeedback = { type: 'error', msg: err?.error?.message ?? 'Error al aplicar.' };
@@ -579,6 +580,7 @@ export class MochilaComponent implements OnInit, OnDestroy {
           this.loadMochila();
           this.loadInfections();
           this.loadTeam();
+          this.auth.refreshUser().subscribe();
         },
         error: (err) => {
           this.applyFeedback = { type: 'error', msg: err?.error?.message ?? 'Error al curar.' };

@@ -194,7 +194,7 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
 
     this.openConfirmDialog(
       'Confirmar curación',
-      `Vas a gastar hasta ${this.healQty} Xux de Maduixa para curar a ${this.selectedChuchemon.name}, recuperar hasta ${this.healQty * 20} PS y ganar ${this.healQty * 50} XP.`,
+      `Vas a gastar hasta ${this.healQty} Xux de Maduixa para curar a ${this.selectedChuchemon.name} y recuperar hasta ${this.healQty * 20} PS.`,
       () => this.executeHealWithXux()
     );
   }
@@ -202,7 +202,8 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   private executeHealWithXux(): void {
     this.levelingService.healChuchemon(this.selectedChuchemon.id, this.healQty).subscribe({
       next: (res: any) => {
-        this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp}) · +${res.xp_gained ?? 0} XP`;
+        const xpPart = (res.xp_gained ?? 0) > 0 ? ` · +${res.xp_gained} XP` : '';
+        this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp})${xpPart}`;
 
         // Actualización inmediata sin esperar el refresco async
         if (res.current_hp !== undefined) {
@@ -218,6 +219,7 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
         }
 
         this.chuchemonService.notifyChuchemonStateChanged();
+        this.auth.refreshUser().subscribe();
       },
       error: (err) => {
         this.actionMessage = err.error?.message ?? 'No se puede curar ahora';

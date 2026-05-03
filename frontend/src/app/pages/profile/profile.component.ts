@@ -116,6 +116,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.auth.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(u => { if (u) this.applyUserXp(u); });
+
     this.auth.me().pipe(takeUntil(this.destroy$)).subscribe({
       next: (u: any) => {
         this.user = u;

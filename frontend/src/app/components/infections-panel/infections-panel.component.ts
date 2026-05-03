@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../core/services/auth.service';
 import { InfectionsService } from '../../services/infections.service';
 import { LevelingService } from '../../services/leveling.service';
 
@@ -33,6 +34,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
+    private auth: AuthService,
     private infectionsService: InfectionsService,
     private levelingService: LevelingService
   ) {}
@@ -147,6 +149,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
     this.infectionsService.cureInfection(infectionId, vaccineId).subscribe({
       next: () => {
         this.errorMessage = null;
+        this.auth.refreshUser().subscribe();
       },
       error: (error) => {
         console.error('Error curing infection:', error);
@@ -168,6 +171,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.feedbackMap[c.id] = { type: 'success', msg: res.message };
         this.healingMap[c.id] = false;
+        this.auth.refreshUser().subscribe();
       },
       error: (err) => {
         this.feedbackMap[c.id] = { type: 'error', msg: err.error?.message ?? 'Error al curar' };
@@ -184,6 +188,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.feedbackMap[c.id] = { type: 'success', msg: res.message };
         this.evolvingMap[c.id] = false;
+        this.auth.refreshUser().subscribe();
       },
       error: (err) => {
         this.feedbackMap[c.id] = { type: 'error', msg: err.error?.message ?? 'Error al evolucionar' };

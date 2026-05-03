@@ -5,15 +5,15 @@
 }
 
 .infections-panel h2 {
-  margin: 0 0 20px 0;
+  margin: 0 0 1rem 0;
   color: #c62828;
-  font-size: 1.8rem;
+  font-size: 1.3rem;
 }
 
 .infections-panel h3 {
-  margin: 0 0 15px 0;
+  margin: 0 0 0.75rem 0;
   color: #d32f2f;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .infections-section,
@@ -23,7 +23,7 @@
 
 .infections-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 15px;
 }
 
@@ -321,6 +321,7 @@
   font-weight: 600;
   cursor: pointer;
   margin-left: auto;
+  flex-shrink: 0;
   transition: opacity 0.15s;
 }
 
@@ -376,7 +377,7 @@
 
 .todos-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
   gap: 15px;
 }
 

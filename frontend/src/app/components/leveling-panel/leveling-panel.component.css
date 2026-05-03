@@ -6,15 +6,15 @@
 }
 
 .leveling-panel h2 {
-  margin: 0 0 20px 0;
+  margin: 0 0 1rem 0;
   color: #1a1a2e;
-  font-size: 1.8rem;
+  font-size: 1.3rem;
 }
 
 .leveling-panel h3 {
-  margin: 0 0 15px 0;
+  margin: 0 0 0.75rem 0;
   color: #333;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .chuchemons-list {

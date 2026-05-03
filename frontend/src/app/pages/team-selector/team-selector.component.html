@@ -5,6 +5,7 @@
   [showAdmin]="!!user?.is_admin"
   (logoutClick)="logout()"
 >
+  <div class="page-stack">
 
   <!-- Page header -->
     <header class="page-header">
@@ -108,6 +109,8 @@
         <button class="btn-primary" (click)="saveTeam()">Guardar Equipo</button>
       </div>
     </div>
+
+  </div><!-- /page-stack -->
 
 </app-main-layout>
 

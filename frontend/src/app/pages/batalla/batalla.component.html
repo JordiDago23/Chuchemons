@@ -5,6 +5,7 @@
   [showPokeball]="false"
   (logoutClick)="logout()"
 >
+  <div class="page-stack">
     @if (!isCombatPage) {
       <section class="hero">
         <h1>Arena de Batalla</h1>
@@ -194,6 +195,9 @@
             <div class="fighter-name-row">
               <h3>{{ myFighter?.name || 'Selecciona un Xuxemon' }}</h3>
               <span class="fighter-level">{{ sizeLabel(myFighter?.current_mida) }}</span>
+              @if (myFighter?.element) {
+                <span class="fighter-element" [ngClass]="elementClass(myFighter?.element)">{{ elementLabel(myFighter?.element) }}</span>
+              }
             </div>
 
             @if (isInCombat || hasResult) {
@@ -214,8 +218,14 @@
             }
 
             <div class="fighter-stats-row">
-              <div><small>Atac</small><strong>{{ myFighter?.attack ?? '-' }}</strong></div>
-              <div><small>Def</small><strong>{{ myFighter?.defense ?? '-' }}</strong></div>
+              <div>
+                <small>Atac</small>
+                <strong [class.stat-boosted]="(myFighter?.attack_boost ?? 0) > 0">{{ myFighter?.effective_attack ?? myFighter?.attack ?? '-' }}</strong>
+              </div>
+              <div>
+                <small>Def</small>
+                <strong [class.stat-boosted]="(myFighter?.defense_boost ?? 0) > 0">{{ myFighter?.effective_defense ?? myFighter?.defense ?? '-' }}</strong>
+              </div>
               <div><small>Vel</small><strong>{{ myFighter?.speed ?? '-' }}</strong></div>
             </div>
           </article>
@@ -256,6 +266,9 @@
             <div class="fighter-name-row">
               <h3>{{ opponentFighter?.name || 'Esperando selección rival' }}</h3>
               <span class="fighter-level">{{ sizeLabel(opponentFighter?.current_mida) }}</span>
+              @if (opponentFighter?.element) {
+                <span class="fighter-element" [ngClass]="elementClass(opponentFighter?.element)">{{ elementLabel(opponentFighter?.element) }}</span>
+              }
             </div>
 
             @if (isInCombat || hasResult) {
@@ -276,8 +289,14 @@
             }
 
             <div class="fighter-stats-row">
-              <div><small>Atac</small><strong>{{ opponentFighter?.attack ?? '-' }}</strong></div>
-              <div><small>Def</small><strong>{{ opponentFighter?.defense ?? '-' }}</strong></div>
+              <div>
+                <small>Atac</small>
+                <strong [class.stat-boosted]="(opponentFighter?.attack_boost ?? 0) > 0">{{ opponentFighter?.effective_attack ?? opponentFighter?.attack ?? '-' }}</strong>
+              </div>
+              <div>
+                <small>Def</small>
+                <strong [class.stat-boosted]="(opponentFighter?.defense_boost ?? 0) > 0">{{ opponentFighter?.effective_defense ?? opponentFighter?.defense ?? '-' }}</strong>
+              </div>
               <div><small>Vel</small><strong>{{ opponentFighter?.speed ?? '-' }}</strong></div>
             </div>
           </article>
@@ -423,6 +442,7 @@
       }
     }
 
+  </div><!-- /page-stack -->
 
 </app-main-layout>
 

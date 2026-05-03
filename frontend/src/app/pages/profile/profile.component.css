@@ -20,10 +20,15 @@
 /* BANNER */
 .banner {
   background: linear-gradient(135deg, #f4722b, #e63946);
-  border-radius: 16px; padding: 1.2rem 1.5rem;
-  display: flex; justify-content: space-between; align-items: flex-start;
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
-.banner-left { display: flex; gap: 1rem; align-items: flex-start; }
+.banner-left { display: flex; gap: 1rem; align-items: flex-start; flex: 1 1 auto; min-width: 0; }
 .avatar-wrap  { position: relative; }
 .avatar {
   width: 72px; height: 72px; border-radius: 50%;
@@ -47,8 +52,8 @@
 .tag.yellow { background: #f4a611; color: #fff; }
 .tag.gray   { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
 .tag.admin  { background: #7c3aed; color: #fff; }
-.xp-row  { display: flex; justify-content: space-between; font-size: 0.72rem; color: rgba(255,255,255,0.9); margin-top: 0.3rem; width: 280px; }
-.xp-track{ width: 280px; height: 7px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; }
+.xp-row  { display: flex; justify-content: space-between; font-size: 0.72rem; color: rgba(255,255,255,0.9); margin-top: 0.3rem; width: 100%; max-width: 320px; }
+.xp-track{ width: 100%; max-width: 320px; height: 7px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; }
 .xp-fill { height: 100%; background: #fff; border-radius: 99px; }
 .edit-btn {
   background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);

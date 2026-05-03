@@ -529,6 +529,8 @@ class LevelingController extends Controller
             $mochilaXux->quantity -= $qty;
             $mochilaXux->quantity <= 0 ? $mochilaXux->delete() : $mochilaXux->save();
 
+            $user->addExperience(5 * $qty);
+
             // Add experience (+50 XP per candy)
             $xpToAdd = $qty * self::XP_PER_CANDY;
 
@@ -625,6 +627,8 @@ class LevelingController extends Controller
                 ->where('chuchemon_id', $chuchemonId)
                 ->update(['current_hp' => $newHp]);
 
+            $user->addExperience(5 * $xuxesUsed);
+
             return response()->json([
                 'message'      => "¡Has curado {$actualHeal} PS al Xuxemon!",
                 'healed'       => $actualHeal,
@@ -713,6 +717,8 @@ class LevelingController extends Controller
                 ->where('user_id', $user->id)
                 ->where('chuchemon_id', $chuchemonId)
                 ->update([$boostColumn => $newBoost]);
+
+            $user->addExperience(10 * $xuxesUsed);
 
             $statLabel = $stat === 'attack' ? 'ataque' : 'defensa';
 

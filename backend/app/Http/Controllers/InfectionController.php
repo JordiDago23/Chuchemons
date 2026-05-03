@@ -155,6 +155,8 @@ class InfectionController extends Controller
                 ]);
             }
 
+            $user->addExperience(15);
+
             return response()->json([
                 'message' => 'Infección curada exitosamente',
                 'infection' => $infection->fresh(),

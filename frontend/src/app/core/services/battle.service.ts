@@ -21,6 +21,10 @@ export interface BattleRosterEntry {
   attack: number;
   defense: number;
   speed: number;
+  effective_attack?: number;
+  effective_defense?: number;
+  attack_boost?: number;
+  defense_boost?: number;
   count: number;
   level: number;
   current_mida: string;

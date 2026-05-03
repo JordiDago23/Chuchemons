@@ -683,6 +683,16 @@ export class BatallaComponent implements OnInit, OnDestroy {
     return mida ? (map[mida] ?? mida) : '-';
   }
 
+  elementLabel(element: string | null | undefined): string {
+    const map: Record<string, string> = { Aigua: 'Agua', Terra: 'Tierra', Aire: 'Aire' };
+    return element ? (map[element] ?? element) : '-';
+  }
+
+  elementClass(element: string | null | undefined): string {
+    const map: Record<string, string> = { Aigua: 'elem-water', Terra: 'elem-earth', Aire: 'elem-air' };
+    return element ? (map[element] ?? '') : '';
+  }
+
   imageFor(entry: BattleRosterEntry | null): string {
     if (!entry?.image) {
       return 'https://placehold.co/760x340?text=Xuxemon';
