@@ -105,7 +105,7 @@
             [locked]="isBlockedForDisplay(chuchemon)"
             [showCaptureBtn]="!isCaptured(chuchemon) && !isAdmin && selectedTab === 'todos'"
             [showDetailsBtn]="true"
-            [showEvolveBtn]="isCaptured(chuchemon) && selectedTab === 'mis'"
+            [showEvolveBtn]="false"
             [showTeamBadge]="isInTeam(chuchemon.id)"
             (capture)="captureChuchemon($event)"
             (details)="openDetailsModal($event)"

@@ -26,12 +26,17 @@ class DailyRewardController extends Controller
      */
     private static function calculateItemSlots($item): int
     {
+        // Vacunas: NO apilables (1 vacuna = 1 slot, cada registro independiente)
+        if ($item->vaccine_id) {
+            return $item->quantity;
+        }
+
         // Items no_apilable: 1 slot por unidad
         if ($item->item_id && $item->item && $item->item->type === 'no_apilable') {
             return $item->quantity;
         }
 
-        // Todo lo demás (xuxes, vacunas): apilable 5 por slot
+        // Xuxes y items apilables: 5 por slot
         return (int) ceil($item->quantity / self::STACK_SIZE);
     }
 
@@ -61,12 +66,18 @@ class DailyRewardController extends Controller
         
         foreach ($itemsToAdd as $newItem) {
             $quantity = $newItem['quantity'];
-            
+
+            // Vacunas: NO apilables — cada unidad crea un registro separado (1 unidad = 1 slot)
+            if ($newItem['type'] === 'vaccine') {
+                $slotsNeeded += $quantity;
+                continue;
+            }
+
             // Buscar si ya existe un registro del mismo tipo
             $existingRow = null;
             foreach ($currentItems as $item) {
                 // Items genéricos
-                if ($newItem['type'] === 'item' && 
+                if ($newItem['type'] === 'item' &&
                     isset($newItem['item_id']) &&
                     $item->item_id === $newItem['item_id'] && 
                     !$item->chuchemon_id && 
@@ -95,15 +106,6 @@ class DailyRewardController extends Controller
                     break;
                 }
                 
-                // Vaccines
-                if ($newItem['type'] === 'vaccine' && 
-                    isset($newItem['vaccine_id']) &&
-                    $item->vaccine_id === $newItem['vaccine_id'] && 
-                    !$item->item_id && 
-                    !$item->chuchemon_id) {
-                    $existingRow = $item;
-                    break;
-                }
             }
             
             // Todo apilable a 5 por slot (xuxes, vacunas, items apilables)

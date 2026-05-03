@@ -37,7 +37,8 @@
 
     <!-- ── CHUCHES SECTION ────────────────────────────────── -->
     <div class="reward-section chuches-section"
-         [class.unavailable]="!isRewardAvailable(xuxReward)">
+         [class.unavailable]="!isRewardAvailable(xuxReward)"
+         [class.mochila-full]="freeSpaces === 0">
 
       <div class="section-header">
         <span class="section-icon">🍬</span>
@@ -59,14 +60,21 @@
         <p class="candy-qty">{{ rewardConfig.daily_xux_quantity }} unidades en total</p>
       </div>
 
-      <div class="availability-row" *ngIf="!isRewardAvailable(xuxReward)">
+      <div class="full-mochila-warning" *ngIf="freeSpaces === 0">
+        <span>🎒</span>
+        <span>Mochila llena (20/20) — libera espacio para recoger</span>
+      </div>
+
+      <div class="availability-row" *ngIf="!isRewardAvailable(xuxReward) && freeSpaces > 0">
         <span class="cooldown-badge">⏱ {{ getTimeUntilAvailable(xuxReward) }}</span>
       </div>
 
       <button class="claim-btn chuches-btn"
         (click)="claimXuxReward()"
-        [disabled]="!isRewardAvailable(xuxReward)">
-        {{ isRewardAvailable(xuxReward) ? '¡Recoger Chuches!' : 'Ya reclamado hoy' }}
+        [disabled]="!isRewardAvailable(xuxReward) || freeSpaces === 0">
+        @if (freeSpaces === 0) { 🎒 Mochila llena }
+        @else if (isRewardAvailable(xuxReward)) { ¡Recoger Chuches! }
+        @else { Ya reclamado hoy }
       </button>
     </div>
 

@@ -18,6 +18,7 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   chuchemonReward: any = null;
   isLoading = false;
   errorMessage: string | null = null;
+  freeSpaces = 20;
 
   // Overlay — Chuchemon
   showChuchemonOverlay = false;
@@ -61,7 +62,14 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
         }
       });
 
+    this.mochilaService.mochilaData$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data) this.freeSpaces = data.free_spaces;
+      });
+
     this.configService.refreshDailyRewards();
+    this.mochilaService.refreshMochila();
   }
 
   ngOnDestroy(): void {
