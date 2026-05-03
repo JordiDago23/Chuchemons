@@ -9,17 +9,19 @@
           <div class="infection-card">
             <h4>{{ infection.chuchemon?.name }}</h4>
             <p><strong>Enfermedad:</strong> {{ infection.malaltia?.name }}</p>
-            <p><strong>Severidad:</strong> {{ infection.malaltia?.severity }}/10</p>
-            <div class="infection-bar">
-              <div class="infection-fill" [style.width.%]="infection.infection_percentage"></div>
-            </div>
-            <p class="infection-val">{{ infection.infection_percentage }}% infectado</p>
+            <p class="infected-status">🦠 Este Xuxemon está infectado y sufre efectos negativos hasta que sea curado</p>
 
             <div class="cure-options">
               @for (vaccine of vaccines; track vaccine.id) {
                 @if (vaccine.malaltia_id === infection.malaltia_id) {
-                  <button (click)="cureInfection(infection.id, vaccine.id)">
-                    Usar {{ vaccine.name }}
+                  <button 
+                    (click)="cureInfection(infection.id, vaccine.id)"
+                    [disabled]="!vaccine.stock || vaccine.stock < 1"
+                    [class.no-stock]="!vaccine.stock || vaccine.stock < 1">
+                    Usar {{ vaccine.name }} 
+                    @if (vaccine.stock !== undefined) {
+                      ({{ vaccine.stock }})
+                    }
                   </button>
                 }
               }
@@ -35,7 +37,7 @@
   <!-- LOW HP WARNINGS -->
   @if (lowHpChuchemons.length > 0) {
     <div class="low-hp-section">
-      <h3>⚠️ Xuxemons con vida baja</h3>
+      <h3>⚠️ Chuchemons con vida baja</h3>
       <div class="low-hp-list">
         @for (c of lowHpChuchemons; track c.id) {
           <div class="low-hp-card">

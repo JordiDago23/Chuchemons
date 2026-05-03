@@ -42,7 +42,7 @@
           <div class="infection-tags">
             @for (infection of selectedInfections; track trackInfection($index, infection)) {
               <span class="infection-tag">
-                🦠 {{ infection.name }} · {{ infection.infection_percentage }}%
+                🦠 {{ infection.name }}
               </span>
             }
           </div>
@@ -104,11 +104,37 @@
       @if (selectedChuchemon.current_mida !== 'Gran') {
         <div class="stat-block evolve-block">
           <p class="evolve-title">🔮 Evolución</p>
+          
+          <!-- Barra de experiencia -->
+          <div class="xp-section">
+            <div class="stat-label-row">
+              <span>⭐ Experiencia para evolución</span>
+              <span class="stat-val">{{ selectedChuchemon.experience ?? 0 }} / {{ selectedChuchemon.experience_for_next_level ?? 0 }} XP</span>
+            </div>
+            <div class="xp-track" role="progressbar"
+              [attr.aria-valuenow]="selectedChuchemon.experience ?? 0"
+              [attr.aria-valuemax]="selectedChuchemon.experience_for_next_level ?? 0"
+              [attr.aria-label]="'Experiencia del Xuxemon'">
+              <div class="xp-fill"
+                [style.width.%]="getXpProgress()"
+                [style.background]="getXpColor()">
+              </div>
+            </div>
+          </div>
+
           <p class="evolve-info">
-            Coste: <strong>{{ getEvolveCost() }} Xux Exp</strong>
-            @if (selectedChuchemon.evolve_cost_extra > 0) { <small class="boost-badge" style="background:#f44336">+{{ selectedChuchemon.evolve_cost_extra }} por Bajón de azúcar</small> }
+            Caramelos necesarios: <strong>{{ getEvolveCost() }} Xux Exp</strong>
+            @if (selectedChuchemon.evolve_cost_extra > 0) { 
+              <small class="boost-badge" style="background:#f44336">+{{ selectedChuchemon.evolve_cost_extra }} por Bajón de azúcar</small> 
+            }
             · Tienes: <strong>{{ selectedChuchemon.xuxes_exp ?? 0 }}</strong>
           </p>
+          <p class="xp-breakdown">
+            <small>
+              (Te faltan {{ (selectedChuchemon.experience_for_next_level ?? 0) - (selectedChuchemon.experience ?? 0) }} XP × 50 XP/caramelo = {{ getEvolveCost() }} caramelos)
+            </small>
+          </p>
+          
           <div class="evolve-preview">
             <span class="evolve-preview-title">Al evolucionar a {{ getNextSizeLabel() }}:</span>
             <span class="evolve-stat-change">❤️ PS: {{ statsForSize(selectedChuchemon.current_mida).hp }} → <strong>{{ statsForSize(getNextMida()).hp }}</strong> <small class="stat-up">(+{{ statsForSize(getNextMida()).hp - statsForSize(selectedChuchemon.current_mida).hp }})</small></span>

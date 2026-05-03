@@ -70,7 +70,7 @@ class InfectionController extends Controller
                 'user_id' => $user->id,
                 'chuchemon_id' => $chuchemonId,
                 'malaltia_id' => $malaltiaId,
-                'infection_percentage' => rand(10, 50),
+                'is_active' => true,
                 'infected_at' => now(),
             ]);
 
@@ -144,7 +144,6 @@ class InfectionController extends Controller
                     $inf->update([
                         'is_active' => false,
                         'cured_at' => now(),
-                        'infection_percentage' => 0,
                     ]);
                 }
             } else {
@@ -153,7 +152,6 @@ class InfectionController extends Controller
                 $infection->update([
                     'is_active' => false,
                     'cured_at' => now(),
-                    'infection_percentage' => 0,
                 ]);
             }
 
@@ -221,12 +219,25 @@ class InfectionController extends Controller
     }
 
     /**
-     * Obtiene lista de vacunas
+     * Obtiene lista de vacunas con el stock del usuario autenticado
      */
     public function getVaccines(): JsonResponse
     {
         try {
+            $user = auth('api')->user();
             $vaccines = Vaccine::with('malaltia')->get();
+            
+            // Si hay usuario autenticado, añadir stock
+            if ($user) {
+                $vaccines = $vaccines->map(function ($vaccine) use ($user) {
+                    $stock = \App\Models\MochilaXux::where('user_id', $user->id)
+                        ->where('vaccine_id', $vaccine->id)
+                        ->sum('quantity');
+                    $vaccine->stock = $stock ?? 0;
+                    return $vaccine;
+                });
+            }
+            
             return response()->json($vaccines, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);

@@ -98,7 +98,7 @@ export class InfectionsPanelComponent implements OnInit, OnDestroy {
         type: 'cure',
         priority: 'high',
         title: `Curar infección de ${infection.chuchemon?.name}`,
-        description: `${infection.chuchemon?.name} está infectado con ${infection.malaltia?.name} (${infection.infection_percentage}% infectado)`,
+        description: `${infection.chuchemon?.name} está infectado con ${infection.malaltia?.name}`,
         action: 'Usar vacuna disponible'
       });
     });

@@ -14,22 +14,16 @@ class MalaltiaSeeder extends Seeder
                 'name' => 'Bajón de azúcar',
                 'description' => 'El xuxemon no pot alimentar-se. Requereix +2 xuxes per nivell per a créixer',
                 'type' => 'metabolic',
-                'severity' => 5,
-                'infection_rate' => 5,
             ],
             [
                 'name' => 'Sobredosis de sucre',
                 'description' => 'El xuxemon ha pres massa sucre. Redueix la defensa temporalment.',
                 'type' => 'metabolic',
-                'severity' => 4,
-                'infection_rate' => 10,
             ],
             [
                 'name' => 'Atracón',
                 'description' => 'El xuxemon ha menjat domasiat. No pot menjar més xuxes per a aquest cicle',
                 'type' => 'digestive',
-                'severity' => 3,
-                'infection_rate' => 15,
             ],
         ];
 

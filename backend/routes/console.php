@@ -34,7 +34,7 @@ Schedule::call(function () {
                             'chuchemon_id'         => $cid,
                             'malaltia_id'          => $malaltia->id,
                             'is_active'            => true,
-                            'infection_percentage'  => rand(10, 80),
+                            'infected_at'          => now(),
                         ]);
                     }
                 }

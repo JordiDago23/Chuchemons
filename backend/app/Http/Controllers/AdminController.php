@@ -217,18 +217,7 @@ class AdminController extends Controller
 
     private function settingsPayload(): array
     {
-        $defaultRate = GameSetting::getInt('taxa_infeccio', 12);
-        $diseases = Malaltia::query()->select('id', 'name')->get()->map(function ($disease) use ($defaultRate) {
-            $disease->infection_rate = Schema::hasColumn('malalties', 'infection_rate')
-                ? (int) ($disease->getAttribute('infection_rate') ?? $defaultRate)
-                : $defaultRate;
-
-            return $disease;
-        });
-
-        if (Schema::hasColumn('malalties', 'infection_rate')) {
-            $diseases = Malaltia::query()->select('id', 'name', 'infection_rate')->get();
-        }
+        $diseases = Malaltia::query()->select('id', 'name')->get();
 
         return [
             'config' => [
@@ -237,6 +226,7 @@ class AdminController extends Controller
             ],
             'infection' => [
                 'diseases' => $diseases,
+                'default_rate' => GameSetting::getInt('taxa_infeccio', 12),
             ],
             'schedules' => [
                 'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
@@ -283,28 +273,18 @@ class AdminController extends Controller
 
     public function updateInfectionRate(Request $request): JsonResponse
     {
-        if (!Schema::hasColumn('malalties', 'infection_rate')) {
-            return response()->json([
-                'message' => 'Falta la migración de infection_rate en malalties. Ejecuta las migraciones del backend.',
-            ], 409);
-        }
-
         $validator = Validator::make($request->all(), [
-            'diseases' => 'required|array',
-            'diseases.*.id' => 'required|exists:malalties,id',
-            'diseases.*.infection_rate' => 'required|integer|min:0|max:100',
+            'default_rate' => 'required|integer|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        foreach ($request->diseases as $d) {
-            Malaltia::where('id', $d['id'])->update(['infection_rate' => $d['infection_rate']]);
-        }
+        GameSetting::setValue('taxa_infeccio', (int) $request->default_rate);
 
         return response()->json([
-            'message' => 'Tasas de infección actualizadas correctamente.',
+            'message' => 'Tasa de infección global actualizada correctamente.',
             'settings' => $this->settingsPayload()['infection'],
         ]);
     }

@@ -507,6 +507,7 @@ class ChuchemonController extends Controller
     /**
      * Evoluciona un Xuxemon capturado del usuario
      * Petit -> Mitjà -> Gran
+     * (Basado en sistema de XP acumulado)
      */
     public function evolve(int $chuchemonId): JsonResponse
     {
@@ -517,18 +518,19 @@ class ChuchemonController extends Controller
                 return response()->json(['message' => 'Usuario no autenticado'], 401);
             }
 
-            // Get the user's captured Chuchemon
-            $userChuchemon = $user->capturedChuchemsWithEvolution()
+            // Get the user's captured Chuchemon with current XP
+            $uc = DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
                 ->where('chuchemon_id', $chuchemonId)
                 ->first();
 
-            if (!$userChuchemon) {
+            if (!$uc) {
                 return response()->json(['message' => 'No has capturado este Xuxemon'], 404);
             }
 
-            $currentMida = $userChuchemon->pivot->current_mida;
-            $nextMida = null;
-            $cost = 0;
+            $currentMida = $uc->current_mida ?? 'Petit';
+            $currentXp = $uc->experience ?? 0;
+            $xpForEvolution = LevelingController::experienceForMida($currentMida);
 
             // Atracón blocks feeding / evolving
             $activeInfections = LevelingController::mapActiveInfections($user->id, [$chuchemonId])
@@ -539,24 +541,32 @@ class ChuchemonController extends Controller
                 ], 422);
             }
 
-            // Determine next size and cost
-            if ($currentMida === 'Petit') {
-                $nextMida = 'Mitjà';
-                $cost = GameSetting::getInt('xux_petit_mitja', 3);
-            } elseif ($currentMida === 'Mitjà') {
-                $nextMida = 'Gran';
-                $cost = GameSetting::getInt('xux_mitja_gran', 5);
-            } elseif ($currentMida === 'Gran') {
+            // Check if already at max evolution
+            if ($currentMida === 'Gran') {
                 return response()->json(['message' => 'Tu Xuxemon ya está en su máxima evolución'], 400);
             }
 
-            // Bajón de azúcar: +2 extra xuxes per evolution
+            // Check if XP requirement is met
+            if ($xpForEvolution <= 0) {
+                return response()->json(['message' => 'No se puede determinar el requisito de XP para evolución'], 400);
+            }
+
+            // Calculate how many Xux Exp needed
+            $xpNeeded = $xpForEvolution - $currentXp;
+            if ($xpNeeded < 0) $xpNeeded = 0;
+
+            $xuxNeeded = (int) ceil($xpNeeded / LevelingController::XP_PER_CANDY);
+
+            // Add bajón de azúcar extra cost
+            $extraCost = 0;
             if ($activeInfections->contains(fn ($inf) => in_array(
                 LevelingController::normalizeMalaltiaName($inf['name'] ?? null),
                 ['bajon de azucar', 'bajo de azucar']
             ))) {
-                $cost += 2;
+                $extraCost = 2;
             }
+
+            $totalXuxNeeded = $xuxNeeded + $extraCost;
 
             $xuxExpItemId = Item::idByName(Item::NAME_XUX_EXP);
             if (!$xuxExpItemId) {
@@ -570,14 +580,18 @@ class ChuchemonController extends Controller
                 ->where('item_id', $xuxExpItemId)
                 ->sum('quantity');
 
-            if ($totalXuxExp < $cost) {
+            if ($totalXuxExp < $totalXuxNeeded) {
                 return response()->json([
-                    'message' => "Necesitas {$cost} Xux Exp para evolucionar. Tienes {$totalXuxExp}.",
+                    'message' => "Necesitas {$xpForEvolution} XP para evolucionar. Tienes {$currentXp} XP. Te faltan {$totalXuxNeeded} Xux Exp.",
+                    'xp_current' => $currentXp,
+                    'xp_needed' => $xpForEvolution,
+                    'xux_needed' => $totalXuxNeeded,
+                    'xux_have' => $totalXuxExp,
                 ], 400);
             }
 
             // Deduct Xux Exp
-            $remaining = $cost;
+            $remaining = $totalXuxNeeded;
             $xuxRows = MochilaXux::where('user_id', $user->id)
                 ->where('item_id', $xuxExpItemId)
                 ->where('quantity', '>', 0)
@@ -592,59 +606,52 @@ class ChuchemonController extends Controller
                 $remaining -= $deduct;
             }
 
-            // Update the pivot table with new mida
-            DB::table('user_chuchemons')
-                ->where('user_id', $user->id)
-                ->where('chuchemon_id', $chuchemonId)
-                ->update([
-                    'current_mida'   => $nextMida,
-                    'evolution_count' => DB::raw('evolution_count + 1'),
-                    'experience_for_next_level' => LevelingController::experienceForMida($nextMida),
-                ]);
+            // Add XP and evolve (will be handled by addExperience with auto-evolution)
+            $xpToAdd = $totalXuxNeeded * LevelingController::XP_PER_CANDY;
+            
+            // Create an instance of LevelingController to call addExperience
+            $levelingController = new LevelingController();
+            $response = $levelingController->addExperience($chuchemonId, $xpToAdd);
+            $payload = $response->getData(true);
 
-            // Recalculate max_hp and scale current_hp on evolution
-            $ucRow      = DB::table('user_chuchemons')
-                ->where('user_id', $user->id)
-                ->where('chuchemon_id', $chuchemonId)
-                ->first();
-            $baseDefense = $userChuchemon->defense ?? 50;
-            $newMaxHp    = LevelingController::computeMaxHp($baseDefense, $ucRow->level ?? 1, $nextMida);
-            $oldMaxHp    = $ucRow->max_hp ?? 105;
-            $oldCurrHp   = $ucRow->current_hp ?? $oldMaxHp;
-            // Keep HP ratio proportional after evolution
-            $newCurrHp   = (int) round(($oldCurrHp / max($oldMaxHp, 1)) * $newMaxHp);
-            $newCurrHp   = max(1, min($newCurrHp, $newMaxHp));
+            // Check if evolution occurred
+            if ($response->getStatusCode() >= 400) {
+                return $response;
+            }
 
-            DB::table('user_chuchemons')
-                ->where('user_id', $user->id)
-                ->where('chuchemon_id', $chuchemonId)
-                ->update([
-                    'max_hp'     => $newMaxHp,
-                    'current_hp' => $newCurrHp,
-                ]);
-
-            // +25 XP al evolucionar a Mitjà, +50 XP a Gran
-            $xpGain = $nextMida === 'Gran' ? 50 : 25;
-            $user->addExperience($xpGain);
+            $evolved = $payload['evolved'] ?? false;
+            $nextMida = $payload['current_mida'] ?? $currentMida;
 
             // Get updated data
-            $updated = $user->capturedChuchemsWithEvolution()
+            $userChuchemon = $user->capturedChuchemsWithEvolution()
                 ->where('chuchemon_id', $chuchemonId)
                 ->first();
 
-            return response()->json([
-                'message'   => "Tu {$userChuchemon->name} ha evolucionado a {$nextMida}!",
-                'xp_gained' => $xpGain,
-                'chuchemon' => [
-                    'id'              => $updated->id,
-                    'name'            => $updated->name,
-                    'element'         => $updated->element,
-                    'mida'            => $updated->mida,
-                    'image'           => $updated->image,
-                    'current_mida'    => $updated->pivot->current_mida,
-                    'evolution_count' => $updated->pivot->evolution_count,
-                ],
-            ]);
+            if ($evolved) {
+                // +25 XP al evolucionar a Mitjà, +50 XP a Gran
+                $xpGain = $nextMida === 'Gran' ? 50 : 25;
+                $user->addExperience($xpGain);
+
+                return response()->json([
+                    'message'   => $payload['message'] ?? "¡Tu Xuxemon ha evolucionado a {$nextMida}!",
+                    'xp_gained' => $xpGain,
+                    'evolved'   => true,
+                    'chuchemon' => [
+                        'id'              => $userChuchemon->id,
+                        'name'            => $userChuchemon->name,
+                        'element'         => $userChuchemon->element,
+                        'mida'            => $userChuchemon->mida,
+                        'image'           => $userChuchemon->image,
+                        'current_mida'    => $userChuchemon->pivot->current_mida,
+                        'evolution_count' => $userChuchemon->pivot->evolution_count,
+                    ],
+                ]);
+            } else {
+                return response()->json([
+                    'message' => $payload['message'] ?? 'Experiencia añadida, pero no se alcanzó el umbral de evolución.',
+                    'evolved' => false,
+                ], 200);
+            }
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }

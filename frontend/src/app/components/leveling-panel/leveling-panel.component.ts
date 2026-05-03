@@ -97,8 +97,11 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   evolve(): void {
     if (!this.selectedChuchemon) return;
     const cost = this.getEvolveCost();
+    const currentXp = this.selectedChuchemon.experience ?? 0;
+    const xpNeeded = this.selectedChuchemon.experience_for_next_level ?? 0;
+    
     if ((this.selectedChuchemon.xuxes_exp ?? 0) < cost) {
-      this.actionMessage = `Necesitas ${cost} Xux Exp para evolucionar. Tienes ${this.selectedChuchemon.xuxes_exp ?? 0}.`;
+      this.actionMessage = `Necesitas ${cost} Xux Exp para evolucionar (te faltan ${xpNeeded - currentXp} XP). Tienes ${this.selectedChuchemon.xuxes_exp ?? 0} caramelos.`;
       return;
     }
     this.openConfirmDialog(
@@ -125,11 +128,47 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   }
 
   getEvolveCost(): number {
+    if (!this.selectedChuchemon) return 0;
+    
+    const currentXp = this.selectedChuchemon.experience ?? 0;
+    const xpNeeded = this.selectedChuchemon.experience_for_next_level ?? 0;
+    
+    if (xpNeeded <= 0) return 0;
+    
+    // Calcular cuántos XP faltan para evolucionar
+    const xpToGo = Math.max(0, xpNeeded - currentXp);
+    
+    // Cada caramelo da 50 XP
+    const xpPerCandy = 50;
+    const candiesNeeded = Math.ceil(xpToGo / xpPerCandy);
+    
+    // Agregar costo extra por Bajón de azúcar
+    const extraCost = this.selectedChuchemon?.evolve_cost_extra ?? 0;
+    
+    return candiesNeeded + extraCost;
+  }
+
+  getTotalEvolveCost(): number {
     const mida = this.selectedChuchemon?.current_mida;
     let base = 0;
     if (mida === 'Petit') base = this.evolveCostConfig.xux_petit_mitja;
     else if (mida === 'Mitjà') base = this.evolveCostConfig.xux_mitja_gran;
     return base + (this.selectedChuchemon?.evolve_cost_extra ?? 0);
+  }
+
+  getXpProgress(): number {
+    if (!this.selectedChuchemon) return 0;
+    const current = this.selectedChuchemon.experience ?? 0;
+    const needed = this.selectedChuchemon.experience_for_next_level ?? 1;
+    return needed > 0 ? Math.round((current / needed) * 100) : 0;
+  }
+
+  getXpColor(): string {
+    const p = this.getXpProgress();
+    if (p >= 100) return '#4caf50';
+    if (p >= 66) return '#8bc34a';
+    if (p >= 33) return '#ff9800';
+    return '#f44336';
   }
 
   getNextSizeLabel(): string {

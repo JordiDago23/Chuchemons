@@ -51,9 +51,9 @@ class LevelingController extends Controller
     public static function experienceForMida(string $currentMida): int
     {
         return match ($currentMida) {
-            'Mitjà' => 350,
-            'Gran' => 450,
-            default => 250,
+            'Mitjà' => GameSetting::getInt('xp_mitja_gran', 250),
+            'Gran' => 0, // Gran no puede evolucionar más
+            default => GameSetting::getInt('xp_petit_mitja', 150),
         };
     }
 
@@ -70,11 +70,9 @@ class LevelingController extends Controller
             ->whereIn('user_infections.chuchemon_id', $chuchemonIds)
             ->select(
                 'user_infections.chuchemon_id',
-                'user_infections.infection_percentage',
                 'malalties.id as malaltia_id',
                 'malalties.name',
-                'malalties.type',
-                'malalties.severity'
+                'malalties.type'
             )
             ->get()
             ->groupBy('chuchemon_id')
@@ -84,8 +82,6 @@ class LevelingController extends Controller
                         'id' => $infection->malaltia_id,
                         'name' => $infection->name,
                         'type' => $infection->type,
-                        'severity' => $infection->severity,
-                        'infection_percentage' => $infection->infection_percentage,
                     ];
                 })->values();
             });
@@ -108,33 +104,29 @@ class LevelingController extends Controller
 
     private static function maybeApplyRandomInfection(int $userId, int $chuchemonId): ?array
     {
-        // Each disease has its own infection_rate (%). Check each independently.
+        // Get active infections to avoid duplicates
         $activeMalaltiaIds = UserInfection::query()
             ->where('user_id', $userId)
             ->where('chuchemon_id', $chuchemonId)
             ->where('is_active', true)
             ->pluck('malaltia_id');
 
-        $baseQuery = Malaltia::query()
-            ->when($activeMalaltiaIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $activeMalaltiaIds));
-
-        if (Schema::hasColumn('malalties', 'infection_rate')) {
-            $candidates = $baseQuery->where('infection_rate', '>', 0)->get();
-        } else {
-            $fallbackRate = GameSetting::getInt('taxa_infeccio', 12);
-            $candidates = $baseQuery->get()->each(function ($malaltia) use ($fallbackRate) {
-                $malaltia->infection_rate = $fallbackRate;
-            });
-        }
+        // Get candidate diseases (not already infected)
+        $candidates = Malaltia::query()
+            ->when($activeMalaltiaIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $activeMalaltiaIds))
+            ->get();
 
         if ($candidates->isEmpty()) {
             return null;
         }
 
+        // Apply infection with default rate
+        $defaultRate = GameSetting::getInt('taxa_infeccio', 12);
+        
         // Roll for each candidate disease individually
         $infected = null;
         foreach ($candidates as $malaltia) {
-            if (rand(1, 100) <= $malaltia->infection_rate) {
+            if (rand(1, 100) <= $defaultRate) {
                 $infected = $malaltia;
                 break; // Only one infection per action
             }
@@ -184,7 +176,6 @@ class LevelingController extends Controller
             'user_id' => $userId,
             'chuchemon_id' => $chuchemonId,
             'malaltia_id' => $infected->id,
-            'infection_percentage' => rand(10, 50),
             'original_mida' => $originalMida,
             'is_active' => true,
             'infected_at' => now(),
@@ -194,8 +185,6 @@ class LevelingController extends Controller
             'id' => $infected->id,
             'name' => $infected->name,
             'type' => $infected->type,
-            'severity' => $infected->severity,
-            'infection_percentage' => $infection->infection_percentage,
         ];
     }
 
@@ -378,6 +367,7 @@ class LevelingController extends Controller
 
     /**
      * Agrega experiencia y verifica si sube de nivel (actualiza max_hp al subir)
+     * Además, verifica si tiene suficiente XP para evolucionar de tamaño y lo hace automáticamente
      */
     public function addExperience(int $chuchemonId, int $experienceAmount): JsonResponse
     {
@@ -394,27 +384,73 @@ class LevelingController extends Controller
 
             if (!$uc) return response()->json(['message' => 'Chuchemon no encontrado en tu colección'], 404);
 
-            $mida      = $uc->current_mida ?? 'Petit';
+            $oldMida   = $uc->current_mida ?? 'Petit';
             $newXp     = $uc->experience + $experienceAmount;
             $level     = $uc->level;
-            $xpForNext = $uc->experience_for_next_level ?: self::experienceForMida($mida);
+            $xpForNext = $uc->experience_for_next_level ?: self::experienceForMida($oldMida);
             $leveledUp = false;
+            $evolved   = false;
+            $currentMida = $oldMida;
 
-            while ($newXp >= $xpForNext) {
-                $newXp    -= $xpForNext;
-                $level++;
-                $xpForNext = self::experienceForMida($mida);
-                $leveledUp = true;
+            // Check if should auto-evolve based on XP threshold BEFORE level-up
+            $xpForEvolution = self::experienceForMida($oldMida);
+            $activeInfections = self::mapActiveInfections($user->id, [$chuchemonId])->get($chuchemonId, collect());
+            $hasAtracon = $activeInfections->contains(fn ($inf) => self::normalizeMalaltiaName($inf['name'] ?? null) === 'atracon');
+
+            if (!$hasAtracon && $newXp >= $xpForEvolution && $xpForEvolution > 0 && $oldMida !== 'Gran') {
+                // Determine next size
+                $nextMida = match ($oldMida) {
+                    'Petit' => 'Mitjà',
+                    'Mitjà' => 'Gran',
+                    default => $oldMida,
+                };
+
+                if ($nextMida !== $oldMida) {
+                    // Reset experience for new size
+                    $newXp = 0;
+                    $xpForNext = self::experienceForMida($nextMida);
+                    $currentMida = $nextMida;
+                    $evolved = true;
+
+                    // Update size in database immediately
+                    DB::table('user_chuchemons')
+                        ->where('user_id', $user->id)
+                        ->where('chuchemon_id', $chuchemonId)
+                        ->update([
+                            'current_mida'   => $nextMida,
+                            'evolution_count' => DB::raw('evolution_count + 1'),
+                            'experience_for_next_level' => $xpForNext,
+                        ]);
+                }
+            } else {
+                // No evolution, check for level up
+                while ($newXp >= $xpForNext && $xpForNext > 0) {
+                    $newXp    -= $xpForNext;
+                    $level++;
+                    $xpForNext = self::experienceForMida($currentMida);
+                    $leveledUp = true;
+                }
             }
 
-            $maxHp  = self::computeMaxHp($uc->defense ?? 50, $level, $mida);
+            // Calculate HP (use new mida if evolved)
+            $maxHp  = self::computeMaxHp($uc->defense ?? 50, $level, $currentMida);
             $currHp = $uc->current_hp ?? $maxHp;
 
-            // On level up, restore HP proportionally (not to full, just gain bonus)
+            // On level up, restore HP bonus
             if ($leveledUp) {
                 $currHp = min($currHp + 10, $maxHp);
             }
 
+            // On evolution, scale HP proportionally
+            if ($evolved) {
+                $oldMaxHp = self::computeMaxHp($uc->defense ?? 50, $level, $oldMida);
+                $oldCurrHp = $currHp;
+                $newMaxHp = $maxHp;
+                $currHp = (int) round(($oldCurrHp / max($oldMaxHp, 1)) * $newMaxHp);
+                $currHp = max(1, min($currHp, $newMaxHp));
+            }
+
+            // Update all values
             DB::table('user_chuchemons')
                 ->where('user_id', $user->id)
                 ->where('chuchemon_id', $chuchemonId)
@@ -426,12 +462,22 @@ class LevelingController extends Controller
                     'current_hp'              => $currHp,
                 ]);
 
+            // Generate appropriate message
+            $message = '¡Experiencia añadida!';
+            if ($evolved) {
+                $message = "¡Tu Xuxemon ha evolucionado a {$currentMida}!";
+            } elseif ($leveledUp) {
+                $message = '¡Xuxemon ha subido de nivel!';
+            }
+
             return response()->json([
-                'message'                 => $leveledUp ? 'Chuchemon ha pujat de nivell!' : 'Experiència afegida',
+                'message'                 => $message,
                 'level'                   => $level,
                 'experience'              => $newXp,
                 'experience_for_next_level' => $xpForNext,
                 'level_up'                => $leveledUp,
+                'evolved'                 => $evolved,
+                'current_mida'            => $currentMida,
                 'current_hp'              => $currHp,
                 'max_hp'                  => $maxHp,
             ], 200);
@@ -579,26 +625,13 @@ class LevelingController extends Controller
                 ->where('chuchemon_id', $chuchemonId)
                 ->update(['current_hp' => $newHp]);
 
-            $xpToAdd = $xuxesUsed * self::XP_PER_CANDY;
-            $xpResponse = $this->addExperience($chuchemonId, $xpToAdd);
-            $xpPayload = $xpResponse->getData(true);
-
-            if ($xpResponse->getStatusCode() >= 400) {
-                return $xpResponse;
-            }
-
             return response()->json([
-                'message'      => "¡Has curado {$actualHeal} PS al Xuxemon y ha ganado {$xpToAdd} XP!",
+                'message'      => "¡Has curado {$actualHeal} PS al Xuxemon!",
                 'healed'       => $actualHeal,
                 'current_hp'   => $newHp,
                 'max_hp'       => $maxHp,
                 'xuxes_used'   => $xuxesUsed,
                 'xuxes_left'   => $maduixaRow->exists ? $maduixaRow->quantity : 0,
-                'xp_gained'    => $xpToAdd,
-                'experience'   => $xpPayload['experience'] ?? null,
-                'experience_for_next_level' => $xpPayload['experience_for_next_level'] ?? null,
-                'level'        => $xpPayload['level'] ?? null,
-                'level_up'     => $xpPayload['level_up'] ?? false,
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
@@ -681,27 +714,14 @@ class LevelingController extends Controller
                 ->where('chuchemon_id', $chuchemonId)
                 ->update([$boostColumn => $newBoost]);
 
-            $xpToAdd = $xuxesUsed * self::XP_PER_CANDY;
-            $xpResponse = $this->addExperience($chuchemonId, $xpToAdd);
-            $xpPayload = $xpResponse->getData(true);
-
-            if ($xpResponse->getStatusCode() >= 400) {
-                return $xpResponse;
-            }
-
             $statLabel = $stat === 'attack' ? 'ataque' : 'defensa';
 
             return response()->json([
-                'message'    => "¡+{$actualBoost}% de {$statLabel} temporal para el Xuxemon y +{$xpToAdd} XP!",
+                'message'    => "¡+{$actualBoost}% de {$statLabel} temporal para el Xuxemon!",
                 'boost'      => $newBoost,
                 'stat'       => $stat,
                 'xuxes_used' => $xuxesUsed,
                 'xuxes_left' => $row->exists ? $row->quantity : 0,
-                'xp_gained'  => $xpToAdd,
-                'experience' => $xpPayload['experience'] ?? null,
-                'experience_for_next_level' => $xpPayload['experience_for_next_level'] ?? null,
-                'level'      => $xpPayload['level'] ?? null,
-                'level_up'   => $xpPayload['level_up'] ?? false,
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);

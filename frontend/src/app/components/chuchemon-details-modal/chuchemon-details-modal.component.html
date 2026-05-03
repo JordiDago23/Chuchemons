@@ -31,7 +31,7 @@
               <p class="modal-infections-title">Malalties actives</p>
               <div class="modal-infection-list">
                 @for (infection of activeInfections; track infection.name) {
-                  <span class="modal-infection-tag">🦠 {{ infection.name }} · {{ infection.infection_percentage }}%</span>
+                  <span class="modal-infection-tag">🦠 {{ infection.name }}</span>
                 }
               </div>
             </div>

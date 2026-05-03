@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Malaltia extends Model
 {
     protected $table = 'malalties';
-    protected $fillable = ['name', 'description', 'type', 'severity', 'infection_rate'];
+    protected $fillable = ['name', 'description', 'type'];
 
     public function vaccines()
     {

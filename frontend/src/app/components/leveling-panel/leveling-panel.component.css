@@ -158,6 +158,31 @@
   border-radius: 8px;
 }
 
+/* XP bar (for evolution progress) */
+.xp-section {
+  margin-bottom: 12px;
+}
+
+.xp-track {
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.xp-fill {
+  height: 100%;
+  transition: width 0.5s ease, background 0.3s ease;
+  border-radius: 8px;
+}
+
+.xp-breakdown {
+  margin: 4px 0 10px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
 .hp-bar-mini {
   height: 4px;
   background: #e0e0e0;

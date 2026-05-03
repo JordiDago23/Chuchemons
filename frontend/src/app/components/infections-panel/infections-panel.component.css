@@ -46,23 +46,15 @@
   color: #555;
 }
 
-.infection-bar {
-  height: 8px;
-  background: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 12px 0 6px 0;
-}
-
-.infection-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ff6b6b, #d32f2f);
-}
-
-.infection-val {
-  font-weight: 600;
-  color: #c62828;
-  margin-top: 8px;
+.infected-status {
+  background: #fff3cd;
+  border-left: 3px solid #ff9800;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #856404;
+  font-weight: 500;
+  margin: 12px 0;
 }
 
 .cure-options {
@@ -87,6 +79,19 @@
 .cure-options button:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(76,175,80,.3);
+}
+
+.cure-options button:disabled,
+.cure-options button.no-stock {
+  background: linear-gradient(135deg, #bdbdbd, #9e9e9e);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cure-options button:disabled:hover,
+.cure-options button.no-stock:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .no-infections {
