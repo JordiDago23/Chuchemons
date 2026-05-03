@@ -56,7 +56,11 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
   private pollingSubscription: Subscription | null = null;
+  private cancelCheckSub: Subscription | null = null;
   private overviewSub: Subscription | null = null;
+  private _prevPendingSentIds = new Set<number>();
+  private _prevActiveBattleIds = new Set<number>();
+  private _overviewInitialized = false;
 
   constructor(
     private auth: AuthService,
@@ -111,6 +115,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+    this.stopCancelCheck();
     this.stopOverviewPolling();
     this.destroy$.next();
     this.destroy$.complete();
@@ -123,13 +128,33 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
     this.battleService.getOverview().subscribe({
       next: (response: BattleOverviewResponse) => {
-        this.onlineFriends = response.online_friends ?? [];
-        this.pendingReceived = response.pending_received ?? [];
-        this.pendingSent = response.pending_sent ?? [];
-        this.activeBattles = response.active_battles ?? [];
-        this.recentBattles = response.recent_battles ?? [];
-        this.stats = response.stats ?? this.stats;
-        this.loading = false;
+        const prevSentIds    = this._prevPendingSentIds;
+        const prevActiveIds  = this._prevActiveBattleIds;
+        const wasInitialized = this._overviewInitialized;
+
+        this.onlineFriends    = response.online_friends   ?? [];
+        this.pendingReceived  = response.pending_received ?? [];
+        this.pendingSent      = response.pending_sent     ?? [];
+        this.activeBattles    = response.active_battles   ?? [];
+        this.recentBattles    = response.recent_battles   ?? [];
+        this.stats            = response.stats            ?? this.stats;
+        this.loading          = false;
+
+        const newSentIds   = new Set(this.pendingSent.map(r => r.id));
+        const newActiveIds = new Set(this.activeBattles.map(b => b.id));
+
+        if (wasInitialized) {
+          const sentAccepted   = [...prevSentIds].some(id => !newSentIds.has(id));
+          const newBattle      = this.activeBattles.find(b => !prevActiveIds.has(b.id));
+          if (sentAccepted && newBattle) {
+            this.openBattle(newBattle.id);
+            return;
+          }
+        }
+
+        this._prevPendingSentIds   = newSentIds;
+        this._prevActiveBattleIds  = newActiveIds;
+        this._overviewInitialized  = true;
       },
       error: (err) => {
         this.error = err.error?.message ?? 'No se pudo cargar la Arena de Batalla.';
@@ -223,6 +248,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
           this.triggerResultOverlay();
         }
         this.startPollingIfNeeded();
+        this.startCancelCheck();
       },
       error: (err) => {
         this.error = err.error?.message ?? 'No se pudo abrir la batalla.';
@@ -266,6 +292,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
           // Si el combate pasó a ser mi turno, parar el polling (el jugador ahora actúa)
           if (response.battle.status === 'in_combat' && response.battle.is_my_turn) {
             this.stopPolling();
+            this.startCancelCheck();
             return;
           }
 
@@ -291,6 +318,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.stopPolling();
+    this.stopCancelCheck();
     this.showResultOverlay = false;
     this.resultAnimDone = false;
     this.router.navigate(['/batalla']);
@@ -319,6 +347,34 @@ export class BatallaComponent implements OnInit, OnDestroy {
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
       this.pollingSubscription = null;
+    }
+  }
+
+  private startCancelCheck(): void {
+    if (this.cancelCheckSub) return;
+    this.cancelCheckSub = interval(3000)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() =>
+          this.currentBattleId ? this.battleService.getBattle(this.currentBattleId) : EMPTY
+        )
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.battle.status === 'cancelled') {
+            this.stopPolling();
+            this.stopCancelCheck();
+            this.error = 'Tu rival abandonó la batalla.';
+            setTimeout(() => this.router.navigate(['/batalla']), 2000);
+          }
+        }
+      });
+  }
+
+  private stopCancelCheck(): void {
+    if (this.cancelCheckSub) {
+      this.cancelCheckSub.unsubscribe();
+      this.cancelCheckSub = null;
     }
   }
 
@@ -360,12 +416,14 @@ export class BatallaComponent implements OnInit, OnDestroy {
       next: () => {
         this.actionLoading = '';
         this.stopPolling();
+        this.stopCancelCheck();
         this.router.navigate(['/batalla']);
       },
       error: () => {
         // Si falla (ej. ya completada), salimos igualmente
         this.actionLoading = '';
         this.stopPolling();
+        this.stopCancelCheck();
         this.router.navigate(['/batalla']);
       }
     });
@@ -377,6 +435,22 @@ export class BatallaComponent implements OnInit, OnDestroy {
 
   isLoadingAction(prefix: string, id: number): boolean {
     return this.actionLoading === `${prefix}-${id}`;
+  }
+
+  isDeadEntry(entry: BattleRosterEntry): boolean {
+    return entry.current_hp === 0;
+  }
+
+  isLowHpEntry(entry: BattleRosterEntry): boolean {
+    return entry.hp_percent > 0 && entry.hp_percent <= 25;
+  }
+
+  get hasDeadRosterEntry(): boolean {
+    return this.myRoster.some(e => e.current_hp === 0);
+  }
+
+  get hasLowHpRosterEntry(): boolean {
+    return this.myRoster.some(e => e.hp_percent > 0 && e.hp_percent <= 25);
   }
 
   get canSelect(): boolean {
@@ -433,8 +507,10 @@ export class BatallaComponent implements OnInit, OnDestroy {
         if (!response.battle_over) {
           this.startPollingIfNeeded();
         } else {
+          this.stopCancelCheck();
           this.triggerResultOverlay();
           this.loadOverview(true);
+          this.auth.refreshUser().subscribe();
         }
       },
       error: (err) => {

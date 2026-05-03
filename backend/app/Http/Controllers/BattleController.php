@@ -461,11 +461,15 @@ class BattleController extends Controller
 
             $battle->update($updateData);
 
+            // +50 XP al ganador
+            $user->addExperience(50);
+
             return response()->json([
                 'message'     => '¡Batalla terminada!',
                 'battle'      => $this->formatBattleSummary($battle->fresh(['challenger', 'challenged', 'selections']), (int) $user->id),
                 'last_roll'   => $turnEntry,
                 'battle_over' => true,
+                'xp_gained'   => 50,
             ]);
         }
 

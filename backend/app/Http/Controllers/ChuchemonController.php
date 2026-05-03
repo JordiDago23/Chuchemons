@@ -345,6 +345,8 @@ class ChuchemonController extends Controller
                         $currHp = $uc->current_hp ?? $maxHp;
                         $xpForNext = $uc->experience_for_next_level ?? LevelingController::experienceForMida($uc->current_mida ?? 'Petit');
                         $xp        = $uc->experience ?? 0;
+                        $atkBoost  = ($uc->attack_boost  ?? 0) / 100;
+                        $defBoost  = ($uc->defense_boost ?? 0) / 100;
                         $teamData[] = [
                             'id'                        => $c->id,
                             'name'                      => $c->name,
@@ -354,6 +356,8 @@ class ChuchemonController extends Controller
                             'attack'                    => $c->attack ?? 50,
                             'defense'                   => $c->defense ?? 50,
                             'speed'                     => $c->speed ?? 50,
+                            'attack_boost'              => $uc->attack_boost  ?? 0,
+                            'defense_boost'             => $uc->defense_boost ?? 0,
                             'current_mida'              => $uc->current_mida ?? 'Petit',
                             'level'                     => $uc->level ?? 1,
                             'current_hp'                => $currHp,
@@ -362,8 +366,8 @@ class ChuchemonController extends Controller
                             'experience'                => $xp,
                             'experience_for_next_level' => $xpForNext,
                             'xp_percent'                => $xpForNext > 0 ? round(($xp / $xpForNext) * 100, 1) : 0,
-                            'effective_attack'          => LevelingController::effectiveAttack($c->attack ?? 50, $uc->current_mida ?? 'Petit'),
-                            'effective_defense'         => LevelingController::effectiveDefense($c->defense ?? 50, $uc->current_mida ?? 'Petit'),
+                            'effective_attack'          => round(LevelingController::effectiveAttack($c->attack ?? 50, $uc->current_mida ?? 'Petit') * (1 + $atkBoost), 1),
+                            'effective_defense'         => round(LevelingController::effectiveDefense($c->defense ?? 50, $uc->current_mida ?? 'Petit') * (1 + $defBoost), 1),
                             'effective_speed'           => self::effectiveSpeed($c->speed ?? 50, $uc->current_mida ?? 'Petit'),
                         ];
                     }
@@ -619,20 +623,25 @@ class ChuchemonController extends Controller
                     'current_hp' => $newCurrHp,
                 ]);
 
+            // +25 XP al evolucionar a Mitjà, +50 XP a Gran
+            $xpGain = $nextMida === 'Gran' ? 50 : 25;
+            $user->addExperience($xpGain);
+
             // Get updated data
             $updated = $user->capturedChuchemsWithEvolution()
                 ->where('chuchemon_id', $chuchemonId)
                 ->first();
 
             return response()->json([
-                'message' => "Tu {$userChuchemon->name} ha evolucionado a {$nextMida}!",
+                'message'   => "Tu {$userChuchemon->name} ha evolucionado a {$nextMida}!",
+                'xp_gained' => $xpGain,
                 'chuchemon' => [
-                    'id' => $updated->id,
-                    'name' => $updated->name,
-                    'element' => $updated->element,
-                    'mida' => $updated->mida,
-                    'image' => $updated->image,
-                    'current_mida' => $updated->pivot->current_mida,
+                    'id'              => $updated->id,
+                    'name'            => $updated->name,
+                    'element'         => $updated->element,
+                    'mida'            => $updated->mida,
+                    'image'           => $updated->image,
+                    'current_mida'    => $updated->pivot->current_mida,
                     'evolution_count' => $updated->pivot->evolution_count,
                 ],
             ]);

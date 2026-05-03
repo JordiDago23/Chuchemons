@@ -50,7 +50,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     { type: 'Tipo Aire',   count: 0, color: '#48cae4' },
   ];
 
-  logros = [
+  logros: { icon: string; title: string; desc: string; status: string; progress: string | null }[] = [
     { icon: '🏆', title: 'Primer Xuxemon',       desc: 'Captura el primer Xuxemon',      status: 'locked',   progress: null },
     { icon: '🔥', title: 'Primera Victoria',      desc: 'Gana tu primera partida',        status: 'locked',   progress: null },
     { icon: '🎯', title: 'Coleccionista',          desc: 'Captura 50 Xuxemons diferentes', status: 'locked',   progress: null },
@@ -116,16 +116,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const cached = this.auth.currentUser;
-    if (cached) {
-      this.user = cached;
-      this.fillForm(cached);
-    } else {
-      this.auth.me().subscribe({
-        next: (u: any) => { this.user = u; this.fillForm(u); }
-      });
-    }
+    this.auth.me().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (u: any) => {
+        this.user = u;
+        this.fillForm(u);
+        this.applyUserXp(u);
+      }
+    });
     this.loadStats();
+  }
+
+  private applyUserXp(u: any): void {
+    this.stats.level  = u.level  ?? 0;
+    this.stats.xp     = u.experience ?? 0;
+    this.stats.xpMax  = u.experience_for_next_level ?? 100;
   }
 
   ngOnDestroy(): void {
@@ -139,23 +143,68 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.stats.wins   = r.stats.victories;
         this.stats.losses = r.stats.defeats;
         this.stats.streak = r.stats.streak;
+        this.updateLogros();
       }
     });
 
     this.chuchemonService.getMyChuchemons().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (mine) => {
+      next: (mine: any[]) => {
         this.stats.captured = mine.length;
+
         this.typeStats = [
           { type: 'Tipo Agua',   count: mine.filter((c: any) => c.element === 'Aigua').length, color: '#457b9d' },
           { type: 'Tipo Tierra', count: mine.filter((c: any) => c.element === 'Terra').length, color: '#b8860b' },
           { type: 'Tipo Aire',   count: mine.filter((c: any) => c.element === 'Aire').length,  color: '#48cae4' },
         ];
+        this.updateLogros();
       }
     });
 
     this.chuchemonService.getAllChuchemons().pipe(takeUntil(this.destroy$)).subscribe({
       next: (all) => { this.stats.total = all.length; }
     });
+  }
+
+  private updateLogros(): void {
+    const { wins, captured, streak, total } = this.stats;
+    this.logros = [
+      {
+        icon: '🏆', title: 'Primer Xuxemon',
+        desc: 'Captura el primer Xuxemon',
+        status: captured >= 1 ? 'done' : 'locked',
+        progress: null,
+      },
+      {
+        icon: '🔥', title: 'Primera Victoria',
+        desc: 'Gana tu primera partida',
+        status: wins >= 1 ? 'done' : 'locked',
+        progress: null,
+      },
+      {
+        icon: '🎯', title: 'Coleccionista',
+        desc: 'Captura 50 Xuxemons diferentes',
+        status: captured >= 50 ? 'done' : captured > 0 ? 'progress' : 'locked',
+        progress: captured > 0 && captured < 50 ? `${captured}/50` : null,
+      },
+      {
+        icon: '🏆', title: 'Maestro del Combate',
+        desc: 'Consigue 100 victorias',
+        status: wins >= 100 ? 'done' : wins > 0 ? 'progress' : 'locked',
+        progress: wins > 0 && wins < 100 ? `${wins}/100` : null,
+      },
+      {
+        icon: '📖', title: 'Xuxedex Completada',
+        desc: `Captura todos los Xuxemons (${total})`,
+        status: total > 0 && captured >= total ? 'done' : captured > 0 ? 'progress' : 'locked',
+        progress: captured > 0 && captured < total ? `${captured}/${total}` : null,
+      },
+      {
+        icon: '↗', title: 'Invencible',
+        desc: 'Gana 10 partidas seguidas',
+        status: streak >= 10 ? 'done' : streak > 0 ? 'progress' : 'locked',
+        progress: streak > 0 && streak < 10 ? `${streak}/10` : null,
+      },
+    ];
   }
 
   logout() {

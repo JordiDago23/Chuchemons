@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
+import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { ConfigService, EvolutionConfig } from '../../services/config.service';
 import { LevelingService } from '../../services/leveling.service';
@@ -40,6 +41,7 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
+    private auth: AuthService,
     private chuchemonService: ChuchemonService,
     private configService: ConfigService,
     private levelingService: LevelingService
@@ -109,8 +111,12 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
   private executeEvolve(): void {
     this.levelingService.evolveChuchemon(this.selectedChuchemon.id).subscribe({
       next: (res) => {
-        this.actionMessage = res.message ?? '¡Xuxemon evolucionado!';
+        const xp = res.xp_gained ?? 0;
+        this.actionMessage = `${res.message ?? '¡Xuxemon evolucionado!'} · +${xp} XP`;
         this.chuchemonService.notifyChuchemonStateChanged();
+        if (xp > 0) {
+          this.auth.refreshUser().subscribe();
+        }
       },
       error: (err) => {
         this.actionMessage = err.error?.message ?? 'Error al evolucionar';
@@ -158,6 +164,20 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
     this.levelingService.healChuchemon(this.selectedChuchemon.id, this.healQty).subscribe({
       next: (res: any) => {
         this.actionMessage = `❤️ Curado +${res.healed} PS (${res.current_hp}/${res.max_hp}) · +${res.xp_gained ?? 0} XP`;
+
+        // Actualización inmediata sin esperar el refresco async
+        if (res.current_hp !== undefined) {
+          const patch = {
+            current_hp:    res.current_hp,
+            max_hp:        res.max_hp        ?? this.selectedChuchemon.max_hp,
+            xuxes_maduixa: res.xuxes_left    ?? this.selectedChuchemon.xuxes_maduixa,
+          };
+          this.selectedChuchemon = { ...this.selectedChuchemon, ...patch };
+          this.chuchemons = this.chuchemons.map(c =>
+            c.id === this.selectedChuchemon.id ? { ...c, ...patch } : c
+          );
+        }
+
         this.chuchemonService.notifyChuchemonStateChanged();
       },
       error: (err) => {

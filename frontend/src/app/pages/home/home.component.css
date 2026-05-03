@@ -23,14 +23,35 @@
 
 .xp-bar-wrap {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+  align-self: center;
+}
+
+.xp-bar-header {
+  display: flex;
   justify-content: space-between;
-  font-size: 0.78rem;
-  margin-bottom: 4px;
-  opacity: 0.9;
+  font-size: 0.8rem;
+  opacity: 0.95;
+}
+
+.xp-label {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.xp-count {
+  opacity: 0.85;
+}
+
+.xp-count.xp-max {
+  font-weight: 700;
+  opacity: 1;
 }
 
 .xp-track {
-  width: 260px;
+  width: 100%;
   height: 8px;
   background: rgba(255,255,255,0.3);
   border-radius: 99px;
@@ -38,13 +59,10 @@
 }
 
 .xp-fill {
-  min-width: 0;
-  transition: width 0.2s ease;
-
   height: 100%;
   background: #fff;
   border-radius: 99px;
-  transition: width 0.4s;
+  transition: width 0.5s ease;
 }
 
 .banner-level {

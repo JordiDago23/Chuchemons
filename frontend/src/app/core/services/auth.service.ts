@@ -80,6 +80,14 @@ export class AuthService {
     );
   }
 
+  refreshUser() {
+    return this.http.get(`${this.apiUrl}/me`).pipe(
+      timeout(8000),
+      tap((u: any) => this.setCurrentUser(u)),
+      catchError(this.handleError)
+    );
+  }
+
   async initializeSession(): Promise<void> {
     const token = this.getToken();
 

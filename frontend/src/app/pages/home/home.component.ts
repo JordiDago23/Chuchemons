@@ -65,29 +65,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     Aigua:  '#457b9d',
   };
 
-  protected get experienceProgress(): number {
-    if (typeof document === 'undefined') {
-      return 0;
-    }
-
-    const pageRoot = document.querySelector('app-home') ?? document.body;
-    const xpText = Array.from(pageRoot.querySelectorAll('span, p, div'))
-      .map((element) => element.textContent?.trim() ?? '')
-      .find((text) => /\d+\s*\/\s*\d+\s*XP/i.test(text));
-
-    const match = xpText?.match(/(\d+)\s*\/\s*(\d+)\s*XP/i);
-    if (!match) {
-      return 0;
-    }
-
-    const currentXp = Number(match[1]);
-    const totalXp = Number(match[2]);
-
-    if (!Number.isFinite(currentXp) || !Number.isFinite(totalXp) || totalXp <= 0) {
-      return 0;
-    }
-
-    return Math.min(1, Math.max(0, currentXp / totalXp));
+  private applyUserXp(u: any): void {
+    this.stats.level  = u.level  ?? 0;
+    this.stats.xp     = u.experience ?? 0;
+    this.stats.xpMax  = u.experience_for_next_level ?? 100;
   }
 
   constructor(
@@ -104,17 +85,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loadStats(true);
       });
 
-    const cached = this.auth.currentUser;
-    if (cached) {
-      this.user = cached;
-      this.loading = false;
-      this.loadTeam();
-      this.loadStats();
-      return;
-    }
-    this.auth.me().subscribe({
+    this.auth.me().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
         this.user = data;
+        this.applyUserXp(data);
         this.loading = false;
         this.loadTeam();
         this.loadStats();
@@ -142,6 +116,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.team && Array.isArray(response.team)) {
             this.team = response.team.filter((t: Chuchemon | null) => t !== null);
+            if (this.selectedChuchemonForDetails) {
+              const updated = this.team.find(m => m.id === this.selectedChuchemonForDetails!.id);
+              if (updated) this.selectedChuchemonForDetails = updated;
+            }
           } else {
             this.team = [];
           }

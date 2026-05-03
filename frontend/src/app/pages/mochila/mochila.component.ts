@@ -552,6 +552,7 @@ export class MochilaComponent implements OnInit, OnDestroy {
           this.applying = false;
           this.loadMochila();
           this.loadTeam();
+          this.chuchemonService.notifyChuchemonStateChanged();
         },
         error: (err) => {
           this.applyFeedback = { type: 'error', msg: err?.error?.message ?? 'Error al aplicar.' };

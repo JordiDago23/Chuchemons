@@ -27,9 +27,40 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $casts = [
-        'is_admin' => 'boolean',  //Rol de administrador
+        'is_admin'   => 'boolean',
         'last_seen_at' => 'datetime',
+        'level'      => 'integer',
+        'experience' => 'integer',
     ];
+
+    protected $appends = ['experience_for_next_level'];
+
+    // XP necesario para pasar del nivel N al N+1 (índice = nivel actual)
+    public const XP_THRESHOLDS = [100, 200, 350, 550, 800, 1100, 1500, 2000, 2600, 3300];
+
+    public function getExperienceForNextLevelAttribute(): int
+    {
+        return self::XP_THRESHOLDS[$this->level] ?? 0; // 0 = nivel máximo alcanzado
+    }
+
+    /**
+     * Añade XP al usuario y sube de nivel si procede.
+     */
+    public function addExperience(int $amount): void
+    {
+        if ($this->level >= 10) return;
+
+        $this->experience += $amount;
+
+        while ($this->level < 10) {
+            $needed = self::XP_THRESHOLDS[$this->level] ?? PHP_INT_MAX;
+            if ($this->experience < $needed) break;
+            $this->experience -= $needed;
+            $this->level++;
+        }
+
+        $this->save();
+    }
 
     public function getJWTIdentifier()
     {

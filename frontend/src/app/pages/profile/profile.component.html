@@ -22,11 +22,9 @@
           </div>
           <div class="banner-info">
             <span class="banner-name">{{ user.player_id }}</span>
-            <span class="banner-email">{{ user.email }}</span>
             <div class="banner-tags">
               <span class="tag red">❤ Nivel {{ stats.level }}</span>
               <span class="tag yellow">📅 Miembro desde el {{ memberSince }}</span>
-              <span class="tag gray">📦 {{ stats.captured }} Chuchemons atrapados</span>
               @if (user.is_admin) {
                 <span class="tag admin">⭐ Admin</span>
               }

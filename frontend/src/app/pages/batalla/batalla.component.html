@@ -10,6 +10,19 @@
         <h1>Arena de Batalla</h1>
         <p>Desafía a tus amigos, elige un Xuxemon y resuelve el duelo con tirada + modificadores.</p>
       </section>
+
+      @if (activeBattles.length > 0) {
+        <div class="active-battle-banner">
+          <div class="active-battle-info">
+            <span class="active-battle-dot"></span>
+            <div>
+              <strong>¡Tienes una batalla en curso!</strong>
+              <p>vs {{ activeBattles[0].opponent?.display_name || activeBattles[0].opponent?.player_id || 'Rival' }}</p>
+            </div>
+          </div>
+          <button class="resume-btn" (click)="openBattle(activeBattles[0].id)">⚔️ Volver a la batalla</button>
+        </div>
+      }
     }
 
     @if (success) {
@@ -83,50 +96,28 @@
       </article>
     </section>
 
-    <section class="grid two-cols">
-      <article class="card">
-        <h2>Solicitudes enviadas</h2>
-        @if (!loading && pendingSent.length === 0) {
-          <p class="empty">No has enviado desafíos.</p>
-        }
+    <section class="card">
+      <h2>Solicitudes enviadas</h2>
+      @if (!loading && pendingSent.length === 0) {
+        <p class="empty">No has enviado desafíos.</p>
+      }
 
-        <div class="list">
-          @for (request of pendingSent; track trackById($index, request)) {
-            <div class="list-item">
-              <div>
-                <strong>{{ request.user.display_name || request.user.player_id }}</strong>
-                <p>{{ request.user.player_id }}</p>
-              </div>
-              <button
-                class="ghost-btn"
-                (click)="deleteRequest(request.id)"
-                [disabled]="isLoadingAction('delete', request.id)">
-                Cancelar
-              </button>
+      <div class="list">
+        @for (request of pendingSent; track trackById($index, request)) {
+          <div class="list-item">
+            <div>
+              <strong>{{ request.user.display_name || request.user.player_id }}</strong>
+              <p>{{ request.user.player_id }}</p>
             </div>
-          }
-        </div>
-      </article>
-
-      <article class="card">
-        <h2>Batallas activas</h2>
-
-        @if (!loading && activeBattles.length === 0) {
-          <p class="empty">Aún no hay batallas activas.</p>
+            <button
+              class="ghost-btn"
+              (click)="deleteRequest(request.id)"
+              [disabled]="isLoadingAction('delete', request.id)">
+              Cancelar
+            </button>
+          </div>
         }
-
-        <div class="list">
-          @for (battle of activeBattles; track trackById($index, battle)) {
-            <div class="list-item">
-              <div>
-                <strong>vs {{ battle.opponent?.display_name || battle.opponent?.player_id || 'Rival' }}</strong>
-                <p>{{ battle.status === 'pending_selection' ? 'Pendiente de selección' : battle.status === 'in_combat' ? 'En combate' : 'Completada' }}</p>
-              </div>
-              <button class="primary-btn" (click)="openBattle(battle.id)">Abrir</button>
-            </div>
-          }
-        </div>
-      </article>
+      </div>
     </section>
 
     <section class="card stats">
@@ -186,7 +177,7 @@
             <h2>Batalla en Curs</h2>
             <p>Batalla #{{ selectedBattle.id }} · {{ battlePhaseLabel }}</p>
           </div>
-          @if (selectedBattle?.status === 'pending_selection' || selectedBattle?.status === 'in_combat') {
+          @if (selectedBattle.status === 'pending_selection' || selectedBattle.status === 'in_combat') {
             <button class="danger-btn" (click)="closeBattlePanel()" [disabled]="actionLoading === 'cancel'">
               {{ actionLoading === 'cancel' ? 'Cancelando...' : 'Abandonar batalla' }}
             </button>
@@ -207,7 +198,7 @@
 
             @if (isInCombat || hasResult) {
               <p class="fighter-hp-text">
-                HP: {{ selectedBattle?.my_current_hp ?? myFighter?.current_hp ?? '-' }}
+                HP: {{ selectedBattle.my_current_hp ?? myFighter?.current_hp ?? '-' }}
                 / {{ myFighter?.max_hp ?? '-' }}
               </p>
               <div class="hp-track">
@@ -234,11 +225,11 @@
             @if (isInCombat) {
               <div class="dice-wrapper" [class.rolling]="diceRolling">
                 <div class="dice-face">
-                  {{ selectedBattle?.last_roll?.roll ?? '?' }}
+                  {{ selectedBattle.last_roll?.roll ?? '?' }}
                 </div>
               </div>
 
-              @if (selectedBattle?.last_roll) {
+              @if (selectedBattle.last_roll) {
                 <div class="last-roll-info">
                   <small>+{{ selectedBattle!.last_roll!.size_mod }} tam</small>
                   <small>{{ selectedBattle!.last_roll!.type_mod >= 0 ? '+' : '' }}{{ selectedBattle!.last_roll!.type_mod }} tipo</small>
@@ -269,7 +260,7 @@
 
             @if (isInCombat || hasResult) {
               <p class="fighter-hp-text">
-                HP: {{ selectedBattle?.opponent_current_hp ?? opponentFighter?.current_hp ?? '-' }}
+                HP: {{ selectedBattle.opponent_current_hp ?? opponentFighter?.current_hp ?? '-' }}
                 / {{ opponentFighter?.max_hp ?? '-' }}
               </p>
               <div class="hp-track">
@@ -295,18 +286,38 @@
         @if (!battleLoading && canSelect) {
           <section class="card">
             <h3>Selecciona tu Xuxemon</h3>
+
+            @if (hasDeadRosterEntry) {
+              <div class="roster-warning dead-warning">
+                ❌ Tienes Xuxemons sin vida que no puedes utilizar en batalla.
+              </div>
+            }
+            @if (hasLowHpRosterEntry) {
+              <div class="roster-warning low-warning">
+                ⚠️ Algunos de tus Xuxemons tienen poca vida. ¡Elige con cuidado!
+              </div>
+            }
+
             <div class="roster-grid">
               @for (entry of myRoster; track trackById($index, entry)) {
                 <button
                   class="roster-card"
+                  [class.roster-card-dead]="isDeadEntry(entry)"
+                  [class.roster-card-low]="isLowHpEntry(entry)"
                   (click)="selectForBattle(entry.id)"
-                  [disabled]="isLoadingAction('select', entry.id)">
+                  [disabled]="isLoadingAction('select', entry.id) || isDeadEntry(entry)">
                   <div>
                     <strong>{{ entry.name }}</strong>
                     <p>Nv.{{ entry.level }} · {{ entry.current_mida }} · {{ entry.element }}</p>
                     <small>HP {{ entry.current_hp }}/{{ entry.max_hp }} · x{{ entry.count }}</small>
                   </div>
-                  <span>{{ isLoadingAction('select', entry.id) ? '...' : 'Seleccionar' }}</span>
+                  @if (isDeadEntry(entry)) {
+                    <span class="roster-badge dead-badge">💀 Sin vida</span>
+                  } @else if (isLowHpEntry(entry)) {
+                    <span class="roster-badge low-badge">⚠️ Poca vida</span>
+                  } @else {
+                    <span>{{ isLoadingAction('select', entry.id) ? '...' : 'Seleccionar' }}</span>
+                  }
                 </button>
               }
             </div>
@@ -322,10 +333,10 @@
         <section class="card">
           <h3>Registro de combate</h3>
           <div class="battle-log">
-            @if (!selectedBattle?.combat_log?.length) {
+            @if (!selectedBattle.combat_log?.length) {
               <p class="log-empty">El combate aún no ha empezado.</p>
             }
-            @for (entry of (selectedBattle?.combat_log ?? []); track entry.turn) {
+            @for (entry of (selectedBattle.combat_log ?? []); track entry.turn) {
               <div class="log-entry" [class.my-attack]="entry.attacker_id === user?.id">
                 <span class="log-turn">T{{ entry.turn }}</span>
                 <span class="log-text">

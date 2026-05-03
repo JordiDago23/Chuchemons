@@ -49,6 +49,68 @@
   color: #991b1b;
 }
 
+.active-battle-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.active-battle-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.active-battle-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.35);
+  flex-shrink: 0;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.35); }
+  50%       { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.15); }
+}
+
+.active-battle-info strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.active-battle-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.resume-btn {
+  background: #fff;
+  color: #1e3a5f;
+  border: none;
+  border-radius: 0.65rem;
+  padding: 0.55rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.resume-btn:hover {
+  background: #e0eeff;
+  transform: translateY(-1px);
+}
+
 .grid {
   display: grid;
   gap: 1rem;
@@ -212,6 +274,59 @@
 .roster-card p,
 .roster-card small {
   color: var(--battle-muted);
+}
+
+.roster-card.roster-card-dead {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.roster-card.roster-card-low {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.roster-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dead-badge {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.low-badge {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.roster-warning {
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.dead-warning {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.low-warning {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #92400e;
 }
 
 
