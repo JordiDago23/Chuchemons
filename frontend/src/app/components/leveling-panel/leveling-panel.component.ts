@@ -9,6 +9,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
 import { ConfigService, EvolutionConfig } from '../../services/config.service';
 import { LevelingService } from '../../services/leveling.service';
+import { EVO_RINGS, EVO_SPARKS, EVO_STARS, EVO_TIMING } from '../../animations/evolution-params';
 
 @Component({
   selector: 'app-leveling-panel',
@@ -18,6 +19,10 @@ import { LevelingService } from '../../services/leveling.service';
   styleUrls: ['./leveling-panel.component.css']
 })
 export class LevelingPanelComponent implements OnInit, OnDestroy {
+  readonly evoRings  = EVO_RINGS;
+  readonly evoSparks = EVO_SPARKS;
+  readonly evoStars  = EVO_STARS;
+  readonly evoTiming = EVO_TIMING;
   @Input() compact = false;
   chuchemons: any[] = [];
   selectedChuchemon: any = null;
@@ -198,6 +203,15 @@ export class LevelingPanelComponent implements OnInit, OnDestroy {
     if (mida === 'Petit') return 'Mitjà';
     if (mida === 'Mitjà') return 'Gran';
     return 'Gran';
+  }
+
+  sizeLabel(mida: string): string {
+    switch (mida) {
+      case 'Petit': return 'Peq.';
+      case 'Mitjà': return 'Med.';
+      case 'Gran':  return 'Gde.';
+      default:      return mida;
+    }
   }
 
   healWithXux(): void {

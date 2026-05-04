@@ -95,17 +95,23 @@
 <!-- ══════════════════════════════════════════════════════════
      OVERLAY — CHUCHEMON REVEAL
 ══════════════════════════════════════════════════════════ -->
-<div class="reveal-overlay chuchemon-overlay" *ngIf="showChuchemonOverlay">
+<div class="reveal-overlay chuchemon-overlay" *ngIf="showChuchemonOverlay" [@overlayIn]>
 
   <div class="overlay-beam-ring"></div>
 
   <div class="stars-container">
-    <span *ngFor="let s of stars" class="star"></span>
+    <span *ngFor="let s of stars" class="star"
+      [style.top]="s.top"
+      [style.left]="s.left"
+      [style.width]="s.width"
+      [style.height]="s.height"
+      [style.background]="s.color"
+      [style.animation-delay]="s.delay"></span>
   </div>
 
-  <div class="overlay-card">
+  <div class="overlay-card" [@cardBounceIn]>
 
-    <div class="new-ribbon" *ngIf="wasNewChuchemon">¡NUEVO!</div>
+    <div class="new-ribbon" *ngIf="wasNewChuchemon" [@popIn]>¡NUEVO!</div>
 
     <div class="reveal-img-wrap">
       <div class="reveal-glow-ring"></div>
@@ -114,6 +120,7 @@
         [src]="'http://localhost:8000/chuchemons/' + claimedChuchemon.image"
         [alt]="claimedChuchemon.name"
         class="reveal-chuchemon-img"
+        [@imgReveal]
         onerror="this.src='assets/placeholder.png'"
       >
     </div>
@@ -156,9 +163,9 @@
 <!-- ══════════════════════════════════════════════════════════
      OVERLAY — CHUCHES REVEAL
 ══════════════════════════════════════════════════════════ -->
-<div class="reveal-overlay xux-overlay" *ngIf="showXuxOverlay">
+<div class="reveal-overlay xux-overlay" *ngIf="showXuxOverlay" [@overlayIn]>
 
-  <div class="overlay-card xux-card">
+  <div class="overlay-card xux-card" [@cardBounceIn]>
     <div class="xux-header">
       <span class="xux-header-icon">🍬</span>
       <h2>¡Chuches conseguidas!</h2>
@@ -168,6 +175,7 @@
       <div class="item-reveal-card"
            [class.item-in]="itemsVisible"
            *ngFor="let item of claimedItems; let i = index"
+           [@itemPopIn]
            [style.animation-delay]="(i * 120) + 'ms'">
         <div class="item-emoji">{{ itemEmoji(item.name) }}</div>
         <span class="item-name">{{ item.name }}</span>

@@ -14,6 +14,8 @@ import {
 } from '../../core/services/battle.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
+import { overlayInAnim, popInAnim, slideUpAnim, slideUpSubAnim } from '../../animations/shared.animations';
+import { BATTLE_PARTICLES, ParticleConfig } from '../../animations/batalla-params';
 
 @Component({
   selector: 'app-batalla',
@@ -21,6 +23,7 @@ import { MainLayoutComponent } from '../../components/main-layout/main-layout.co
   imports: [CommonModule, MainLayoutComponent],
   templateUrl: './batalla.component.html',
   styleUrls: ['./batalla.component.css'],
+  animations: [overlayInAnim, popInAnim, slideUpAnim, slideUpSubAnim],
 })
 export class BatallaComponent implements OnInit, OnDestroy {
   user: any = null;
@@ -52,7 +55,7 @@ export class BatallaComponent implements OnInit, OnDestroy {
   currentBattleId: number | null = null;
   showResultOverlay = false;
   resultAnimDone = false;
-  readonly particles = [1,2,3,4,5,6,7,8,9,10,11,12];
+  readonly particles: ParticleConfig[] = BATTLE_PARTICLES;
 
   private readonly destroy$ = new Subject<void>();
   private pollingSubscription: Subscription | null = null;

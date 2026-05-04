@@ -1,13 +1,15 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chuchemon } from '../../models/chuchemon.model';
+import { fadeInAnim, slideInAnim } from '../../animations/shared.animations';
 
 @Component({
   selector: 'app-chuchemon-details-modal',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './chuchemon-details-modal.component.html',
-  styleUrls: ['./chuchemon-details-modal.component.css']
+  styleUrls: ['./chuchemon-details-modal.component.css'],
+  animations: [fadeInAnim, slideInAnim],
 })
 export class ChuchemonDetailsModalComponent {
   @Input() chuchemon: Chuchemon | null = null;

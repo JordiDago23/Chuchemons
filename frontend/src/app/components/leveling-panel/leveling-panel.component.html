@@ -38,7 +38,7 @@
 
       @if (!compact && hasSelectedInfections) {
         <div class="infection-panel">
-          <p class="infection-title">Malalties actives</p>
+          <p class="infection-title">Infecciones activas</p>
           <div class="infection-tags">
             @for (infection of selectedInfections; track trackInfection($index, infection)) {
               <span class="infection-tag">
@@ -56,7 +56,7 @@
       @if (!compact) {
       <div class="stat-block">
         <div class="stat-label-row">
-          <span>❤️ Punts de Salut (PS)</span>
+          <span>❤️ Puntos de Salud (PS)</span>
           <span class="stat-val">{{ selectedChuchemon.current_hp }} / {{ selectedChuchemon.max_hp }}</span>
         </div>
         <div class="hp-track" role="progressbar"
@@ -150,7 +150,7 @@
       } @else {
         <div class="stat-block evolve-block">
           <p class="evolve-title">🔮 Evolución</p>
-          <p class="evolve-info">Este Xuxemon ya es <strong>Gran</strong> (máximo).</p>
+          <p class="evolve-info">Este Xuxemon ya es <strong>Grande</strong> (máximo).</p>
         </div>
       }
 
@@ -163,7 +163,7 @@
             <tr>
               <th></th>
               @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
-                <th [class.current]="selectedChuchemon.current_mida === size">{{ size }}</th>
+                <th [class.current]="selectedChuchemon.current_mida === size">{{ sizeLabel(size) }}</th>
               }
             </tr>
           </thead>
@@ -175,7 +175,7 @@
               }
             </tr>
             <tr>
-              <td class="row-label">Atac</td>
+              <td class="row-label">Atq</td>
               @for (size of ['Petit', 'Mitjà', 'Gran']; track size) {
                 <td [class.current]="selectedChuchemon.current_mida === size">{{ statsForSize(size).atk }}</td>
               }
@@ -214,16 +214,30 @@
   <div class="lp-evo-overlay" aria-live="assertive">
     <div class="lp-evo-flash" aria-hidden="true"></div>
     <div class="lp-evo-rings" aria-hidden="true">
-      <span></span><span></span><span></span><span></span><span></span>
+      @for (ring of evoRings; track $index) {
+        <span [style.animation-delay]="ring.delay" [style.border-color]="ring.color"
+          [style.animation-duration]="evoTiming.ringDuration"></span>
+      }
     </div>
     <div class="lp-evo-sparks" aria-hidden="true">
-      <span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span>
+      @for (spark of evoSparks; track $index) {
+        <span [style.--a]="spark.angle" [style.background]="spark.color"
+          [style.animation-delay]="spark.delay"
+          [style.animation-duration]="evoTiming.sparkDuration"
+          [style.animation-timing-function]="evoTiming.sparkEasing"></span>
+      }
     </div>
     <div class="lp-evo-stars" aria-hidden="true">
-      <span>★</span><span>✦</span><span>★</span>
-      <span>✦</span><span>★</span><span>✦</span>
+      @for (star of evoStars; track $index) {
+        <span
+          [style.top]="star.top ?? null"
+          [style.left]="star.left ?? null"
+          [style.bottom]="star.bottom ?? null"
+          [style.right]="star.right ?? null"
+          [style.animation-delay]="star.delay"
+          [style.font-size]="star.size"
+          [style.animation-duration]="evoTiming.starDuration">★</span>
+      }
     </div>
     <div class="lp-evo-card">
       <p class="lp-evo-eyebrow">¡Evolución completada!</p>

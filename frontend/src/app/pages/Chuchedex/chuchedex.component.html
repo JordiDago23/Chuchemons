@@ -135,16 +135,30 @@
       <div class="evo-overlay" role="status" aria-live="assertive">
         <div class="evo-flash" aria-hidden="true"></div>
         <div class="evo-rings" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
+          @for (ring of evoRings; track $index) {
+            <span [style.animation-delay]="ring.delay" [style.border-color]="ring.color"
+              [style.animation-duration]="evoTiming.ringDuration"></span>
+          }
         </div>
         <div class="evo-sparks" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
+          @for (spark of evoSparks; track $index) {
+            <span [style.--a]="spark.angle" [style.background]="spark.color"
+              [style.animation-delay]="spark.delay"
+              [style.animation-duration]="evoTiming.sparkDuration"
+              [style.animation-timing-function]="evoTiming.sparkEasing"></span>
+          }
         </div>
         <div class="evo-stars" aria-hidden="true">
-          <span>★</span><span>✦</span><span>★</span>
-          <span>✦</span><span>★</span><span>✦</span>
+          @for (star of evoStars; track $index) {
+            <span
+              [style.top]="star.top ?? null"
+              [style.left]="star.left ?? null"
+              [style.bottom]="star.bottom ?? null"
+              [style.right]="star.right ?? null"
+              [style.animation-delay]="star.delay"
+              [style.font-size]="star.size"
+              [style.animation-duration]="evoTiming.starDuration">★</span>
+          }
         </div>
         <div class="evo-card">
           <p class="evo-eyebrow">¡Evolución completada!</p>

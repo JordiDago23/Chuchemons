@@ -709,7 +709,6 @@
   justify-content: flex-start;
   padding: 4rem 1.5rem 2rem;
   overflow-y: auto;
-  animation: overlayIn 0.45s ease both;
 }
 
 .win-overlay {
@@ -720,10 +719,7 @@
   background: radial-gradient(ellipse at 50% 0%, #450a0a 0%, #7f1d1d 40%, #991b1b 80%, #3b0000 100%);
 }
 
-@keyframes overlayIn {
-  from { opacity: 0; transform: scale(1.04); }
-  to   { opacity: 1; transform: scale(1); }
-}
+/* overlayIn → Angular animation trigger [@overlayIn] */
 
 /* ── Partículas (victoria) ── */
 .particles {
@@ -744,18 +740,7 @@
   animation: fall 2s ease-in infinite;
 }
 
-.particle:nth-child(1)  { left: 4%;  animation-delay: 0s;    animation-duration: 2.1s; background: #fde68a; width: 8px;  height: 8px; }
-.particle:nth-child(2)  { left: 12%; animation-delay: 0.18s; animation-duration: 2.4s; background: #fb923c; width: 12px; height: 12px; }
-.particle:nth-child(3)  { left: 20%; animation-delay: 0.32s; animation-duration: 1.9s; background: #a3e635; border-radius: 2px; }
-.particle:nth-child(4)  { left: 28%; animation-delay: 0.08s; animation-duration: 2.6s; background: #fde68a; width: 9px; height: 9px; }
-.particle:nth-child(5)  { left: 36%; animation-delay: 0.47s; animation-duration: 2.0s; background: #fff; width: 7px; height: 7px; }
-.particle:nth-child(6)  { left: 44%; animation-delay: 0.22s; animation-duration: 2.3s; background: #fb923c; border-radius: 2px; }
-.particle:nth-child(7)  { left: 52%; animation-delay: 0.38s; animation-duration: 1.85s; background: #fde68a; }
-.particle:nth-child(8)  { left: 60%; animation-delay: 0.05s; animation-duration: 2.55s; background: #a3e635; width: 11px; height: 11px; }
-.particle:nth-child(9)  { left: 68%; animation-delay: 0.53s; animation-duration: 2.15s; background: #fff; border-radius: 2px; }
-.particle:nth-child(10) { left: 76%; animation-delay: 0.26s; animation-duration: 1.95s; background: #fb923c; width: 8px; height: 8px; }
-.particle:nth-child(11) { left: 84%; animation-delay: 0.41s; animation-duration: 2.7s;  background: #fde68a; width: 12px; height: 12px; }
-.particle:nth-child(12) { left: 92%; animation-delay: 0.14s; animation-duration: 2.0s;  background: #a3e635; border-radius: 3px; }
+/* particle positions/colors/timings are driven from batalla-params.ts via inline styles */
 
 @keyframes fall {
   0%   { transform: translateY(0) rotate(0deg);   opacity: 0.9; }
@@ -774,55 +759,36 @@
   z-index: 1;
 }
 
+/* [@popIn] drives .result-emoji enter animation */
 .result-emoji {
   font-size: 5.5rem;
   line-height: 1;
-  animation: popIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.4) both;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35));
 }
 
-.lose-overlay .result-emoji {
-  animation: popIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.4) both,
-             wobble 0.7s ease 1.2s 2;
-}
-
-@keyframes popIn {
-  from { transform: scale(0) rotate(-25deg); opacity: 0; }
-  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
-}
-
-@keyframes wobble {
-  0%, 100% { transform: rotate(0deg); }
-  25%       { transform: rotate(-10deg); }
-  75%       { transform: rotate(10deg); }
-}
-
+/* [@slideUp] drives .result-heading enter animation */
 .result-heading {
   margin: 0;
   font-size: 3.2rem;
   font-weight: 900;
   letter-spacing: 0.06em;
   text-shadow: 0 3px 12px rgba(0,0,0,0.4);
-  animation: slideUp 0.5s ease 0.35s both;
 }
 
 .win-overlay  .result-heading { color: #451a03; }
 .lose-overlay .result-heading { color: #fca5a5; }
 
+/* [@slideUpSub] drives .result-sub enter animation */
 .result-sub {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 500;
-  animation: slideUp 0.5s ease 0.55s both;
 }
 
 .win-overlay  .result-sub { color: #78350f; }
 .lose-overlay .result-sub { color: #fecaca; }
 
-@keyframes slideUp {
-  from { transform: translateY(16px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
+/* slideUp → Angular animation triggers [@slideUp] [@slideUpSub] */
 
 /* ── Área de claim ── */
 .claim-area {

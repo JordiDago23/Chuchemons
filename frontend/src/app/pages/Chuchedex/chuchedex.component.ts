@@ -11,6 +11,7 @@ import { ChuchemonCardComponent } from '../../components/chuchemon-card/chuchemo
 import { ConfirmDialogComponent } from '../../components/dialogs/confirm-dialog.component';
 import { ChuchemonDetailsModalComponent } from '../../components/chuchemon-details-modal/chuchemon-details-modal.component';
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
+import { EVO_RINGS, EVO_SPARKS, EVO_STARS, EVO_TIMING } from '../../animations/evolution-params';
 
 interface ChuchemonExtended extends Chuchemon {
   captured?: boolean;
@@ -24,9 +25,13 @@ type ElementFilter = 'Todos' | 'Terra' | 'Aire' | 'Aigua';
   standalone: true,
   imports: [CommonModule, FormsModule, ChuchemonCardComponent, ConfirmDialogComponent, ChuchemonDetailsModalComponent, MainLayoutComponent],
   templateUrl: './chuchedex.component.html',
-  styleUrls: ['./chuchedex.component.css']
+  styleUrls: ['./chuchedex.component.css'],
 })
 export class ChuchedexComponent implements OnInit, OnDestroy {
+  readonly evoRings   = EVO_RINGS;
+  readonly evoSparks  = EVO_SPARKS;
+  readonly evoStars   = EVO_STARS;
+  readonly evoTiming  = EVO_TIMING;
   chuchemons: ChuchemonExtended[] = [];
   myChuchemons: ChuchemonExtended[] = [];
   filteredChuchemons: ChuchemonExtended[] = [];

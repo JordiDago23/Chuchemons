@@ -175,7 +175,7 @@
       <section class="battle-live">
         <div class="battle-live-head">
           <div>
-            <h2>Batalla en Curs</h2>
+            <h2>Batalla en Curso</h2>
             <p>Batalla #{{ selectedBattle.id }} · {{ battlePhaseLabel }}</p>
           </div>
           @if (selectedBattle.status === 'pending_selection' || selectedBattle.status === 'in_combat') {
@@ -219,14 +219,14 @@
 
             <div class="fighter-stats-row">
               <div>
-                <small>Atac</small>
+                <small>Atq</small>
                 <strong [class.stat-boosted]="(myFighter?.attack_boost ?? 0) > 0">{{ myFighter?.effective_attack ?? myFighter?.attack ?? '-' }}</strong>
               </div>
               <div>
                 <small>Def</small>
                 <strong [class.stat-boosted]="(myFighter?.defense_boost ?? 0) > 0">{{ myFighter?.effective_defense ?? myFighter?.defense ?? '-' }}</strong>
               </div>
-              <div><small>Vel</small><strong>{{ myFighter?.speed ?? '-' }}</strong></div>
+              <div><small>Vel.</small><strong>{{ myFighter?.speed ?? '-' }}</strong></div>
             </div>
           </article>
 
@@ -290,14 +290,14 @@
 
             <div class="fighter-stats-row">
               <div>
-                <small>Atac</small>
+                <small>Atq</small>
                 <strong [class.stat-boosted]="(opponentFighter?.attack_boost ?? 0) > 0">{{ opponentFighter?.effective_attack ?? opponentFighter?.attack ?? '-' }}</strong>
               </div>
               <div>
                 <small>Def</small>
                 <strong [class.stat-boosted]="(opponentFighter?.defense_boost ?? 0) > 0">{{ opponentFighter?.effective_defense ?? opponentFighter?.defense ?? '-' }}</strong>
               </div>
-              <div><small>Vel</small><strong>{{ opponentFighter?.speed ?? '-' }}</strong></div>
+              <div><small>Vel.</small><strong>{{ opponentFighter?.speed ?? '-' }}</strong></div>
             </div>
           </article>
         </div>
@@ -345,7 +345,7 @@
 
         @if (!battleLoading && selectedBattle.my_selection && selectedBattle.status === 'pending_selection') {
           <section class="card">
-            <p class="waiting-msg">Has seleccionat <strong>{{ myFighter?.name }}</strong>. Esperant que l'oponent triï...</p>
+            <p class="waiting-msg">Has seleccionado <strong>{{ myFighter?.name }}</strong>. Esperando que el oponente elija...</p>
           </section>
         }
 
@@ -377,21 +377,28 @@
 
       <!-- ── Overlay de victoria / derrota ── -->
       @if (showResultOverlay && hasResult) {
-        <div class="result-overlay" [class.win-overlay]="didIWin" [class.lose-overlay]="!didIWin">
+        <div class="result-overlay" [@overlayIn] [class.win-overlay]="didIWin" [class.lose-overlay]="!didIWin">
 
           <!-- Partículas de fondo (victoria) -->
           @if (didIWin) {
             <div class="particles" aria-hidden="true">
-              @for (p of particles; track p) {
-                <span class="particle"></span>
+              @for (p of particles; track p.left) {
+                <span class="particle"
+                  [style.left]="p.left"
+                  [style.animation-delay]="p.delay"
+                  [style.animation-duration]="p.duration"
+                  [style.background]="p.color"
+                  [style.width]="p.width || '10px'"
+                  [style.height]="p.height || '10px'"
+                  [style.border-radius]="p.borderRadius || '50%'"></span>
               }
             </div>
           }
 
           <div class="result-anim-block">
-            <div class="result-emoji">{{ didIWin ? '🏆' : '💀' }}</div>
-            <h1 class="result-heading">{{ didIWin ? '¡VICTORIA!' : 'DERROTA' }}</h1>
-            <p class="result-sub">{{ didIWin ? '¡Has ganado la batalla!' : 'Has perdido la batalla.' }}</p>
+            <div class="result-emoji" [@popIn]>{{ didIWin ? '🏆' : '💀' }}</div>
+            <h1 class="result-heading" [@slideUp]>{{ didIWin ? '¡VICTORIA!' : 'DERROTA' }}</h1>
+            <p class="result-sub" [@slideUpSub]>{{ didIWin ? '¡Has ganado la batalla!' : 'Has perdido la batalla.' }}</p>
           </div>
 
           <div class="claim-area" [class.claim-visible]="resultAnimDone">

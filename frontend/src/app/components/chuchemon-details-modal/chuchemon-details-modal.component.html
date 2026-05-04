@@ -1,6 +1,6 @@
 @if (isVisible && chuchemon) {
-  <div class="modal-backdrop" (click)="onBackdropClick($event)">
-    <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+  <div class="modal-backdrop" [@fadeIn] (click)="onBackdropClick($event)">
+    <div class="modal-content" [@slideIn] role="dialog" aria-labelledby="modal-title" aria-modal="true">
       <button class="modal-close" (click)="onClose()" aria-label="Cerrar modal">&times;</button>
 
       <div class="modal-header">
@@ -28,7 +28,7 @@
 
           @if (activeInfections.length) {
             <div class="modal-infections">
-              <p class="modal-infections-title">Malalties actives</p>
+              <p class="modal-infections-title">Infecciones activas</p>
               <div class="modal-infection-list">
                 @for (infection of activeInfections; track infection.name) {
                   <span class="modal-infection-tag">🦠 {{ infection.name }}</span>

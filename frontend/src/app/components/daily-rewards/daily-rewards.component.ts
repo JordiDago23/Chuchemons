@@ -5,13 +5,16 @@ import { MochilaService } from '../../services/mochila.service';
 import { ConfigService, RewardConfig } from '../../services/config.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { overlayInAnim, cardBounceInAnim, itemPopInAnim, imgRevealAnim, popInAnim } from '../../animations/shared.animations';
+import { DAILY_STARS, StarConfig } from '../../animations/daily-rewards-params';
 
 @Component({
   selector: 'app-daily-rewards',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './daily-rewards.component.html',
-  styleUrls: ['./daily-rewards.component.css']
+  styleUrls: ['./daily-rewards.component.css'],
+  animations: [overlayInAnim, cardBounceInAnim, itemPopInAnim, imgRevealAnim, popInAnim],
 })
 export class DailyRewardsComponent implements OnInit, OnDestroy {
   xuxReward: any = null;
@@ -31,7 +34,7 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   claimedItems: any[] = [];
   itemsVisible = false;
 
-  readonly stars = [1,2,3,4,5,6,7,8,9,10,11,12];
+  readonly stars: StarConfig[] = DAILY_STARS;
 
   rewardConfig: RewardConfig = {
     daily_xux_quantity: 10,

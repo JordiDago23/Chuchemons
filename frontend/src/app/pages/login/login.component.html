@@ -2,22 +2,21 @@
 
   <!-- Partículas decorativas de fondo -->
   <div class="bg-particles" aria-hidden="true">
-    <span class="p p1">🍬</span>
-    <span class="p p2">🍓</span>
-    <span class="p p3">⭐</span>
-    <span class="p p4">🍋</span>
-    <span class="p p5">🥤</span>
-    <span class="p p6">🍊</span>
-    <span class="p p7">🍬</span>
-    <span class="p p8">🍓</span>
+    @for (p of bgParticles; track p.emoji + p.left) {
+      <span class="p"
+        [style.left]="p.left"
+        [style.top]="p.top"
+        [style.--p-duration]="p.duration"
+        [style.--p-delay]="p.delay">{{ p.emoji }}</span>
+    }
   </div>
 
-  <main class="card" aria-labelledby="login-title">
+  <main class="card" [@cardIn] aria-labelledby="login-title">
 
     <!-- Pokéball logo (decorativa) -->
     <header class="login-header">
-      <div class="pokeball" aria-hidden="true">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
+      <div class="pokeball" [@pokeballDrop] aria-hidden="true">
+        <svg [@pokeballSpin] viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false">
           <circle cx="50" cy="50" r="48" fill="white" stroke="#1a1a1a" stroke-width="4"/>
           <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#e63946"/>
           <rect x="2" y="46" width="96" height="8" fill="#1a1a1a"/>
@@ -40,7 +39,7 @@
     <!-- Error general (aria-live per actualitzacions dinàmiques) -->
     <div aria-live="polite" aria-atomic="true">
       @if (error) {
-        <div class="alert alert-danger error-msg fade-in" role="alert">
+        <div class="alert alert-danger error-msg" [@fadeInDown] role="alert">
           <span class="error-icon" aria-hidden="true">⚠</span>
           {{ error }}
         </div>

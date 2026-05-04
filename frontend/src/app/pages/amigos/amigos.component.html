@@ -212,7 +212,7 @@
               <p class="friend-bio">{{ friend.bio || 'Preparado para una nueva batalla.' }}</p>
 
               <div class="friend-actions">
-                <a class="secondary-btn" [routerLink]="['/chat']" [queryParams]="{ friendId: friend.id }">Xat</a>
+                <a class="secondary-btn" [routerLink]="['/chat']" [queryParams]="{ friendId: friend.id }">Chat</a>
                 <a class="secondary-btn" [routerLink]="['/batalla']" [queryParams]="{ friendId: friend.id }">Batalla</a>
                 <button class="danger-btn" (click)="removeFriend(friend)" [disabled]="isActionLoading('remove', friend.id)">
                   {{ isActionLoading('remove', friend.id) ? 'Eliminando...' : 'Eliminar' }}

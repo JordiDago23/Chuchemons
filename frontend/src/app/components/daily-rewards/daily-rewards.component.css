@@ -317,7 +317,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: overlayFadeIn 0.35s ease both;
+/* [@overlayIn] drives this overlay's enter animation */
 }
 
 @keyframes overlayFadeIn {
@@ -366,18 +366,7 @@
   animation: starFly 2.5s ease-in-out infinite;
 }
 
-.star:nth-child(1)  { top: 15%; left: 10%; animation-delay: 0s;    width: 8px;  height: 8px;  }
-.star:nth-child(2)  { top: 25%; left: 85%; animation-delay: 0.3s;  }
-.star:nth-child(3)  { top: 70%; left: 8%;  animation-delay: 0.5s;  width: 5px;  height: 5px;  }
-.star:nth-child(4)  { top: 80%; left: 90%; animation-delay: 0.7s;  width: 9px;  height: 9px;  background: #a78bfa; }
-.star:nth-child(5)  { top: 50%; left: 5%;  animation-delay: 1.0s;  width: 4px;  height: 4px;  }
-.star:nth-child(6)  { top: 10%; left: 55%; animation-delay: 1.2s;  width: 7px;  height: 7px;  background: #f9a8d4; }
-.star:nth-child(7)  { top: 90%; left: 45%; animation-delay: 0.2s;  }
-.star:nth-child(8)  { top: 35%; left: 92%; animation-delay: 1.5s;  width: 5px;  height: 5px;  background: #fde68a; }
-.star:nth-child(9)  { top: 60%; left: 78%; animation-delay: 0.8s;  }
-.star:nth-child(10) { top: 5%;  left: 30%; animation-delay: 1.8s;  width: 10px; height: 10px; background: #a78bfa; }
-.star:nth-child(11) { top: 45%; left: 15%; animation-delay: 0.4s;  width: 4px;  height: 4px;  }
-.star:nth-child(12) { top: 75%; left: 60%; animation-delay: 2.0s;  background: #fde68a; }
+/* star positions/sizes/colors/delays driven from daily-rewards-params.ts via inline styles */
 
 @keyframes starFly {
   0%   { transform: translateY(0) scale(1); opacity: 0.9; }
@@ -407,13 +396,10 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   box-shadow: 0 2px 8px rgba(245,158,11,0.4);
-  animation: popIn 0.4s 0.3s both cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* [@popIn] drives this element's enter animation */
 }
 
-@keyframes popIn {
-  from { transform: scale(0); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
+/* popIn → Angular animation trigger [@popIn] */
 
 .reveal-img-wrap {
   position: relative;
@@ -443,10 +429,11 @@
   position: relative;
   z-index: 1;
   filter: drop-shadow(0 0 20px rgba(167,139,250,0.6));
-  animation: imgReveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+/* [@imgReveal] drives this element's enter animation */
 }
 
-@keyframes imgReveal {
+/* imgReveal → Angular animation trigger [@imgReveal] */
+@keyframes imgReveal_UNUSED {
   0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
   60%  { transform: scale(1.1) rotate(3deg); opacity: 1; }
   80%  { transform: scale(0.95) rotate(-1deg); }
@@ -525,10 +512,10 @@
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   max-width: 420px;
   width: 90%;
-  animation: cardBounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+/* [@cardBounceIn] drives this element's enter animation */
 }
 
-@keyframes cardBounceIn {
+@keyframes cardBounceIn_UNUSED {
   0%   { transform: scale(0.5); opacity: 0; }
   70%  { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); }
@@ -575,11 +562,9 @@
   transition: none;
 }
 
-.item-reveal-card.item-in {
-  animation: itemPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
+/* [@itemPopIn] drives this element's enter animation */
 
-@keyframes itemPopIn {
+@keyframes itemPopIn_UNUSED {
   0%   { transform: scale(0); opacity: 0; }
   70%  { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }

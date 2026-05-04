@@ -6,6 +6,20 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { cardInAnim, pokeballDropAnim, pokeballSpinAnim, fadeInDownAnim } from '../../animations/shared.animations';
+
+interface ParticleItem { emoji: string; left: string; top: string; duration: string; delay: string; }
+
+const BG_PARTICLES: ParticleItem[] = [
+  { emoji: '🍬', left:  '5%', top: '12%', duration: '4.2s', delay: '0s'   },
+  { emoji: '🍓', left: '18%', top: '70%', duration: '5.1s', delay: '0.6s' },
+  { emoji: '⭐', left: '80%', top:  '8%', duration: '3.8s', delay: '1.1s' },
+  { emoji: '🍋', left: '88%', top: '60%', duration: '4.7s', delay: '0.3s' },
+  { emoji: '🥤', left: '70%', top: '85%', duration: '5.5s', delay: '1.5s' },
+  { emoji: '🍊', left: '35%', top:  '5%', duration: '4.0s', delay: '0.9s' },
+  { emoji: '🍬', left: '55%', top: '90%', duration: '3.6s', delay: '2.0s' },
+  { emoji: '🍓', left:  '3%', top: '45%', duration: '4.9s', delay: '1.8s' },
+];
 
 function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
   const pw      = g.get('password')?.value;
@@ -18,13 +32,16 @@ function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css']
+  styleUrls: ['./register.component.css'],
+  animations: [cardInAnim, pokeballDropAnim, pokeballSpinAnim, fadeInDownAnim],
 })
 export class RegisterComponent {
+  readonly bgParticles = BG_PARTICLES;
+
   form: FormGroup;
   error = '';
   loading = false;
-  registeredId = '';  // ID real generat pel backend
+  registeredId = '';
   showPassword = false;
   showPasswordConfirmation = false;
 
