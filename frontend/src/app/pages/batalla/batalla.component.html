@@ -202,7 +202,7 @@
 
             @if (isInCombat || hasResult) {
               <p class="fighter-hp-text">
-                HP: {{ selectedBattle.my_current_hp ?? myFighter?.current_hp ?? '-' }}
+                PS: {{ selectedBattle.my_current_hp ?? myFighter?.current_hp ?? '-' }}
                 / {{ myFighter?.max_hp ?? '-' }}
               </p>
               <div class="hp-track">
@@ -211,7 +211,7 @@
                   [class.hp-mid]="myHpPercent > 25 && myHpPercent <= 50"></span>
               </div>
             } @else {
-              <p class="fighter-hp-text">HP: {{ myFighter?.current_hp ?? '-' }} / {{ myFighter?.max_hp ?? '-' }}</p>
+              <p class="fighter-hp-text">PS: {{ myFighter?.current_hp ?? '-' }} / {{ myFighter?.max_hp ?? '-' }}</p>
               <div class="hp-track">
                 <span class="hp-fill" [style.width.%]="myFighter?.hp_percent || 0"></span>
               </div>
@@ -243,7 +243,7 @@
                 <div class="last-roll-info">
                   <small>+{{ selectedBattle!.last_roll!.size_mod }} tam</small>
                   <small>{{ selectedBattle!.last_roll!.type_mod >= 0 ? '+' : '' }}{{ selectedBattle!.last_roll!.type_mod }} tipo</small>
-                  <strong class="damage-dealt">-{{ selectedBattle!.last_roll!.damage }} HP</strong>
+                  <strong class="damage-dealt">-{{ selectedBattle!.last_roll!.damage }} PS</strong>
                 </div>
               }
 
@@ -273,7 +273,7 @@
 
             @if (isInCombat || hasResult) {
               <p class="fighter-hp-text">
-                HP: {{ selectedBattle.opponent_current_hp ?? opponentFighter?.current_hp ?? '-' }}
+                PS: {{ selectedBattle.opponent_current_hp ?? opponentFighter?.current_hp ?? '-' }}
                 / {{ opponentFighter?.max_hp ?? '-' }}
               </p>
               <div class="hp-track">
@@ -282,7 +282,7 @@
                   [class.hp-mid]="opponentHpPercent > 25 && opponentHpPercent <= 50"></span>
               </div>
             } @else {
-              <p class="fighter-hp-text">HP: {{ opponentFighter?.current_hp ?? '-' }} / {{ opponentFighter?.max_hp ?? '-' }}</p>
+              <p class="fighter-hp-text">PS: {{ opponentFighter?.current_hp ?? '-' }} / {{ opponentFighter?.max_hp ?? '-' }}</p>
               <div class="hp-track">
                 <span class="hp-fill" [style.width.%]="opponentFighter?.hp_percent || 0"></span>
               </div>
@@ -363,9 +363,9 @@
                   <strong>{{ entry.roll }}</strong>
                   (tam {{ entry.size_mod >= 0 ? '+' : '' }}{{ entry.size_mod }},
                    tipo {{ entry.type_mod >= 0 ? '+' : '' }}{{ entry.type_mod }})
-                  → ataque {{ entry.attack_total }} vs def {{ entry.defense }}
+                  → ataque {{ entry.attack_total }} vs def. {{ entry.defense }}
                   → <strong>{{ entry.damage }} daño</strong>
-                  · {{ entry.defender_name }}: {{ entry.hp_after }} HP
+                  · {{ entry.defender_name }}: {{ entry.hp_after }} PS
                 </span>
               </div>
             }
