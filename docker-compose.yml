@@ -1,7 +1,9 @@
 services:
   # Servicio Frontend - Angular
   frontend:
-    image: node:20-alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: angular-frontend
     working_dir: /app
     volumes:
@@ -9,7 +11,6 @@ services:
       - /app/node_modules
     ports:
       - "4200:4200"
-    command: sh -c "npm install && npm start"
     networks:
       - app-network
     depends_on:

@@ -352,10 +352,10 @@
         <section class="card">
           <h3>Registro de combate</h3>
           <div class="battle-log">
-            @if (!selectedBattle.combat_log?.length) {
+            @if (!selectedBattle.combat_log.length) {
               <p class="log-empty">El combate aún no ha empezado.</p>
             }
-            @for (entry of (selectedBattle.combat_log ?? []); track entry.turn) {
+            @for (entry of selectedBattle.combat_log; track entry.turn) {
               <div class="log-entry" [class.my-attack]="entry.attacker_id === user?.id">
                 <span class="log-turn">T{{ entry.turn }}</span>
                 <span class="log-text">
