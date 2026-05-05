@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
+import { AdminUsersService } from '../../core/services/admin-users.service';
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
 
 @Component({
@@ -13,8 +16,10 @@ import { MainLayoutComponent } from '../../components/main-layout/main-layout.co
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   private apiUrl = 'http://localhost:8000/api';
+  private readonly usersRefreshMs = 10000;
+  private readonly destroy$ = new Subject<void>();
 
   user: any = null;
   activeTab: 'jugadors' | 'recursos' | 'configuracio' | 'horaris' = 'jugadors';
@@ -26,7 +31,7 @@ export class AdminComponent implements OnInit {
   users: any[] = [];
   usersLoading = false;
 
-  // Añadir Xuxes
+  // Añadir Chuches
   xuxPlayerId: number | null = null;
   xuxItemId: number = 1;
   xuxQty = 10;
@@ -35,13 +40,13 @@ export class AdminComponent implements OnInit {
   xuxFeedbackType: 'success' | 'error' | '' = '';
 
   readonly xuxTypes = [
-    { id: 1, name: 'Xux de Maduixa', emoji: '🍓' },
-    { id: 2, name: 'Xux de Llimona', emoji: '🍋' },
-    { id: 3, name: 'Xux de Cola', emoji: '🥤' },
-    { id: 4, name: 'Xux Exp', emoji: '⭐' },
+    { id: 1, name: 'Chuche de Fresa', emoji: '🍓' },
+    { id: 2, name: 'Chuche de Limon', emoji: '🍋' },
+    { id: 3, name: 'Chuche de Cola', emoji: '🥤' },
+    { id: 4, name: 'Chuche EXP', emoji: '⭐' },
   ];
 
-  // Afegir Xuxemon Aleatori
+  // Añadir Chuchemon Aleatorio
   aleatorioPlayerId: number | null = null;
   aleatorioLoading = false;
   aleatorioFeedback = '';
@@ -140,7 +145,7 @@ export class AdminComponent implements OnInit {
         this.horariXuxesLoading = false;
       },
       error: (err) => {
-        this.horariXuxesFeedback = err.error?.message || 'Error guardando horario de Xuxes.';
+        this.horariXuxesFeedback = err.error?.message || 'Error guardando horario de Chuches.';
         this.horariXuxesFeedbackType = 'error';
         this.horariXuxesLoading = false;
       }
@@ -160,35 +165,61 @@ export class AdminComponent implements OnInit {
         this.horariXuxemoLoading = false;
       },
       error: (err) => {
-        this.horariXuxemoFeedback = err.error?.message || 'Error guardando horario de Xuxemon.';
+        this.horariXuxemoFeedback = err.error?.message || 'Error guardando horario de Chuchemon.';
         this.horariXuxemoFeedbackType = 'error';
         this.horariXuxemoLoading = false;
       }
     });
   }
 
-  constructor(private auth: AuthService, private router: Router, private http: HttpClient) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private http: HttpClient,
+    private adminUsersService: AdminUsersService
+  ) {}
 
   ngOnInit() {
+    this.adminUsersService.users$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((users) => {
+        this.users = users;
+      });
+
+    this.adminUsersService.usersLoading$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isLoading) => {
+        this.usersLoading = isLoading;
+      });
+
     const cached = this.auth.currentUser;
     if (cached) {
       this.user = cached;
       if (!this.user.is_admin) { this.router.navigate(['/home']); return; }
-      this.loadStats();
-      this.loadSettings();
-      this.loadUsers();
+      this.initAdminData();
       return;
     }
     this.auth.me().subscribe({
       next: (data) => {
         this.user = data;
         if (!this.user.is_admin) { this.router.navigate(['/home']); return; }
-        this.loadStats();
-        this.loadSettings();
-        this.loadUsers();
+        this.initAdminData();
       },
       error: () => this.router.navigate(['/login'])
     });
+  }
+
+  ngOnDestroy(): void {
+    this.adminUsersService.stopUsersSync();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initAdminData(): void {
+    this.loadStats();
+    this.loadSettings();
+    this.loadUsers();
+    this.adminUsersService.startUsersSync(this.usersRefreshMs);
   }
 
   loadStats() {
@@ -214,12 +245,8 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  loadUsers() {
-    this.usersLoading = true;
-    this.http.get<any>(`${this.apiUrl}/admin/users`).subscribe({
-      next: (data) => { this.users = data.users; this.usersLoading = false; },
-      error: ()     => { this.usersLoading = false; }
-    });
+  loadUsers(silent = false) {
+    this.adminUsersService.refreshUsers(silent);
   }
 
   get nonAdminUsers() {
@@ -241,7 +268,7 @@ export class AdminComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.xuxFeedback     = err.error?.message || 'Error al añadir Xuxes.';
+        this.xuxFeedback     = err.error?.message || 'Error al añadir chuches.';
         this.xuxFeedbackType = 'error';
         this.xuxLoading      = false;
       }
@@ -260,7 +287,7 @@ export class AdminComponent implements OnInit {
         this.loadUsers();
       },
       error: (err) => {
-        this.aleatorioFeedback     = err.error?.message || 'Error al añadir el Xuxemon.';
+        this.aleatorioFeedback     = err.error?.message || 'Error al añadir el Chuchemon.';
         this.aleatorioFeedbackType = 'error';
         this.aleatorioLoading      = false;
       }

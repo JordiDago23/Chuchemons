@@ -61,6 +61,8 @@ export class AmigosComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((response) => this.applyOverview(response));
 
+    this.friendsService.startOverviewSync();
+
     this.searchControl.valueChanges
       .pipe(
         debounceTime(300),
@@ -73,6 +75,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.friendsService.stopOverviewSync();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -82,9 +85,8 @@ export class AmigosComponent implements OnInit, OnDestroy {
       this.loading = true;
     }
 
-    this.friendsService.getOverview().subscribe({
+    this.friendsService.refreshOverview().subscribe({
       next: (response: FriendsOverviewResponse) => {
-        this.friendsService.updateOverview(response);
         this.loading = false;
       },
       error: (err) => {
@@ -288,6 +290,7 @@ export class AmigosComponent implements OnInit, OnDestroy {
     this.pendingReceived = response.pending_received ?? [];
     this.pendingSent = response.pending_sent ?? [];
     this.stats = response.stats ?? { total: 0, online: 0, offline: 0 };
+    this.syncSearchResultsWithOverview(response);
   }
 
   private openConfirmDialog(title: string, message: string, action: () => void): void {
@@ -320,6 +323,59 @@ export class AmigosComponent implements OnInit, OnDestroy {
           }
         : item
     );
+  }
+
+  private syncSearchResultsWithOverview(response: FriendsOverviewResponse): void {
+    if (this.searchResults.length === 0) {
+      return;
+    }
+
+    const acceptedFriends = new Map((response.friends ?? []).map((friend) => [friend.id, friend]));
+    const receivedRequests = new Map((response.pending_received ?? []).map((request) => [request.id, request]));
+    const sentRequests = new Map((response.pending_sent ?? []).map((request) => [request.id, request]));
+
+    this.searchResults = this.searchResults.map((result) => {
+      const friend = acceptedFriends.get(result.id);
+      if (friend) {
+        return {
+          ...result,
+          friendship_status: 'friends',
+          friendship_id: friend.friendship_id ?? null,
+          status: 'accepted'
+        };
+      }
+
+      const pendingReceived = receivedRequests.get(result.id);
+      if (pendingReceived) {
+        return {
+          ...result,
+          friendship_status: 'pending_received',
+          friendship_id: pendingReceived.friendship_id ?? null,
+          status: pendingReceived.status ?? 'pending'
+        };
+      }
+
+      const pendingSent = sentRequests.get(result.id);
+      if (pendingSent) {
+        return {
+          ...result,
+          friendship_status: 'pending_sent',
+          friendship_id: pendingSent.friendship_id ?? null,
+          status: pendingSent.status ?? 'pending'
+        };
+      }
+
+      if (result.friendship_status === 'pending_sent' || result.friendship_status === 'pending_received' || result.friendship_status === 'friends') {
+        return {
+          ...result,
+          friendship_status: 'none',
+          friendship_id: null,
+          status: null
+        };
+      }
+
+      return result;
+    });
   }
 }
 

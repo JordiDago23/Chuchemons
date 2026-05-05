@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, Subscription, timer } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChuchemonService } from '../../services/chuchemon.service';
@@ -32,6 +32,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   error = '';
   teamLoading = true;
   private destroy$ = new Subject<void>();
+  private teamSyncSub: Subscription | null = null;
 
   // Details modal properties
   showDetailsModal = false;
@@ -85,7 +86,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.chuchemonService.stateChanges$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.loadTeam(true);
+        this.loadTeam(true, true);
         this.loadStats(true);
       });
 
@@ -96,6 +97,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.loadTeam();
         this.loadStats();
+        this.startTeamSync();
       },
       error: () => {
         this.loading = false;
@@ -105,16 +107,39 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopTeamSync();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  loadTeam(forceRefresh: boolean = false): void {
-    this.teamLoading = true;
+  private startTeamSync(refreshMs = 5000): void {
+    if (this.teamSyncSub) {
+      return;
+    }
+
+    this.teamSyncSub = timer(refreshMs, refreshMs).subscribe(() => {
+      this.loadTeam(true, true);
+    });
+  }
+
+  private stopTeamSync(): void {
+    this.teamSyncSub?.unsubscribe();
+    this.teamSyncSub = null;
+  }
+
+  loadTeam(forceRefresh: boolean = false, silent: boolean = false): void {
+    if (!silent) {
+      this.teamLoading = true;
+    }
+
     this.chuchemonService.getTeam(forceRefresh)
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => { this.teamLoading = false; })
+        finalize(() => {
+          if (!silent) {
+            this.teamLoading = false;
+          }
+        })
       )
       .subscribe({
         next: (response) => {

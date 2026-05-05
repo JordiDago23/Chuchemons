@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, timer } from 'rxjs';
 
 export interface FriendUser {
   id: number;
@@ -31,6 +31,7 @@ export interface FriendsOverviewResponse {
 @Injectable({ providedIn: 'root' })
 export class FriendsService {
   private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly overviewSyncMs = 5000;
   private readonly overviewSubject = new BehaviorSubject<FriendsOverviewResponse>({
     friends: [],
     pending_received: [],
@@ -41,6 +42,7 @@ export class FriendsService {
       offline: 0,
     },
   });
+  private overviewSyncSub: Subscription | null = null;
 
   readonly overview$ = this.overviewSubject.asObservable();
 
@@ -52,6 +54,39 @@ export class FriendsService {
 
   updateOverview(overview: FriendsOverviewResponse): void {
     this.overviewSubject.next(overview);
+  }
+
+  refreshOverview(): Observable<FriendsOverviewResponse> {
+    return new Observable<FriendsOverviewResponse>((observer) => {
+      const sub = this.getOverview().subscribe({
+        next: (overview) => {
+          this.updateOverview(overview);
+          observer.next(overview);
+          observer.complete();
+        },
+        error: (error) => observer.error(error),
+      });
+
+      return () => sub.unsubscribe();
+    });
+  }
+
+  startOverviewSync(): void {
+    if (this.overviewSyncSub) {
+      return;
+    }
+
+    this.overviewSyncSub = timer(0, this.overviewSyncMs).subscribe(() => {
+      this.getOverview().subscribe({
+        next: (overview) => this.updateOverview(overview),
+        error: () => {},
+      });
+    });
+  }
+
+  stopOverviewSync(): void {
+    this.overviewSyncSub?.unsubscribe();
+    this.overviewSyncSub = null;
   }
 
   get snapshot(): FriendsOverviewResponse {

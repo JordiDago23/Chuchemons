@@ -304,7 +304,7 @@ class AdminController extends Controller
         GameSetting::setValue('daily_xux_quantity', (int) $request->quantity);
 
         return response()->json([
-            'message' => 'Horario de Xuxes actualizado correctamente.',
+            'message' => 'Horario de chuches actualizado correctamente.',
             'settings' => [
                 'daily_xux_hour' => GameSetting::getValue('daily_xux_hour', '06:00'),
                 'daily_xux_quantity' => GameSetting::getInt('daily_xux_quantity', 10),
@@ -325,7 +325,7 @@ class AdminController extends Controller
         GameSetting::setValue('daily_chuchemon_hour', $request->hour);
 
         return response()->json([
-            'message' => 'Horario de Xuxemon actualizado correctamente.',
+            'message' => 'Horario de Chuchemon actualizado correctamente.',
             'settings' => [
                 'daily_chuchemon_hour' => GameSetting::getValue('daily_chuchemon_hour', '08:00'),
             ],
@@ -336,16 +336,32 @@ class AdminController extends Controller
     public function listUsers(): JsonResponse
     {
         $users = User::all()->map(function ($user) {
-            $xuxCount = MochilaXux::where('user_id', $user->id)->sum('quantity');
+            $chuchemonCount = (int) DB::table('user_chuchemons')
+                ->where('user_id', $user->id)
+                ->sum('count');
+
+            $wins = (int) DB::table('battles')
+                ->where('status', 'completed')
+                ->where('winner_id', $user->id)
+                ->count();
+
+            $defeats = (int) DB::table('battles')
+                ->where('status', 'completed')
+                ->where('loser_id', $user->id)
+                ->count();
+
             return [
                 'id'        => $user->id,
                 'nombre'    => $user->nombre,
                 'player_id' => $user->player_id,
                 'email'     => $user->email,
                 'is_admin'  => $user->is_admin,
-                'xux_count' => (int) $xuxCount,
-                'level'     => 1,
-                'wins'      => 0,
+                'chuchemon_count' => $chuchemonCount,
+                // Mantener compatibilidad con frontend antiguo que aún use xux_count.
+                'xux_count' => $chuchemonCount,
+                'level'     => (int) ($user->level ?? 0),
+                'wins'      => $wins,
+                'defeats'   => $defeats,
             ];
         });
 
@@ -364,13 +380,13 @@ class AdminController extends Controller
 
         $targetUser = User::find($id);
         if (!$targetUser) {
-            return response()->json(['message' => 'Jugador no trobat.'], 404);
+            return response()->json(['message' => 'Jugador no encontrado.'], 404);
         }
 
-        // Use the first chuchemon as the generic "Xux" carrier
+        // Use the first chuchemon as the generic "chuche" carrier
         $firstChuch = Chuchemon::first();
         if (!$firstChuch) {
-            return response()->json(['message' => "No hi ha Xuxemons a la base de dades."], 404);
+            return response()->json(['message' => 'No hay Chuchemons en la base de datos.'], 404);
         }
 
         $qtyRequested = (int) $request->quantity;
@@ -405,8 +421,8 @@ class AdminController extends Controller
         }
 
         $message = $qtyDiscarded > 0
-            ? "S'han afegit {$qtyToAdd} Xuxes a {$targetUser->player_id}. {$qtyDiscarded} Xuxes descartades per falta d'espai."
-            : "S'han afegit {$qtyToAdd} Xuxes a {$targetUser->player_id}.";
+            ? "Se han anadido {$qtyToAdd} chuches a {$targetUser->player_id}. {$qtyDiscarded} chuches descartadas por falta de espacio."
+            : "Se han anadido {$qtyToAdd} chuches a {$targetUser->player_id}.";
 
         return response()->json([
             'message' => $message,
@@ -420,12 +436,12 @@ class AdminController extends Controller
     {
         $targetUser = User::find($id);
         if (!$targetUser) {
-            return response()->json(['message' => 'Jugador no trobat.'], 404);
+            return response()->json(['message' => 'Jugador no encontrado.'], 404);
         }
 
         $chuchemon = Chuchemon::inRandomOrder()->first();
         if (!$chuchemon) {
-            return response()->json(['message' => 'No hi ha Xuxemons a la base de dades.'], 404);
+            return response()->json(['message' => 'No hay Chuchemons en la base de datos.'], 404);
         }
 
         // Add to user_chuchemons (captured chuchemons), not to mochila_xuxes (inventory)
@@ -459,7 +475,7 @@ class AdminController extends Controller
         }
 
         return response()->json([
-            'message'   => "S'ha desbloqueado 1 {$chuchemon->name} a {$targetUser->player_id}.",
+            'message'   => "Se ha desbloqueado 1 {$chuchemon->name} para {$targetUser->player_id}.",
             'chuchemon' => $chuchemon,
         ]);
     }
@@ -477,7 +493,7 @@ class AdminController extends Controller
 
         $targetUser = User::find($id);
         if (!$targetUser) {
-            return response()->json(['message' => 'Jugador no trobat.'], 404);
+            return response()->json(['message' => 'Jugador no encontrado.'], 404);
         }
 
         $item = Item::find($request->item_id);

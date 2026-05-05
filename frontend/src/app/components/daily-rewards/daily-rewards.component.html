@@ -176,7 +176,7 @@
            [class.item-in]="itemsVisible"
            *ngFor="let item of claimedItems; let i = index"
            [@itemPopIn]
-           [style.animation-delay]="(i * 120) + 'ms'">
+         [style.transition-delay]="(i * 120) + 'ms'">
         <div class="item-emoji">{{ itemEmoji(item.name) }}</div>
         <span class="item-name">{{ item.name }}</span>
         <span class="item-qty">×{{ item.quantity }}</span>

@@ -37,7 +37,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-row">
-          <span class="stat-label">Xuemons</span>
+          <span class="stat-label">Chuchemons</span>
           <span class="stat-icon orange">🎮</span>
         </div>
         <div class="stat-value">{{ stats.xuemons }}</div>
@@ -64,11 +64,11 @@
     <!-- TAB: JUGADORS -->
     @if (activeTab === 'jugadors') {
 
-      <!-- Afegir Xuxes a Jugadors -->
+      <!-- Añadir Chuches a Jugadores -->
       <div class="section-card">
         <div class="section-header">
-          <h2>Añadir Xuxes a Jugadores</h2>
-          <p class="section-sub">Añade una cantidad específica de Xuxes a la mochila de un jugador</p>
+          <h2>Añadir Chuches a Jugadores</h2>
+          <p class="section-sub">Añade una cantidad específica de chuches a la mochila de un jugador</p>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -81,7 +81,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Tipo de Xux</label>
+            <label>Tipo de Chuche</label>
             <select class="form-select" [(ngModel)]="xuxItemId">
               @for (x of xuxTypes; track x.id) {
                 <option [ngValue]="x.id">{{ x.emoji }} {{ x.name }}</option>
@@ -96,7 +96,7 @@
         <div class="alert-warn">
           <div>
             <strong>Importante: Límite de la Mochila</strong><br>
-            Si la mochila del jugador está llena (20 espacios máximo), no se podrán añadir más Xuxes. Las Xuxes sobrantes se descartarán automáticamente.
+            Si la mochila del jugador está llena (20 espacios máximo), no se podrán añadir más chuches. Las chuches sobrantes se descartarán automáticamente.
           </div>
         </div>
         @if (xuxFeedback) {
@@ -104,15 +104,15 @@
         }
         <button class="btn btn-red" (click)="addXux()" [disabled]="xuxLoading || !xuxPlayerId">
           @if (xuxLoading) { <span class="spinner"></span> } @else { <span>+</span> }
-          Añadir Xuxes al Jugador
+          Añadir Chuches al Jugador
         </button>
       </div>
 
-      <!-- Afegir Xuxemon Aleatori -->
+      <!-- Añadir Chuchemon Aleatorio -->
       <div class="section-card">
         <div class="section-header">
-          <h2>Añadir Xuxemon Aleatorio a Jugadores</h2>
-          <p class="section-sub">Añade un Xuxemon aleatorio a la colección de un jugador</p>
+          <h2>Añadir Chuchemon Aleatorio a Jugadores</h2>
+          <p class="section-sub">Añade un Chuchemon aleatorio a la colección de un jugador</p>
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1">
@@ -127,8 +127,8 @@
         </div>
         <div class="alert-info">
           <div>
-            <strong>Xuxemon Aleatorio</strong><br>
-            El sistema seleccionará un Xuxemon aleatorio de tamaño Pequeño y se añadirá automáticamente a la Xuxedex del jugador.
+            <strong>Chuchemon Aleatorio</strong><br>
+            El sistema seleccionará un Chuchemon aleatorio de tamaño Pequeño y se añadirá automáticamente a la ChucheDex del jugador.
           </div>
         </div>
         @if (aleatorioFeedback) {
@@ -136,7 +136,7 @@
         }
         <button class="btn btn-yellow" (click)="addRandomChuchemon()" [disabled]="aleatorioLoading || !aleatorioPlayerId">
           @if (aleatorioLoading) { <span class="spinner"></span> } @else { <span>+</span> }
-          Añadir Xuxemon Aleatorio
+          Añadir Chuchemon Aleatorio
         </button>
       </div>
 
@@ -172,7 +172,7 @@
         <div class="alert-success-box">
           <div>
             <strong>Vacunas No Apilables</strong><br>
-            Cada vacuna ocupa 1 espacio en la mochila. Las vacunas curan enfermedades específicas de los Xuxemons.
+            Cada vacuna ocupa 1 espacio en la mochila. Las vacunas curan enfermedades específicas de los Chuchemons.
           </div>
         </div>
         @if (vacunaFeedback) {
@@ -200,8 +200,9 @@
                 <th>Jugador</th>
                 <th>Email</th>
                 <th>Nivel</th>
-                <th>Xuemons</th>
+                <th>Chuchemons</th>
                 <th>Victorias</th>
+                <th>Derrotas</th>
               </tr>
             </thead>
             <tbody>
@@ -220,12 +221,13 @@
                   </td>
                   <td class="text-muted">{{ u.email }}</td>
                   <td><span class="level-pill">{{ u.level }}</span></td>
-                  <td>{{ u.xux_count }}</td>
+                  <td>{{ u.chuchemon_count ?? u.xux_count }}</td>
                   <td class="text-accent">{{ u.wins }}</td>
+                  <td>{{ u.defeats ?? 0 }}</td>
                 </tr>
               }
               @empty {
-                <tr><td colspan="5" class="empty-row">No hay jugadores registrados.</td></tr>
+                <tr><td colspan="6" class="empty-row">No hay jugadores registrados.</td></tr>
               }
             </tbody>
           </table>
@@ -244,28 +246,28 @@
 
         <div class="recursos-grid">
 
-          <!-- XUXES -->
+          <!-- CHUCHES -->
           <div class="recurs-card recurs-card--red">
-            <div class="recurs-card-title">Xuxes (Apilables x5)</div>
+            <div class="recurs-card-title">Chuches (Apilables x5)</div>
             <ul class="recurs-list">
               <li class="recurs-item">
-                <span class="recurs-name">🍓 Xux de Maduixa</span>
+                <span class="recurs-name">🍓 Chuche de Fresa</span>
                 <span class="recurs-badge badge-red">Cura PS</span>
               </li>
               <li class="recurs-item">
-                <span class="recurs-name">🍋 Xux de Llimona</span>
+                <span class="recurs-name">🍋 Chuche de Limón</span>
                 <span class="recurs-badge badge-red">+Ataque</span>
               </li>
               <li class="recurs-item">
-                <span class="recurs-name">🥤 Xux de Cola</span>
+                <span class="recurs-name">🥤 Chuche de Cola</span>
                 <span class="recurs-badge badge-red">+Defensa</span>
               </li>
               <li class="recurs-item">
-                <span class="recurs-name">⭐ Xux Exp</span>
+                <span class="recurs-name">⭐ Chuche EXP</span>
                 <span class="recurs-badge badge-red">Evolucionar</span>
               </li>
             </ul>
-            <p class="recurs-footer">Cada tipo de Xux tiene un efecto distinto sobre los Xuxemons</p>
+            <p class="recurs-footer">Cada tipo de chuche tiene un efecto distinto sobre los Chuchemons</p>
           </div>
 
           <!-- VACUNES -->
@@ -289,7 +291,7 @@
                 <span class="recurs-badge badge-gray">Cura Sobredosis de sucre</span>
               </li>
             </ul>
-            <p class="recurs-footer">Las vacunas curan enfermedades específicas de los Xuxemons</p>
+            <p class="recurs-footer">Las vacunas curan enfermedades específicas de los Chuchemons</p>
           </div>
 
         </div>
@@ -299,22 +301,22 @@
     <!-- TAB: CONFIGURACIÓ -->
     @if (activeTab === 'configuracio') {
 
-      <!-- Xuxes per Créixer -->
+      <!-- Chuches para crecer -->
       <div class="section-card">
         <div class="section-header">
-          <h2>Xuxes para Hacer Crecer Xuxemons</h2>
-          <p class="section-sub">Configura la cantidad de Xuxes necesarias para hacer crecer a los Xuxemons</p>
+          <h2>Chuches para Hacer Crecer Chuchemons</h2>
+          <p class="section-sub">Configura la cantidad de chuches necesarias para hacer crecer a los Chuchemons</p>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Pequeño → Mediano (Xuxes necesarias)</label>
+            <label>Pequeño → Mediano (Chuches necesarias)</label>
             <input class="form-control" type="number" [(ngModel)]="cfg.xuxPetitMitja" min="1" max="100" />
-            <span class="input-hint">Valor por defecto: 3 Xuxes</span>
+            <span class="input-hint">Valor por defecto: 3 chuches</span>
           </div>
           <div class="form-group">
-            <label>Mediano → Grande (Xuxes necesarias)</label>
+            <label>Mediano → Grande (Chuches necesarias)</label>
             <input class="form-control" type="number" [(ngModel)]="cfg.xuxMitjaGran" min="1" max="100" />
-            <span class="input-hint">Valor por defecto: 5 Xuxes</span>
+            <span class="input-hint">Valor por defecto: 5 chuches</span>
           </div>
         </div>
         @if (cfgFeedback) {
@@ -330,7 +332,7 @@
       <div class="section-card">
         <div class="section-header">
           <h2>Tasas de Infección por Enfermedad</h2>
-          <p class="section-sub">Cada enfermedad tiene su propia probabilidad de infección al alimentar Xuxemons</p>
+          <p class="section-sub">Cada enfermedad tiene su propia probabilidad de infección al alimentar Chuchemons</p>
         </div>
         @for (d of diseases; track d.id) {
           <div class="form-group" style="margin-bottom: 12px">
@@ -344,7 +346,7 @@
         <div class="alert-warn">
           <div>
             <strong>Sistema de Infección</strong><br>
-            Al alimentar un Xuxemon, se comprueba cada enfermedad individualmente con su propio %. Un Xuxemon puede tener varias enfermedades simultáneamente.
+            Al alimentar un Chuchemon, se comprueba cada enfermedad individualmente con su propio %. Un Chuchemon puede tener varias enfermedades simultáneamente.
           </div>
         </div>
         @if (taxaFeedback) {
@@ -360,11 +362,11 @@
     <!-- TAB: HORARIS -->
     @if (activeTab === 'horaris') {
 
-      <!-- Xuxes Diàries -->
+      <!-- Chuches diarias -->
       <div class="section-card">
         <div class="section-header">
-          <h2>Xuxes Diarias</h2>
-          <p class="section-sub">Configura la hora y la cantidad de Xuxes que reciben los jugadores cada día</p>
+          <h2>Chuches Diarias</h2>
+          <p class="section-sub">Configura la hora y la cantidad de chuches que reciben los jugadores cada día</p>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -375,13 +377,13 @@
           <div class="form-group">
             <label>Cantidad Diaria</label>
             <input class="form-control" type="number" [(ngModel)]="horariXuxes.quantitat" min="1" max="999" />
-            <span class="input-hint">Valor por defecto: 10 Xuxes aleatorias</span>
+            <span class="input-hint">Valor por defecto: 10 chuches aleatorias</span>
           </div>
         </div>
         <div class="alert-info">
           <div>
             <strong>Distribución Automática</strong><br>
-            A la hora configurada, todos los jugadores recibirán automáticamente la cantidad de Xuxes especificada (tipo aleatorio) en su mochila.
+            A la hora configurada, todos los jugadores recibirán automáticamente la cantidad de chuches especificada (tipo aleatorio) en su mochila.
           </div>
         </div>
         @if (horariXuxesFeedback) {
@@ -389,15 +391,15 @@
         }
         <button class="btn btn-red btn-full" (click)="saveHorariXuxes()" [disabled]="horariXuxesLoading">
           @if (horariXuxesLoading) { <span class="spinner"></span> }
-          Guardar Horario de Xuxes
+          Guardar Horario de Chuches
         </button>
       </div>
 
-      <!-- Xuxemon Diari -->
+      <!-- Chuchemon diario -->
       <div class="section-card">
         <div class="section-header">
-          <h2>Xuxemon Diario</h2>
-          <p class="section-sub">Configura la hora en que los jugadores reciben un Xuxemon aleatorio cada día</p>
+          <h2>Chuchemon Diario</h2>
+          <p class="section-sub">Configura la hora en que los jugadores reciben un Chuchemon aleatorio cada día</p>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -408,8 +410,8 @@
         </div>
         <div class="alert-success-box">
           <div>
-            <strong>Xuxemon Aleatorio Pequeño</strong><br>
-            A la hora configurada, todos los jugadores recibirán automáticamente 1 Xuxemon aleatorio de tamaño Pequeño en su Xuxedex.
+            <strong>Chuchemon Aleatorio Pequeño</strong><br>
+            A la hora configurada, todos los jugadores recibirán automáticamente 1 Chuchemon aleatorio de tamaño Pequeño en su ChucheDex.
           </div>
         </div>
         @if (horariXuxemoFeedback) {
@@ -417,7 +419,7 @@
         }
         <button class="btn btn-green btn-full" (click)="saveHorariXuxemon()" [disabled]="horariXuxemoLoading">
           @if (horariXuxemoLoading) { <span class="spinner"></span> }
-          Guardar Horario de Xuxemon
+          Guardar Horario de Chuchemon
         </button>
       </div>
 
@@ -427,8 +429,8 @@
         <div class="resum-item resum-item--red">
           <div class="resum-left">
             <div>
-              <span class="resum-name">Xuxes Diarias</span>
-              <span class="resum-desc">{{ horariXuxes.quantitat }} Xuxes aleatorias para todos los jugadores</span>
+              <span class="resum-name">Chuches Diarias</span>
+              <span class="resum-desc">{{ horariXuxes.quantitat }} chuches aleatorias para todos los jugadores</span>
             </div>
           </div>
           <span class="resum-hora">{{ horariXuxes.hora }}</span>
@@ -436,8 +438,8 @@
         <div class="resum-item resum-item--orange">
           <div class="resum-left">
             <div>
-              <span class="resum-name">Xuxemon Diario</span>
-              <span class="resum-desc">1 Xuxemon aleatorio pequeño para todos los jugadores</span>
+              <span class="resum-name">Chuchemon Diario</span>
+              <span class="resum-desc">1 Chuchemon aleatorio pequeño para todos los jugadores</span>
             </div>
           </div>
           <span class="resum-hora">{{ horariXuxemon.hora }}</span>
