@@ -28,7 +28,7 @@ import { DailyRewardsComponent } from '../../components/daily-rewards/daily-rewa
       color: #fff;
       border-radius: 1rem;
       padding: 1.15rem 1.25rem;
-      margin-bottom: 0;
+      margin-bottom: 0.45rem;
     }
     .reco-hero h1 { margin: 0 0 0.2rem; font-size: 1.6rem; font-weight: 800; }
     .reco-hero p  { margin: 0; font-size: 0.9rem; opacity: 0.9; }

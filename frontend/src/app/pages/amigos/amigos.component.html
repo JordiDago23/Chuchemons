@@ -1,4 +1,4 @@
-<app-main-layout
+﻿<app-main-layout
   [user]="user"
   [brandName]="'Chuchemons'"
   [brandSub]="'Amigos'"
@@ -56,15 +56,15 @@
 
     @if (showSearchPanel) {
       <section class="panel search-panel">
-        <div class="search-row input-group">
+        <div class="search-row">
           <input
-            class="form-control"
+            class="search-input"
             type="text"
             [formControl]="searchControl"
             (keyup.enter)="onSearch()"
             placeholder="Escribe el ID o el nombre del jugador..."
           />
-          <button class="btn btn-danger search-btn" (click)="onSearch()" [disabled]="searching">
+          <button class="search-btn" (click)="onSearch()" [disabled]="searching">
             {{ searching ? 'Buscando...' : 'Buscar' }}
           </button>
         </div>
