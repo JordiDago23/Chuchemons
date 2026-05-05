@@ -211,15 +211,15 @@
 </div>
 
 @if (showEvoOverlay) {
-  <div class="lp-evo-overlay" aria-live="assertive">
-    <div class="lp-evo-flash" aria-hidden="true"></div>
-    <div class="lp-evo-rings" aria-hidden="true">
+  <div class="evo-overlay" aria-live="assertive">
+    <div class="evo-flash" aria-hidden="true"></div>
+    <div class="evo-rings" aria-hidden="true">
       @for (ring of evoRings; track $index) {
         <span [style.animation-delay]="ring.delay" [style.border-color]="ring.color"
           [style.animation-duration]="evoTiming.ringDuration"></span>
       }
     </div>
-    <div class="lp-evo-sparks" aria-hidden="true">
+    <div class="evo-sparks" aria-hidden="true">
       @for (spark of evoSparks; track $index) {
         <span [style.--a]="spark.angle" [style.background]="spark.color"
           [style.animation-delay]="spark.delay"
@@ -227,7 +227,7 @@
           [style.animation-timing-function]="evoTiming.sparkEasing"></span>
       }
     </div>
-    <div class="lp-evo-stars" aria-hidden="true">
+    <div class="evo-stars" aria-hidden="true">
       @for (star of evoStars; track $index) {
         <span
           [style.top]="star.top ?? null"
@@ -239,11 +239,11 @@
           [style.animation-duration]="evoTiming.starDuration">★</span>
       }
     </div>
-    <div class="lp-evo-card">
-      <p class="lp-evo-eyebrow">¡Evolución completada!</p>
-      <div class="lp-evo-size-badge">{{ evoSize }}</div>
-      <h2 class="lp-evo-name">{{ evoName }}</h2>
-      <p class="lp-evo-sub">ha evolucionado</p>
+    <div class="evo-card">
+      <p class="evo-eyebrow">¡Evolución completada!</p>
+      <div class="evo-size-badge">{{ evoSize }}</div>
+      <h2 class="evo-name">{{ evoName }}</h2>
+      <p class="evo-sub">ha evolucionado</p>
     </div>
   </div>
 }

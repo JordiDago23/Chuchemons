@@ -32,7 +32,7 @@ function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css'],
+  styleUrls: ['../auth/auth-shared.css', './register.component.css'],
   animations: [cardInAnim, pokeballDropAnim, pokeballSpinAnim, fadeInDownAnim],
 })
 export class RegisterComponent {

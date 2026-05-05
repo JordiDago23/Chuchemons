@@ -738,14 +738,15 @@
   background: #fff;
   opacity: 0.85;
   animation: fall 2s ease-in infinite;
+  will-change: transform;
 }
 
 /* particle positions/colors/timings are driven from batalla-params.ts via inline styles */
 
 @keyframes fall {
-  0%   { transform: translateY(0) rotate(0deg);   opacity: 0.9; }
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg);   opacity: 0.9; }
   80%  { opacity: 0.7; }
-  100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
+  100% { transform: translate3d(0, 110vh, 0) rotate(540deg); opacity: 0; }
 }
 
 /* ── Bloque central de animación ── */

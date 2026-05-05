@@ -220,6 +220,7 @@
 .bubble {
   display: inline-block;
   animation: candyFloat 2s ease-in-out infinite;
+  will-change: transform;
 }
 .b1 { animation-delay: 0s; }
 .b2 { animation-delay: 0.3s; }
@@ -228,8 +229,8 @@
 .b5 { animation-delay: 1.2s; }
 
 @keyframes candyFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-5px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%       { transform: translate3d(0, -5px, 0); }
 }
 
 .candy-desc {
@@ -320,11 +321,6 @@
 /* [@overlayIn] drives this overlay's enter animation */
 }
 
-@keyframes overlayFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
 /* ── CHUCHEMON OVERLAY ────────────────────────────────────── */
 .chuchemon-overlay {
   background: radial-gradient(ellipse at center, #1e0a3c 0%, #0d0020 100%);
@@ -364,14 +360,15 @@
   border-radius: 50%;
   background: #fff;
   animation: starFly 2.5s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* star positions/sizes/colors/delays driven from daily-rewards-params.ts via inline styles */
 
 @keyframes starFly {
-  0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.9; }
   50%  { opacity: 1; }
-  100% { transform: translateY(-25px) scale(0.5); opacity: 0; }
+  100% { transform: translate3d(0, -25px, 0) scale(0.5); opacity: 0; }
 }
 
 /* card */
@@ -432,13 +429,7 @@
 /* [@imgReveal] drives this element's enter animation */
 }
 
-/* imgReveal → Angular animation trigger [@imgReveal] */
-@keyframes imgReveal_UNUSED {
-  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
-  60%  { transform: scale(1.1) rotate(3deg); opacity: 1; }
-  80%  { transform: scale(0.95) rotate(-1deg); }
-  100% { transform: scale(1) rotate(0); }
-}
+/* [@imgReveal] drives this element's enter animation */
 
 /* reveal info */
 .reveal-info {
@@ -515,12 +506,6 @@
 /* [@cardBounceIn] drives this element's enter animation */
 }
 
-@keyframes cardBounceIn_UNUSED {
-  0%   { transform: scale(0.5); opacity: 0; }
-  70%  { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); }
-}
-
 .xux-header {
   text-align: center;
   margin-bottom: 1.2rem;
@@ -563,12 +548,6 @@
 }
 
 /* [@itemPopIn] drives this element's enter animation */
-
-@keyframes itemPopIn_UNUSED {
-  0%   { transform: scale(0); opacity: 0; }
-  70%  { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
 
 .item-emoji {
   font-size: 2.4rem;

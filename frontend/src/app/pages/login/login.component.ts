@@ -23,7 +23,7 @@ const BG_PARTICLES: ParticleItem[] = [
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css'],
+  styleUrls: ['../auth/auth-shared.css', './login.component.css'],
   animations: [cardInAnim, pokeballDropAnim, pokeballSpinAnim, fadeInDownAnim],
 })
 export class LoginComponent {
